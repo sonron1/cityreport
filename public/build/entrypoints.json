@@ -1,0 +1,94 @@
+{
+  "entrypoints": {
+    "app": {
+      "js": [
+        "/build/runtime.js",
+        "/build/vendors-node_modules_core-js_internals_an-instance_js-node_modules_core-js_internals_array-it-055933.js",
+        "/build/vendors-node_modules_core-js_internals_dom-iterables_js-node_modules_core-js_internals_dom-to-aac983.js",
+        "/build/vendors-node_modules_core-js_modules_es_array_map_js-node_modules_core-js_modules_esnext_iter-01c182.js",
+        "/build/vendors-node_modules_leaflet_dist_leaflet-src_js.js",
+        "/build/vendors-node_modules_bootstrap_dist_js_bootstrap_esm_js-node_modules_leaflet_dist_leaflet_css-e3453e.js",
+        "/build/app.js"
+      ],
+      "css": [
+        "/build/vendors-node_modules_bootstrap_dist_js_bootstrap_esm_js-node_modules_leaflet_dist_leaflet_css-e3453e.css",
+        "/build/assets_styles_app_scss.css"
+      ]
+    },
+    "signalements-map": {
+      "js": [
+        "/build/runtime.js",
+        "/build/vendors-node_modules_core-js_internals_an-instance_js-node_modules_core-js_internals_array-it-055933.js",
+        "/build/vendors-node_modules_core-js_modules_es_array_map_js-node_modules_core-js_modules_esnext_iter-01c182.js",
+        "/build/signalements-map.js"
+      ]
+    },
+    "carte-index": {
+      "js": [
+        "/build/runtime.js",
+        "/build/vendors-node_modules_core-js_internals_an-instance_js-node_modules_core-js_internals_array-it-055933.js",
+        "/build/vendors-node_modules_core-js_modules_es_array_map_js-node_modules_core-js_modules_esnext_iter-01c182.js",
+        "/build/carte-index.js"
+      ]
+    },
+    "admin": {
+      "js": [
+        "/build/runtime.js",
+        "/build/admin.js"
+      ]
+    },
+    "notifications": {
+      "js": [
+        "/build/runtime.js",
+        "/build/vendors-node_modules_core-js_internals_an-instance_js-node_modules_core-js_internals_array-it-055933.js",
+        "/build/vendors-node_modules_core-js_internals_dom-iterables_js-node_modules_core-js_internals_dom-to-aac983.js",
+        "/build/vendors-node_modules_core-js_modules_es_date_to-primitive_js-node_modules_core-js_modules_es_-c7b0e4.js",
+        "/build/vendors-node_modules_core-js_modules_es_array_concat_js-node_modules_core-js_modules_es_array-35fca0.js",
+        "/build/notifications.js"
+      ]
+    },
+    "lazy-loader": {
+      "js": [
+        "/build/runtime.js",
+        "/build/vendors-node_modules_core-js_internals_an-instance_js-node_modules_core-js_internals_array-it-055933.js",
+        "/build/vendors-node_modules_core-js_internals_dom-iterables_js-node_modules_core-js_internals_dom-to-aac983.js",
+        "/build/vendors-node_modules_core-js_modules_es_date_to-primitive_js-node_modules_core-js_modules_es_-c7b0e4.js",
+        "/build/vendors-node_modules_core-js_modules_es_weak-set_js-node_modules_core-js_modules_esnext_itera-8ae9a0.js",
+        "/build/lazy-loader.js"
+      ]
+    },
+    "performance-optimizer": {
+      "js": [
+        "/build/runtime.js",
+        "/build/vendors-node_modules_core-js_internals_an-instance_js-node_modules_core-js_internals_array-it-055933.js",
+        "/build/vendors-node_modules_core-js_internals_dom-iterables_js-node_modules_core-js_internals_dom-to-aac983.js",
+        "/build/vendors-node_modules_core-js_modules_es_date_to-primitive_js-node_modules_core-js_modules_es_-c7b0e4.js",
+        "/build/performance-optimizer.js"
+      ]
+    },
+    "styles": {
+      "js": [
+        "/build/runtime.js"
+      ],
+      "css": [
+        "/build/assets_styles_app_scss.css"
+      ]
+    },
+    "admin-styles": {
+      "js": [
+        "/build/runtime.js"
+      ],
+      "css": [
+        "/build/admin-styles.css"
+      ]
+    },
+    "notifications-styles": {
+      "js": [
+        "/build/runtime.js"
+      ],
+      "css": [
+        "/build/notifications-styles.css"
+      ]
+    }
+  }
+}
