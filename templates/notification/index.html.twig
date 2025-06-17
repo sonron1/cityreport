@@ -1,0 +1,494 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Notifications - CityFlow{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        /* Variables CSS pour cohérence */
+        :root {
+            --primary-color: #007bff;
+            --primary-dark: #0056b3;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --light-gray: #f8f9fa;
+            --border-color: #e9ecef;
+            --text-dark: #343a40;
+            --text-muted: #6c757d;
+            --shadow: 0 1px 3px rgba(0,0,0,0.05);
+            --border-radius: 8px;
+        }
+
+        .notifications-container {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+
+        .notifications-header {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .notifications-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--dark-color), var(--info-color));
+        }
+
+        .notifications-title {
+            font-size: 2.25rem;
+            font-weight: 300;
+            color: var(--text-dark);
+            margin: 0;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .notifications-title i {
+            color: var(--dark-color);
+        }
+
+        .notification-item {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .notification-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+
+        .notification-item.unread {
+            border-left: 4px solid var(--dark-color);
+            background: linear-gradient(135deg, rgba(0, 123, 255, 0.02) 0%, #ffffff 100%);
+        }
+
+        .notification-item.read {
+            background: #ffffff;
+            opacity: 0.8;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .notification-type {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            letter-spacing: 0.5px;
+        }
+
+        .notification-type.info {
+            background: rgba(23, 162, 184, 0.1);
+            color: var(--info-color);
+        }
+
+        .notification-type.success {
+            background: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+        }
+
+        .notification-type.warning {
+            background: rgba(255, 193, 7, 0.1);
+            color: #856404;
+        }
+
+        .notification-type.danger {
+            background: rgba(220, 53, 69, 0.1);
+            color: var(--danger-color);
+        }
+
+        .notification-date {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .notification-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .notification-message {
+            color: #555555;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .btn-notification {
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-mark-read {
+            background: var(--dark-color);
+            color: white;
+        }
+
+        .btn-mark-read:hover {
+            background: var(--primary-dark);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .btn-view-detail {
+            background: var(--light-gray);
+            color: var(--text-dark);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-view-detail:hover {
+            background: #e9ecef;
+            color: var(--text-dark);
+            border-color: #adb5bd;
+        }
+
+        .btn-delete {
+            background: transparent;
+            color: var(--danger-color);
+            border: 1px solid var(--danger-color);
+        }
+
+        .btn-delete:hover {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .notifications-filter {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-tab {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            background: var(--light-gray);
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .filter-tab.active,
+        .filter-tab:hover {
+            background: var(--dark-color);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            color: var(--text-dark);
+            font-weight: 300;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .notification-icon.info {
+            background: rgba(23, 162, 184, 0.1);
+            color: var(--info-color);
+        }
+
+        .notification-icon.success {
+            background: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+        }
+
+        .notification-icon.warning {
+            background: rgba(255, 193, 7, 0.1);
+            color: #856404;
+        }
+
+        .notification-icon.danger {
+            background: rgba(220, 53, 69, 0.1);
+            color: var(--danger-color);
+        }
+
+        .mark-all-read-btn {
+            background: var(--dark-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .mark-all-read-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .notification-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .notification-actions {
+                flex-wrap: wrap;
+            }
+
+            .filter-tabs {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="notifications-container">
+        <div class="container">
+            <!-- En-tête -->
+            <div class="notifications-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="notifications-title">
+                            <i class="fas fa-bell me-3"></i>
+                            Mes Notifications
+                        </h1>
+                        <p class="text-muted mb-0">Restez informé de toutes les activités importantes</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        {% if nombreNonLues > 0 %}
+                            <button class="mark-all-read-btn" onclick="markAllAsRead()">
+                                <i class="fas fa-check-double me-2"></i>
+                                Marquer tout comme lu ({{ nombreNonLues }})
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtres -->
+            <div class="notifications-filter">
+                <div class="filter-tabs">
+                    <a href="{{ path('app_notifications_index') }}"
+                       class="filter-tab {{ app.request.query.get('filter') == '' ? 'active' : '' }}">
+                        Toutes
+                    </a>
+                    <a href="{{ path('app_notifications_index', {'filter': 'unread'}) }}"
+                       class="filter-tab {{ app.request.query.get('filter') == 'unread' ? 'active' : '' }}">
+                        Non lues ({{ nombreNonLues|default(0) }})
+                    </a>
+                    <a href="{{ path('app_notifications_index', {'filter': 'read'}) }}"
+                       class="filter-tab {{ app.request.query.get('filter') == 'read' ? 'active' : '' }}">
+                        Lues
+                    </a>
+                </div>
+            </div>
+
+            <!-- Liste des notifications -->
+            <div class="notifications-list">
+                {% if notifications|length > 0 %}
+                    {% for notification in notifications %}
+                        <div class="notification-item {{ notification.isLue ? 'read' : 'unread' }}"
+                             data-notification-id="{{ notification.id }}">
+
+                            <div class="d-flex">
+                                <div class="notification-icon {{ notification.type|lower }}">
+                                    {% if notification.type == 'INFO' %}
+                                        <i class="fas fa-info"></i>
+                                    {% elseif notification.type == 'SUCCESS' %}
+                                        <i class="fas fa-check"></i>
+                                    {% elseif notification.type == 'WARNING' %}
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    {% elseif notification.type == 'DANGER' %}
+                                        <i class="fas fa-exclamation-circle"></i>
+                                    {% else %}
+                                        <i class="fas fa-bell"></i>
+                                    {% endif %}
+                                </div>
+
+                                <div class="flex-grow-1">
+                                    <div class="notification-header">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="notification-type {{ notification.type|lower }}">
+                                                {{ notification.type }}
+                                            </span>
+                                            {% if not notification.isLue %}
+                                                <span class="badge bg-dark">Nouveau</span>
+                                            {% endif %}
+                                        </div>
+                                        <span class="notification-date">
+                                            <i class="fas fa-clock me-1"></i>
+                                            {{ notification.dateEnvoi|date('d/m/Y à H:i') }}
+                                        </span>
+                                    </div>
+
+                                    <h5 class="notification-title">{{ notification.titre|default('Notification') }}</h5>
+                                    <div class="notification-message">{{ notification.message }}</div>
+
+                                    <div class="notification-actions">
+                                        {% if not notification.isLue %}
+                                            <button class="btn-notification btn-mark-read"
+                                                    onclick="markAsRead({{ notification.id }})">
+                                                <i class="fas fa-check me-1"></i>
+                                                Marquer comme lu
+                                            </button>
+                                        {% endif %}
+
+                                        {% if notification.signalement %}
+                                            <a href="{{ path('app_signalement_show', {'id': notification.signalement.id}) }}"
+                                               class="btn-notification btn-view-detail">
+                                                <i class="fas fa-external-link-alt me-1"></i>
+                                                Voir signalement
+                                            </a>
+                                        {% endif %}
+
+                                        <button class="btn-notification btn-delete"
+                                                onclick="deleteNotification({{ notification.id }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-bell-slash"></i>
+                        <h3>Aucune notification</h3>
+                        <p>Vous n'avez aucune notification pour le moment.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function markAsRead(notificationId) {
+            fetch(`{{ path('app_notification_marquer_lue', {'id': 'PLACEHOLDER'}) }}`.replace('PLACEHOLDER', notificationId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    }
+                })
+                .catch(error => console.error('Erreur:', error));
+        }
+
+        function markAllAsRead() {
+            fetch('{{ path('app_notifications_marquer_toutes_lues') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    }
+                })
+                .catch(error => console.error('Erreur:', error));
+        }
+
+        function deleteNotification(notificationId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette notification ?')) {
+                fetch(`{{ path('app_notification_supprimer', {'id': 'PLACEHOLDER'}) }}`.replace('PLACEHOLDER', notificationId), {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        }
+                    })
+                    .catch(error => console.error('Erreur:', error));
+            }
+        }
+    </script>
+{% endblock %}

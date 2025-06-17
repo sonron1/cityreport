@@ -1,0 +1,195 @@
+{# templates/admin/villes/form.html.twig #}
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}{{ ville.id ? 'Modifier' : 'Ajouter' }} une ville{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous" />
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+    </style>
+{% endblock %}
+
+{% block admin_content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ ville.id ? 'Modifier' : 'Ajouter' }} une ville</h1>
+        <a href="{{ path('app_admin_villes') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ ville.id ? 'Modifier la ville "' ~ ville.nom ~ '"' : 'Nouvelle ville' }}</h5>
+                </div>
+                <div class="card-body">
+                    {{ form_start(form) }}
+                    <div class="mb-3">
+                        {{ form_row(form.nom) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form_row(form.departement) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form_row(form.latitudeCentre) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form_row(form.longitudeCentre) }}
+                    </div>
+
+                    <div class="mb-3">
+                        <button type="button" id="pick-on-map" class="btn btn-outline-secondary">
+                            <i class="fas fa-map-marker-alt me-2"></i>Sélectionner sur la carte
+                        </button>
+                    </div>
+
+                    <div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>{{ ville.id ? 'Mettre à jour' : 'Créer' }}
+                        </button>
+                        <a href="{{ path('app_admin_villes') }}" class="btn btn-outline-secondary">Annuler</a>
+                    </div>
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Position sur la carte</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div id="map"></div>
+                </div>
+                <div class="card-footer bg-light">
+                    <small class="text-muted">Cliquez sur la carte pour mettre à jour les coordonnées.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if ville.id %}
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Signalements dans cette ville</h5>
+            </div>
+            <div class="card-body">
+                {% if ville.signalements|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Titre</th>
+                                <th>Département</th>
+                                <th>Catégorie</th>
+                                <th>Date</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for signalement in ville.signalements %}
+                                <tr>
+                                    <td>{{ signalement.id }}</td>
+                                    <td>{{ signalement.titre }}</td>
+                                    <td>{{ ville.departement.nom }}</td>
+                                    <td>{{ signalement.categorie.nom }}</td>
+                                    <td>{{ signalement.dateSignalement|date('d/m/Y H:i') }}</td>
+                                    <td>
+                                            <span class="badge {% if signalement.statut.value == 'NOUVEAU' %}bg-info{% elseif signalement.statut.value == 'EN_COURS' %}bg-warning{% elseif signalement.statut.value == 'RESOLU' %}bg-success{% else %}bg-secondary{% endif %}">
+                                                {{ signalement.statut.value }}
+                                            </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Aucun signalement n'est associé à cette ville.</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Récupérer les champs latitude et longitude
+            var latitudeField = document.getElementById('{{ form.latitudeCentre.vars.id }}');
+            var longitudeField = document.getElementById('{{ form.longitudeCentre.vars.id }}');
+
+            // Coordonnées par défaut ou celles de la ville
+            var defaultLat = latitudeField.value || 6.3676953;
+            var defaultLng = longitudeField.value || 2.3912362;
+
+            // Initialisation de la carte
+            var map = L.map('map').setView([defaultLat, defaultLng], 10);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Ajouter un marqueur à la position actuelle
+            var marker = L.marker([defaultLat, defaultLng], {
+                draggable: true
+            }).addTo(map);
+
+            // Mettre à jour les champs lors du déplacement du marqueur
+            marker.on('dragend', function(e) {
+                var position = marker.getLatLng();
+                latitudeField.value = position.lat.toFixed(6);
+                longitudeField.value = position.lng.toFixed(6);
+            });
+
+            // Fonction pour mettre à jour le marqueur et les champs
+            function updateMarker(lat, lng) {
+                marker.setLatLng([lat, lng]);
+                map.panTo([lat, lng]);
+                latitudeField.value = lat.toFixed(6);
+                longitudeField.value = lng.toFixed(6);
+            }
+
+            // Mettre à jour la position du marqueur quand on clique sur la carte
+            map.on('click', function(e) {
+                updateMarker(e.latlng.lat, e.latlng.lng);
+            });
+
+            // Mettre à jour la position quand on clique sur le bouton
+            document.getElementById('pick-on-map').addEventListener('click', function() {
+                alert('Cliquez sur la carte pour sélectionner l\'emplacement de la ville.');
+            });
+
+            // Mettre à jour la carte quand les champs sont modifiés manuellement
+            latitudeField.addEventListener('change', function() {
+                if (this.value && longitudeField.value) {
+                    updateMarker(parseFloat(this.value), parseFloat(longitudeField.value));
+                }
+            });
+
+            longitudeField.addEventListener('change', function() {
+                if (this.value && latitudeField.value) {
+                    updateMarker(parseFloat(latitudeField.value), parseFloat(this.value));
+                }
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,697 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion - CityFlow Bénin{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #1e4b8c 0%, #2980b9 100%);
+            --success-gradient: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            --danger-gradient: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            --card-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            --border-radius: 20px;
+            --input-focus: 0 0 0 4px rgba(41, 128, 185, 0.15);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            background: #f8f9fa;
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        .login-wrapper {
+            width: 100%;
+            max-width: 450px;
+            margin: 0 auto;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            text-align: center;
+            padding: 3rem 2rem 2rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            position: relative;
+        }
+
+        .login-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: var(--primary-gradient);
+            border-radius: 2px;
+        }
+
+        .app-logo {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: gentle-bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes gentle-bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .login-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0 0 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .login-subtitle {
+            color: #6c757d;
+            font-size: 1rem;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .login-body {
+            padding: 2.5rem 2rem;
+        }
+
+        /* Messages d'alerte propres */
+        .alert-clean {
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-danger.alert-clean {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid rgba(231, 76, 60, 0.2);
+            color: #c0392b;
+        }
+
+        .alert-info.alert-clean {
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid rgba(52, 152, 219, 0.2);
+            color: #2980b9;
+        }
+
+        /* Groupes d'inputs élégants */
+        .form-group-clean {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .input-wrapper-clean {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            transition: var(--transition);
+        }
+
+        .input-wrapper-clean:focus-within {
+            border-color: #2980b9;
+            background: white;
+            box-shadow: var(--input-focus);
+            transform: translateY(-1px);
+        }
+
+        .input-icon-clean {
+            padding: 0 1rem;
+            color: #6c757d;
+            font-size: 1.1rem;
+            transition: var(--transition);
+        }
+
+        .input-wrapper-clean:focus-within .input-icon-clean {
+            color: #2980b9;
+        }
+
+        .form-control-clean {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 1rem 0.75rem;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #2c3e50;
+            outline: none;
+        }
+
+        .form-control-clean::placeholder {
+            color: #95a5a6;
+            font-weight: 400;
+        }
+
+        /* Bouton de basculement du mot de passe */
+        .password-toggle-clean {
+            padding: 0 1rem;
+            color: #6c757d;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .password-toggle-clean:hover {
+            color: #2980b9;
+        }
+
+        /* Options de connexion */
+        .login-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .checkbox-clean {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-clean input[type="checkbox"] {
+            width: 1.2rem;
+            height: 1.2rem;
+            border: 2px solid #dee2e6;
+            border-radius: 4px;
+            appearance: none;
+            cursor: pointer;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .checkbox-clean input[type="checkbox"]:checked {
+            background: var(--primary-gradient);
+            border-color: #2980b9;
+        }
+
+        .checkbox-clean input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .checkbox-clean label {
+            color: #6c757d;
+            font-weight: 500;
+            cursor: pointer;
+            user-select: none;
+            font-size: 0.9rem;
+        }
+
+        .forgot-password-clean {
+            color: #2980b9;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .forgot-password-clean::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #2980b9;
+            transition: var(--transition);
+        }
+
+        .forgot-password-clean:hover::after {
+            width: 100%;
+        }
+
+        .forgot-password-clean:hover {
+            color: #1e4b8c;
+        }
+
+        /* Bouton de connexion élégant */
+        .btn-login-clean {
+            width: 100%;
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 12px;
+            padding: 1rem;
+            font-weight: 600;
+            font-size: 1rem;
+            color: white;
+            letter-spacing: 0.5px;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(41, 128, 185, 0.3);
+        }
+
+        .btn-login-clean:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(41, 128, 185, 0.4);
+        }
+
+        .btn-login-clean:active {
+            transform: translateY(0);
+        }
+
+        .btn-login-clean.loading {
+            background: #95a5a6;
+            pointer-events: none;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Séparateur simple */
+        .divider-clean {
+            position: relative;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .divider-clean::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #dee2e6;
+        }
+
+        .divider-clean span {
+            background: white;
+            padding: 0 1rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Lien d'inscription propre */
+        .register-link-clean {
+            text-align: center;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            margin-top: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .register-link-clean:hover {
+            background: #f1f3f4;
+            border-color: #dee2e6;
+        }
+
+        .register-link-clean p {
+            margin: 0 0 0.5rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .register-link-clean a {
+            color: #2980b9;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .register-link-clean a:hover {
+            color: #1e4b8c;
+            text-decoration: underline;
+        }
+
+        /* Pied de page simple */
+        .footer-clean {
+            text-align: center;
+            margin-top: 2rem;
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        .footer-clean a {
+            color: #2980b9;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer-clean a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 1rem 0.5rem;
+            }
+
+            .login-wrapper {
+                max-width: 100%;
+            }
+
+            .login-header {
+                padding: 2.5rem 1.5rem 2rem;
+            }
+
+            .login-body {
+                padding: 2rem 1.5rem;
+            }
+
+            .app-logo {
+                font-size: 3.5rem;
+            }
+
+            .login-title {
+                font-size: 1.75rem;
+            }
+
+            .login-options {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+
+            .checkbox-clean {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 0.5rem;
+            }
+
+            .login-header {
+                padding: 2rem 1rem 1.5rem;
+            }
+
+            .login-body {
+                padding: 1.5rem 1rem;
+            }
+
+            .register-link-clean {
+                padding: 1rem;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="login-container">
+        <div class="login-wrapper">
+            <div class="login-card">
+                <!-- En-tête -->
+                <div class="login-header">
+                    <div class="app-logo">🏙️</div>
+                    <h1 class="login-title">Bon retour !</h1>
+                    <p class="login-subtitle">Connectez-vous à votre espace citoyen</p>
+                </div>
+
+                <!-- Corps du formulaire -->
+                <div class="login-body">
+                    <!-- Messages d'erreur/succès -->
+                    {% if error %}
+                        <div class="alert alert-danger alert-clean" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <div class="flex-grow-1">
+                                <strong>Erreur de connexion</strong><br>
+                                {{ error.messageKey|trans(error.messageData, 'security') }}
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                        </div>
+                    {% endif %}
+
+                    {% if app.user %}
+                        <div class="alert alert-info alert-clean" role="alert">
+                            <i class="fas fa-info-circle"></i>
+                            <div class="flex-grow-1">
+                                Bonjour {{ app.user.prenom ?? app.user.userIdentifier }} !
+                                <a href="{{ path('app_logout') }}" class="alert-link ms-2">Se déconnecter</a>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <form method="post" action="{{ path('app_login') }}" id="loginForm">
+                        <!-- Token CSRF -->
+                        <input type="hidden" name="_token" value="{{ csrf_token('authenticate') }}">
+
+                        <!-- Email -->
+                        <div class="form-group-clean">
+                            <div class="input-wrapper-clean">
+                                <div class="input-icon-clean">
+                                    <i class="fas fa-envelope"></i>
+                                </div>
+                                <input
+                                        type="email"
+                                        name="email"
+                                        id="inputEmail"
+                                        class="form-control-clean"
+                                        value="{{ last_username }}"
+                                        placeholder="Votre adresse email"
+                                        autocomplete="email"
+                                        required
+                                        autofocus
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Mot de passe -->
+                        <div class="form-group-clean">
+                            <div class="input-wrapper-clean">
+                                <div class="input-icon-clean">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                                <input
+                                        type="password"
+                                        name="password"
+                                        id="inputPassword"
+                                        class="form-control-clean"
+                                        placeholder="Votre mot de passe"
+                                        autocomplete="current-password"
+                                        required
+                                >
+                                <button type="button" class="password-toggle-clean" id="togglePassword">
+                                    <i class="fas fa-eye" id="eyeIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Options de connexion -->
+                        <div class="login-options">
+                            <div class="checkbox-clean">
+                                <input type="checkbox" name="_remember_me" id="rememberMe">
+                                <label for="rememberMe">Se souvenir de moi</label>
+                            </div>
+                            <a href="#" class="forgot-password-clean">
+                                Mot de passe oublié ?
+                            </a>
+                        </div>
+
+                        <!-- Bouton de connexion -->
+                        <button type="submit" class="btn-login-clean" id="loginBtn">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            <span>Se connecter</span>
+                        </button>
+                    </form>
+
+                    <!-- Séparateur -->
+                    <div class="divider-clean">
+                        <span>Nouveau sur CityFlow ?</span>
+                    </div>
+
+                    <!-- Lien d'inscription -->
+                    <div class="register-link-clean">
+                        <p>
+                            <i class="fas fa-user-plus me-2 text-primary"></i>
+                            Pas encore de compte ?
+                        </p>
+                        <a href="{{ path('app_register') }}">
+                            Créer un compte gratuitement
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pied de page -->
+            <div class="footer-clean">
+                <small>
+                    <i class="fas fa-shield-alt me-1"></i>
+                    © {{ 'now'|date('Y') }} CityFlow Bénin -
+                    <a href="#">Conditions d'utilisation</a> •
+                    <a href="#">Politique de confidentialité</a>
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ✅ Variables avec noms uniques pour éviter les conflits
+            const passwordToggleBtn = document.getElementById('togglePassword');
+            const passwordField = document.getElementById('inputPassword');
+            const eyeIconElement = document.getElementById('eyeIcon');
+
+            // Basculer la visibilité du mot de passe
+            if (passwordToggleBtn) {
+                passwordToggleBtn.addEventListener('click', function() {
+                    const currentType = passwordField.getAttribute('type');
+                    const newType = currentType === 'password' ? 'text' : 'password';
+                    passwordField.setAttribute('type', newType);
+
+                    if (newType === 'text') {
+                        eyeIconElement.classList.remove('fa-eye');
+                        eyeIconElement.classList.add('fa-eye-slash');
+                    } else {
+                        eyeIconElement.classList.remove('fa-eye-slash');
+                        eyeIconElement.classList.add('fa-eye');
+                    }
+                });
+            }
+
+            // Animation des inputs au focus
+            const allInputs = document.querySelectorAll('.form-control-clean');
+            allInputs.forEach(function(input) {
+                input.addEventListener('focus', function() {
+                    this.closest('.input-wrapper-clean').classList.add('focused');
+                });
+
+                input.addEventListener('blur', function() {
+                    if (!this.value) {
+                        this.closest('.input-wrapper-clean').classList.remove('focused');
+                    }
+                });
+
+                // Validation en temps réel
+                input.addEventListener('input', function() {
+                    const wrapper = this.closest('.input-wrapper-clean');
+
+                    if (this.type === 'email') {
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (emailRegex.test(this.value)) {
+                            wrapper.style.borderColor = '#27ae60';
+                        } else if (this.value.length > 0) {
+                            wrapper.style.borderColor = '#e74c3c';
+                        } else {
+                            wrapper.style.borderColor = '#e9ecef';
+                        }
+                    } else if (this.type === 'password') {
+                        if (this.value.length >= 6) {
+                            wrapper.style.borderColor = '#27ae60';
+                        } else if (this.value.length > 0) {
+                            wrapper.style.borderColor = '#f39c12';
+                        } else {
+                            wrapper.style.borderColor = '#e9ecef';
+                        }
+                    }
+                });
+            });
+
+            // Animation de soumission
+            const formElement = document.getElementById('loginForm');
+            const submitButton = document.getElementById('loginBtn');
+
+            formElement.addEventListener('submit', function(e) {
+                const originalContent = submitButton.innerHTML;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i><span>Connexion...</span>';
+                submitButton.classList.add('loading');
+                submitButton.disabled = true;
+
+                // Timeout de sécurité
+                setTimeout(function() {
+                    if (submitButton.disabled) {
+                        submitButton.innerHTML = originalContent;
+                        submitButton.classList.remove('loading');
+                        submitButton.disabled = false;
+                    }
+                }, 10000);
+            });
+
+            // Auto-focus sur le premier champ vide
+            const emailField = document.getElementById('inputEmail');
+            const passwordInputField = document.getElementById('inputPassword');
+
+            if (emailField && !emailField.value) {
+                emailField.focus();
+            } else if (passwordInputField && !passwordInputField.value) {
+                passwordInputField.focus();
+            }
+
+            // Navigation clavier
+            allInputs.forEach(function(input) {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+
+                        if (this === emailField && this.value) {
+                            passwordInputField.focus();
+                        } else if (this === passwordInputField && this.value) {
+                            formElement.dispatchEvent(new Event('submit'));
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

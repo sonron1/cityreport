@@ -1,0 +1,15 @@
+controllers:
+    resource:
+        path: ../src/Controller/
+        namespace: App\Controller
+    type: attribute
+
+# Ajouter cette route au début du fichier
+favicon:
+    path: /favicon.ico
+    methods: [GET]
+    defaults:
+        _controller: 'Symfony\Component\HttpFoundation\Response'
+        _format: 'ico'
+    requirements:
+        _format: ico

@@ -1,0 +1,458 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon profil - CityFlow{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .profile-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            border: none;
+            border-radius: 12px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .action-card {
+            border: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .action-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .badge-notification {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            background-color: #dc3545;
+            color: white;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .activity-item {
+            border-left: 3px solid #e9ecef;
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .activity-item:hover {
+            border-left-color: #007bff;
+        }
+
+        .status-nouveau { color: #ffc107; }
+        .status-en_cours { color: #17a2b8; }
+        .status-resolu { color: #28a745; }
+        .status-rejete { color: #dc3545; }
+
+        .profile-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container my-4">
+
+        <!-- En-tête du profil -->
+        <div class="profile-header text-center">
+            <div class="row align-items-center">
+                <div class="col-md-3">
+                    <div class="profile-avatar mx-auto">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-start">
+                    <h1 class="mb-2">{{ app.user.prenom }} {{ app.user.nom }}</h1>
+                    <p class="mb-1">
+                        <i class="fas fa-envelope me-2"></i>{{ app.user.email }}
+                    </p>
+                    <p class="mb-1">
+                        <i class="fas fa-map-marker-alt me-2"></i>{{ app.user.villeResidence.nom }}
+                    </p>
+                    <p class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Membre depuis {{ app.user.dateInscription|date('F Y') }}
+                    </p>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-grid gap-2">
+                        <a href="{{ path('app_profil_edit') }}" class="btn btn-light">
+                            <i class="fas fa-edit me-2"></i>Modifier le profil
+                        </a>
+                        <a href="{{ path('app_profil_activites') }}" class="btn btn-outline-light">
+                            <i class="fas fa-history me-2"></i>Mes activités
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Colonne principale -->
+            <div class="col-lg-8">
+                <!-- Statistiques des signalements -->
+                <div class="profile-section">
+                    <h3 class="mb-4">
+                        <i class="fas fa-chart-bar me-2 text-primary"></i>
+                        Mes statistiques
+                    </h3>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-card text-center p-3">
+                                <div class="stat-icon bg-primary bg-opacity-10 mx-auto">
+                                    <i class="fas fa-exclamation-triangle text-primary"></i>
+                                </div>
+                                <h4 class="h2 mb-0">{{ signalements_stats.total }}</h4>
+                                <p class="text-muted mb-0">Signalements</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-card text-center p-3">
+                                <div class="stat-icon bg-warning bg-opacity-10 mx-auto">
+                                    <i class="fas fa-clock text-warning"></i>
+                                </div>
+                                <h4 class="h2 mb-0">{{ signalements_stats.en_cours }}</h4>
+                                <p class="text-muted mb-0">En cours</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-card text-center p-3">
+                                <div class="stat-icon bg-success bg-opacity-10 mx-auto">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                </div>
+                                <h4 class="h2 mb-0">{{ signalements_stats.resolus }}</h4>
+                                <p class="text-muted mb-0">Résolus</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-card text-center p-3">
+                                <div class="stat-icon bg-info bg-opacity-10 mx-auto">
+                                    <i class="fas fa-comments text-info"></i>
+                                </div>
+                                <h4 class="h2 mb-0">{{ commentaires_count }}</h4>
+                                <p class="text-muted mb-0">Commentaires</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Derniers signalements -->
+                <div class="profile-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="mb-0">
+                            <i class="fas fa-list me-2 text-primary"></i>
+                            Mes derniers signalements
+                        </h3>
+                        <a href="{{ path('app_signalements', {'tab': 'my'}) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-arrow-right me-1"></i>Voir tout
+                        </a>
+                    </div>
+
+                    {% if derniers_signalements|length > 0 %}
+                        <div class="row">
+                            {% for signalement in derniers_signalements %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-0 shadow-sm h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-start">
+                                                <div class="flex-shrink-0 me-3">
+                                                    <div class="rounded-circle p-2" style="background-color: {{ signalement.categorie.couleur ?? '#6c757d' }}20;">
+                                                        <i class="{{ signalement.categorie.icone ?? 'fas fa-exclamation-circle' }} text-primary"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-1">
+                                                        <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}"
+                                                           class="text-decoration-none">
+                                                            {{ signalement.titre }}
+                                                        </a>
+                                                    </h6>
+                                                    <p class="text-muted small mb-1">
+                                                        <i class="fas fa-map-marker-alt me-1"></i>
+                                                        {{ signalement.ville.nom }}
+                                                    </p>
+                                                    <p class="text-muted small mb-2">
+                                                        {{ signalement.description|u.truncate(80, '...') }}
+                                                    </p>
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <small class="text-muted">
+                                                            {{ signalement.dateSignalement|date('d/m/Y') }}
+                                                        </small>
+                                                        <span class="badge bg-{{ signalement.statut.value == 'nouveau' ? 'primary' : (signalement.statut.value == 'en_cours' ? 'warning' : (signalement.statut.value == 'resolu' ? 'success' : 'danger')) }}">
+                                                        {{ signalement.statut.value|replace({'_': ' '})|capitalize }}
+                                                    </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-exclamation-triangle fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Aucun signalement</h5>
+                            <p class="text-muted">Vous n'avez pas encore créé de signalement.</p>
+                            <a href="{{ path('app_signalement_nouveau') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>Créer mon premier signalement
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Actions rapides -->
+                <div class="profile-section">
+                    <h5 class="mb-3">
+                        <i class="fas fa-bolt me-2 text-warning"></i>
+                        Actions rapides
+                    </h5>
+                    <div class="d-grid gap-2">
+                        <!-- Messages avec compteur -->
+                        <div class="position-relative">
+                            <a href="{{ path('app_messages_inbox') }}" class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-start">
+                                <i class="fas fa-envelope me-3"></i>
+                                <span>Mes messages</span>
+                            </a>
+                            {% if messages_non_lus > 0 %}
+                                <span class="badge-notification">{{ messages_non_lus }}</span>
+                            {% endif %}
+                        </div>
+
+                        <a href="{{ path('app_signalement_nouveau') }}" class="btn btn-success w-100 d-flex align-items-center justify-content-start">
+                            <i class="fas fa-plus me-3"></i>
+                            <span>Nouveau signalement</span>
+                        </a>
+
+                        <a href="{{ path('app_signalements', {'tab': 'my'}) }}" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-start">
+                            <i class="fas fa-list me-3"></i>
+                            <span>Mes signalements</span>
+                        </a>
+
+                        <a href="{{ path('app_carte') }}" class="btn btn-outline-info w-100 d-flex align-items-center justify-content-start">
+                            <i class="fas fa-map me-3"></i>
+                            <span>Explorer la carte</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Informations du compte -->
+                <div class="profile-section">
+                    <h5 class="mb-3">
+                        <i class="fas fa-user-cog me-2 text-info"></i>
+                        Informations du compte
+                    </h5>
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item px-0 border-0">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Statut du compte</span>
+                                <span class="badge bg-{{ app.user.estValide ? 'success' : 'warning' }}">
+                                {{ app.user.estValide ? 'Validé' : 'En attente' }}
+                            </span>
+                            </div>
+                        </div>
+                        <div class="list-group-item px-0 border-0">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Rôle</span>
+                                <span class="badge bg-secondary">
+                                {% if 'ROLE_ADMIN' in app.user.roles %}
+                                    Administrateur
+                                {% elseif 'ROLE_MODERATOR' in app.user.roles %}
+                                    Modérateur
+                                {% else %}
+                                    Utilisateur
+                                {% endif %}
+                            </span>
+                            </div>
+                        </div>
+                        <div class="list-group-item px-0 border-0">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Commune</span>
+                                <span>{{ app.user.villeResidence.nom }}</span>
+                            </div>
+                        </div>
+                        <div class="list-group-item px-0 border-0">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Inscription</span>
+                                <span>{{ app.user.dateInscription|date('d/m/Y') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{{ path('app_profil_edit') }}" class="btn btn-outline-primary btn-sm w-100">
+                            <i class="fas fa-edit me-1"></i>Modifier mes informations
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Dernière activité -->
+                <div class="profile-section">
+                    <h5 class="mb-3">
+                        <i class="fas fa-clock me-2 text-success"></i>
+                        Activité récente
+                    </h5>
+                    {% if derniere_activite|length > 0 %}
+                        {% for activite in derniere_activite %}
+                            <div class="activity-item">
+                                <div class="d-flex align-items-start">
+                                    <div class="flex-shrink-0 me-2">
+                                        <i class="fas {{ activite.icon }} text-muted"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <p class="mb-1 small">{{ activite.description }}</p>
+                                        <small class="text-muted">{{ activite.date|date('d/m/Y H:i') }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        <div class="text-center mt-3">
+                            <a href="{{ path('app_profil_activites') }}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-history me-1"></i>Voir toute l'activité
+                            </a>
+                        </div>
+                    {% else %}
+                        <p class="text-muted small">Aucune activité récente à afficher.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Conseils -->
+                <div class="profile-section bg-light">
+                    <h6 class="mb-3">
+                        <i class="fas fa-lightbulb me-2 text-warning"></i>
+                        Conseils
+                    </h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Ajoutez une photo claire pour améliorer vos signalements
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Géolocalisez précisément vos signalements
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Suivez l'évolution de vos signalements
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Participez aux discussions dans les commentaires
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animation des cartes de statistiques
+            const statCards = document.querySelectorAll('.stat-card');
+
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+
+            statCards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = `opacity 0.5s ease ${index * 0.1}s, transform 0.5s ease ${index * 0.1}s`;
+                observer.observe(card);
+            });
+
+            // Auto-refresh du compteur de messages (optionnel)
+            setInterval(function() {
+                fetch('{{ path('app_messages_count') }}')
+                    .then(response => response.json())
+                    .then(data => {
+                        const badge = document.querySelector('.badge-notification');
+                        if (data.count > 0) {
+                            if (badge) {
+                                badge.textContent = data.count;
+                            } else {
+                                // Créer le badge s'il n'existe pas
+                                const messageBtn = document.querySelector('a[href="{{ path('app_messages_inbox') }}"]');
+                                if (messageBtn) {
+                                    const newBadge = document.createElement('span');
+                                    newBadge.className = 'badge-notification';
+                                    newBadge.textContent = data.count;
+                                    messageBtn.parentElement.appendChild(newBadge);
+                                }
+                            }
+                        } else if (badge) {
+                            badge.remove();
+                        }
+                    })
+                    .catch(error => console.log('Erreur lors de la mise à jour du compteur:', error));
+            }, 30000); // Vérifier toutes les 30 secondes
+        });
+    </script>
+{% endblock %}

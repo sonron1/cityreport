@@ -1,0 +1,51 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signalement supprimé</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        .header { text-align: center; color: #dc3545; margin-bottom: 30px; }
+        .content { margin-bottom: 30px; }
+        .danger-box { background: #f8d7da; padding: 20px; border-radius: 8px; border-left: 4px solid #dc3545; margin: 20px 0; }
+        .btn { display: inline-block; padding: 12px 24px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🗑️ Votre signalement a été supprimé</h1>
+    </div>
+
+    <div class="content">
+        <p>Bonjour {{ utilisateur.prenom }} {{ utilisateur.nom }},</p>
+
+        <p>Nous vous informons que votre signalement a été supprimé par notre équipe de modération.</p>
+
+        <div class="danger-box">
+            <h3>Signalement supprimé</h3>
+            <p><strong>Titre :</strong> {{ titreSignalement }}</p>
+            {% if raison %}
+                <p><strong>Raison de la suppression :</strong></p>
+                <p style="font-style: italic;">{{ raison }}</p>
+            {% endif %}
+        </div>
+
+        <p>Si vous pensez qu'il s'agit d'une erreur, n'hésitez pas à nous contacter ou à créer un nouveau signalement.</p>
+
+        <p style="text-align: center;">
+            <a href="{{ dashboardUrl }}" class="btn">Mon tableau de bord</a>
+        </p>
+    </div>
+
+    <div class="footer">
+        <p>Cet email a été envoyé automatiquement, merci de ne pas répondre.</p>
+        <p>© {{ "now"|date("Y") }} Plateforme de signalement</p>
+    </div>
+</div>
+</body>
+</html>

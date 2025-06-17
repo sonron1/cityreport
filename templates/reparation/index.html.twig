@@ -1,0 +1,368 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des réparations - CityFlow{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .card {
+            border-radius: 12px;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 1px solid #dee2e6;
+            border-radius: 12px 12px 0 0 !important;
+        }
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .date-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 0.75rem;
+            border-left: 3px solid #dee2e6;
+        }
+        .empty-state {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 16px;
+            border: 2px dashed #dee2e6;
+        }
+        .progress-indicator {
+            height: 4px;
+            border-radius: 2px;
+            background: #e9ecef;
+            overflow: hidden;
+        }
+        .progress-indicator .progress-bar {
+            transition: width 0.6s ease;
+        }
+        .btn-action {
+            border-radius: 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn-action:hover {
+            transform: translateY(-1px);
+        }
+        .header-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 10px;
+            padding: 1rem;
+            border: 1px solid #e9ecef;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container py-4">
+        <!-- En-tête principal -->
+        <div class="header-section">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="bg-dark rounded-circle p-2 me-3">
+                            <i class="fas fa-tools text-white"></i>
+                        </div>
+                        <div>
+                            <h1 class="h3 mb-1 fw-bold">Gestion des réparations</h1>
+                            <p class="text-muted mb-0">
+                                Vue d'ensemble des réparations planifiées et en cours
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <div class="stats-card">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h4 class="fw-bold mb-0">{{ reparations|length }}</h4>
+                                <small class="text-muted">Réparation(s) total</small>
+                            </div>
+                            <div>
+                                <i class="fas fa-chart-bar fa-2x text-muted"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if reparations is empty %}
+            <!-- État vide -->
+            <div class="row justify-content-center">
+                <div class="col-lg-6">
+                    <div class="empty-state text-center py-5">
+                        <div class="mb-4">
+                            <i class="fas fa-tools fa-4x text-muted opacity-50"></i>
+                        </div>
+                        <h4 class="text-muted mb-3">Aucune réparation planifiée</h4>
+                        <p class="text-muted mb-4 px-3">
+                            Les réparations apparaîtront ici une fois planifiées depuis les signalements validés.
+                            Commencez par consulter les signalements en attente de traitement.
+                        </p>
+                        <a href="{{ path('app_signalements') }}" class="btn btn-dark btn-action px-4">
+                            <i class="fas fa-list me-2"></i>
+                            Consulter les signalements
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- Filtres rapides -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body py-3">
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <span class="fw-bold me-3">Filtres rapides :</span>
+                                <button class="btn btn-outline-secondary btn-sm btn-action" onclick="filterByStatus('all')">
+                                    Toutes
+                                </button>
+                                <button class="btn btn-outline-warning btn-sm btn-action" onclick="filterByStatus('planifiee')">
+                                    Planifiées
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm btn-action" onclick="filterByStatus('en_cours')">
+                                    En cours
+                                </button>
+                                <button class="btn btn-outline-success btn-sm btn-action" onclick="filterByStatus('terminee')">
+                                    Terminées
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Liste des réparations -->
+            <div class="row" id="reparations-container">
+                {% for reparation in reparations %}
+                    <div class="col-xl-4 col-lg-6 mb-4 reparation-card" data-status="{{ reparation.statut.value }}">
+                        <div class="card h-100 shadow-sm">
+                            <!-- En-tête avec statut -->
+                            <div class="card-header d-flex justify-content-between align-items-center py-3">
+                                <div class="d-flex align-items-center">
+                                    <span class="fw-bold text-dark">#{{ reparation.id }}</span>
+                                    <div class="vr mx-2"></div>
+                                    <small class="text-muted">
+                                        {{ reparation.dateDebut|date('d/m/Y') }}
+                                    </small>
+                                </div>
+                                <span class="status-badge
+                                    {% if reparation.statut.value == 'planifiee' %}bg-warning text-dark
+                                    {% elseif reparation.statut.value == 'en_cours' %}bg-primary text-white
+                                    {% elseif reparation.statut.value == 'terminee' %}bg-success text-white
+                                    {% elseif reparation.statut.value == 'annulee' %}bg-danger text-white
+                                    {% else %}bg-secondary text-white
+                                    {% endif %}">
+                                    {% if reparation.statut.value == 'planifiee' %}Planifiée
+                                    {% elseif reparation.statut.value == 'en_cours' %}En cours
+                                    {% elseif reparation.statut.value == 'terminee' %}Terminée
+                                    {% elseif reparation.statut.value == 'annulee' %}Annulée
+                                    {% else %}{{ reparation.statut.value|title }}
+                                    {% endif %}
+                                </span>
+                            </div>
+
+                            <div class="card-body">
+                                <!-- Signalement associé -->
+                                <div class="mb-3">
+                                    <h6 class="card-title mb-2 fw-bold">
+                                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                        {{ reparation.signalement.titre|length > 40 ?
+                                        reparation.signalement.titre|slice(0, 40) ~ '...' :
+                                        reparation.signalement.titre }}
+                                    </h6>
+                                    <div class="d-flex flex-wrap gap-2 mb-2">
+                                        <span class="badge bg-light text-dark border">
+                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                            {{ reparation.signalement.ville.nom }}
+                                        </span>
+                                        {% if reparation.signalement.arrondissement %}
+                                            <span class="badge bg-light text-dark border">
+                                                {{ reparation.signalement.arrondissement.nom }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Description -->
+                                <div class="mb-3">
+                                    <p class="card-text small text-muted">
+                                        <i class="fas fa-clipboard-list me-1"></i>
+                                        {{ reparation.description|length > 80 ?
+                                        reparation.description|slice(0, 80) ~ '...' :
+                                        reparation.description }}
+                                    </p>
+                                </div>
+
+                                <!-- Dates -->
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <div class="date-box text-center">
+                                            <div class="fw-bold text-primary">
+                                                {{ reparation.dateDebut|date('d/m') }}
+                                            </div>
+                                            <small class="text-muted d-block">
+                                                {{ reparation.dateDebut|date('H:i') }}
+                                            </small>
+                                            <small class="text-muted">Début</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="date-box text-center">
+                                            {% if reparation.dateFin %}
+                                                <div class="fw-bold text-primary">
+                                                    {{ reparation.dateFin|date('d/m') }}
+                                                </div>
+                                                <small class="text-muted d-block">
+                                                    {{ reparation.dateFin|date('H:i') }}
+                                                </small>
+                                                <small class="text-muted">Fin</small>
+                                            {% else %}
+                                                <div class="text-muted">
+                                                    <i class="fas fa-clock"></i>
+                                                </div>
+                                                <small class="text-muted d-block">--:--</small>
+                                                <small class="text-muted">Non définie</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Technicien -->
+                                {% if reparation.utilisateur %}
+                                    <div class="border-top pt-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-light rounded-circle p-2 me-2">
+                                                <i class="fas fa-user-cog text-primary"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold small">
+                                                    {{ reparation.utilisateur.prenom }} {{ reparation.utilisateur.nom }}
+                                                </div>
+                                                <small class="text-muted">Technicien assigné</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="border-top pt-3 text-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-user-slash me-1"></i>
+                                            Aucun technicien assigné
+                                        </small>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="card-footer bg-transparent border-top-0 pt-0">
+                                <div class="d-grid gap-2">
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ path('app_signalement_show', {'id': reparation.signalement.id}) }}"
+                                           class="btn btn-outline-secondary btn-sm">
+                                            <i class="fas fa-eye me-1"></i>
+                                            Signalement
+                                        </a>
+                                        <a href="{{ path('app_reparation_edit', {'id': reparation.id}) }}"
+                                           class="btn btn-dark btn-sm">
+                                            <i class="fas fa-edit me-1"></i>
+                                            Modifier
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Statistiques en bas -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body text-center py-3">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                <strong>{{ reparations|length }}</strong> réparation(s) au total
+                                {% if reparations|length > 12 %}
+                                    • Pagination disponible si nécessaire
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        // Fonction de filtrage par statut
+        function filterByStatus(status) {
+            const cards = document.querySelectorAll('.reparation-card');
+            const buttons = document.querySelectorAll('[onclick*="filterByStatus"]');
+
+            // Réinitialiser les boutons
+            buttons.forEach(btn => {
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-outline-secondary');
+            });
+
+            // Activer le bouton cliqué
+            event.target.classList.remove('btn-outline-secondary');
+            event.target.classList.add('btn-secondary');
+
+            // Filtrer les cartes
+            cards.forEach(card => {
+                if (status === 'all' || card.dataset.status === status) {
+                    card.style.display = 'block';
+                    // Animation d'apparition
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        card.style.transition = 'all 0.3s ease';
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Animation d'entrée des cartes
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.reparation-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+{% endblock %}

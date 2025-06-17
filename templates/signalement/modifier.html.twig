@@ -1,0 +1,162 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier le signalement{% endblock %}
+
+{% block body %}
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-warning text-dark">
+                        <h4 class="mb-0">
+                            <i class="fas fa-edit me-2"></i>
+                            Modifier votre signalement
+                        </h4>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Signalement rejeté :</strong> Vous pouvez modifier votre signalement en tenant compte des remarques de la modération.
+                            Une fois modifié, il sera soumis à nouveau pour validation.
+                        </div>
+
+                        {# ✅ AFFICHAGE DU MOTIF DE REJET - VERSION CORRIGÉE #}
+                        {% if signalement.journalValidations %}
+                            {% set dernierRejet = null %}
+                            {% for journal in signalement.journalValidations|reverse %}
+                                {% if journal.action == 'Rejet' and journal.commentaire and dernierRejet is null %}
+                                    {% set dernierRejet = journal %}
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if dernierRejet %}
+                                <div class="alert alert-warning">
+                                    <strong>Motif du rejet :</strong><br>
+                                    {{ dernierRejet.commentaire }}
+                                </div>
+                            {% endif %}
+                        {% endif %}
+
+                        {{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': true}}) }}
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form_label(form.titre, 'Titre du signalements', {'label_attr': {'class': 'form-label required'}}) }}
+                                {{ form_widget(form.titre, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_errors(form.titre) }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form_label(form.ville, 'Ville', {'label_attr': {'class': 'form-label required'}}) }}
+                                {{ form_widget(form.ville, {'attr': {'class': 'form-select'}}) }}
+                                {{ form_errors(form.ville) }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form_label(form.arrondissement, 'Arrondissement', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(form.arrondissement, {'attr': {'class': 'form-select'}}) }}
+                                {{ form_errors(form.arrondissement) }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form_label(form.categorie, 'Catégorie', {'label_attr': {'class': 'form-label required'}}) }}
+                                {{ form_widget(form.categorie, {'attr': {'class': 'form-select'}}) }}
+                                {{ form_errors(form.categorie) }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form_label(form.description, 'Description détaillée', {'label_attr': {'class': 'form-label required'}}) }}
+                                {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': 5}}) }}
+                                {{ form_errors(form.description) }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form_label(form.photo, 'Photo (optionnel - laissez vide pour garder l\'actuelle)', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(form.photo, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_errors(form.photo) }}
+
+                                {% if signalement.photoUrl %}
+                                    <div class="mt-2">
+                                        <small class="text-muted">Photo actuelle :</small><br>
+                                        <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}"
+                                             alt="Photo actuelle"
+                                             class="img-thumbnail"
+                                             style="max-width: 200px;">
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form_label(form.latitude, 'Localisation', {'label_attr': {'class': 'form-label required'}}) }}
+                                <div id="map" style="height: 300px; border-radius: 8px;"></div>
+                                {{ form_widget(form.latitude, {'attr': {'class': 'form-control d-none'}}) }}
+                                {{ form_widget(form.longitude, {'attr': {'class': 'form-control d-none'}}) }}
+                                {{ form_errors(form.latitude) }}
+                                {{ form_errors(form.longitude) }}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ path('app_mes_signalements') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Retour
+                            </a>
+
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save me-1"></i>
+                                Modifier et soumettre
+                            </button>
+                        </div>
+
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script pour la carte -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialiser la carte avec les coordonnées actuelles
+            const lat = {{ signalement.latitude ?? 6.3703 }};
+            const lng = {{ signalement.longitude ?? 2.3912 }};
+            
+            const map = L.map('map').setView([lat, lng], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            let marker = L.marker([lat, lng]).addTo(map);
+
+            // Mettre à jour les champs cachés avec les coordonnées actuelles
+            document.getElementById('{{ form.latitude.vars.id }}').value = lat;
+            document.getElementById('{{ form.longitude.vars.id }}').value = lng;
+
+            // Permettre de cliquer pour changer la position
+            map.on('click', function(e) {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+
+                // Supprimer l'ancien marqueur et en créer un nouveau
+                map.removeLayer(marker);
+                marker = L.marker([lat, lng]).addTo(map);
+
+                // Mettre à jour les champs cachés
+                document.getElementById('{{ form.latitude.vars.id }}').value = lat;
+                document.getElementById('{{ form.longitude.vars.id }}').value = lng;
+            });
+        });
+    </script>
+{% endblock %}

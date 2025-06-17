@@ -1,0 +1,450 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Demandes de suppression - Administration{% endblock %}
+
+{% block admin_breadcrumb %}
+    <li class="breadcrumb-item active">Demandes de suppression</li>
+{% endblock %}
+
+{% block admin_content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-1">
+                <i class="fas fa-trash-alt text-danger me-2"></i>
+                Demandes de suppression
+            </h1>
+            <p class="text-muted mb-0">Gestion des demandes de suppression de signalements</p>
+        </div>
+        <div>
+            <a href="{{ path('app_admin_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Retour dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="statut" class="form-label">Statut</label>
+                    <select name="statut" id="statut" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        <option value="en_attente" {{ current_filters.statut == 'en_attente' ? 'selected' : '' }}>En attente</option>
+                        <option value="acceptee" {{ current_filters.statut == 'acceptee' ? 'selected' : '' }}>Acceptées</option>
+                        <option value="refusee" {{ current_filters.statut == 'refusee' ? 'selected' : '' }}>Refusées</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Recherche</label>
+                    <input type="text" name="search" id="search" class="form-control"
+                           value="{{ current_filters.search ?? '' }}"
+                           placeholder="Titre du signalement ou utilisateur...">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search me-1"></i>Filtrer
+                    </button>
+                    <a href="{{ path('app_admin_demandes_suppression') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>Réinitialiser
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    {% if stats.total > 0 %}
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card admin-card">
+                    <div class="card-body text-center">
+                        <h3 class="text-primary mb-1">{{ stats.total }}</h3>
+                        <p class="text-muted mb-0"><small>Total demandes</small></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card admin-card">
+                    <div class="card-body text-center">
+                        <h3 class="text-warning mb-1">{{ stats.en_attente }}</h3>
+                        <p class="text-muted mb-0"><small>En attente</small></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card admin-card">
+                    <div class="card-body text-center">
+                        <h3 class="text-success mb-1">{{ stats.acceptees }}</h3>
+                        <p class="text-muted mb-0"><small>Acceptées</small></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card admin-card">
+                    <div class="card-body text-center">
+                        <h3 class="text-danger mb-1">{{ stats.refusees }}</h3>
+                        <p class="text-muted mb-0"><small>Refusées</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Liste des demandes -->
+    <div class="card admin-card">
+        <div class="card-header admin-card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                Demandes de suppression
+                {% if demandes|length > 0 %}
+                    <span class="badge bg-primary ms-2">{{ demandes|length }}</span>
+                {% endif %}
+            </h5>
+            {% if current_filters.statut %}
+                <span class="badge bg-info">
+                    Filtre: {{ current_filters.statut|replace({'_': ' '})|title }}
+                </span>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if demandes|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th width="25%">Signalement</th>
+                            <th width="20%">Utilisateur</th>
+                            <th width="15%">Date demande</th>
+                            <th width="10%">Statut</th>
+                            <th width="15%">Traité par</th>
+                            <th width="15%">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for signalement in demandes %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-start">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">
+                                                <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}"
+                                                   class="text-decoration-none" target="_blank">
+                                                    {{ signalement.titre|slice(0, 40) }}{% if signalement.titre|length > 40 %}...{% endif %}
+                                                </a>
+                                            </h6>
+                                            <small class="text-muted">
+                                                <i class="fas fa-map-marker-alt me-1"></i>
+                                                {{ signalement.ville.nom }}
+                                                {% if signalement.arrondissement %}
+                                                    - {{ signalement.arrondissement.nom }}
+                                                {% endif %}
+                                                <br>
+                                                <i class="fas fa-tag me-1"></i>
+                                                {{ signalement.categorie.nom }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>{{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ signalement.utilisateur.email }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if signalement.dateDemandeSuppressionStatut %}
+                                        <small>{{ signalement.dateDemandeSuppressionStatut|date('d/m/Y') }}</small>
+                                        <br>
+                                        <small class="text-muted">{{ signalement.dateDemandeSuppressionStatut|date('H:i') }}</small>
+                                    {% else %}
+                                        <small class="text-muted">Non disponible</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% set statut = signalement.demandeSuppressionStatut %}
+                                    {% if statut == 'en_attente' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-clock me-1"></i>En attente
+                                        </span>
+                                    {% elseif statut == 'acceptee' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>Acceptée
+                                        </span>
+                                    {% elseif statut == 'refusee' %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times me-1"></i>Refusée
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ statut|default('Aucun') }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if signalement.moderateurSuppressionStatut %}
+                                        <small>
+                                            <strong>{{ signalement.moderateurSuppressionStatut.prenom }} {{ signalement.moderateurSuppressionStatut.nom }}</strong>
+                                        </small>
+                                    {% else %}
+                                        <small class="text-muted">Non traité</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if statut == 'en_attente' %}
+                                        <div class="btn-group" role="group">
+                                            <!-- Bouton Accepter -->
+                                            <button type="button" class="btn btn-sm btn-success"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#accepterModal{{ signalement.id }}"
+                                                    title="Accepter la demande">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+
+                                            <!-- Bouton Refuser -->
+                                            <button type="button" class="btn btn-sm btn-danger"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#refuserModal{{ signalement.id }}"
+                                                    title="Refuser la demande">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+
+                                            <!-- Bouton Voir -->
+                                            <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}"
+                                               class="btn btn-sm btn-outline-primary"
+                                               target="_blank"
+                                               title="Voir le signalement">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </div>
+
+                                        <!-- Modal Accepter -->
+                                        <div class="modal fade" id="accepterModal{{ signalement.id }}" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header bg-success text-white">
+                                                        <h5 class="modal-title">
+                                                            <i class="fas fa-check me-2"></i>
+                                                            Accepter la demande de suppression
+                                                        </h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="alert alert-warning">
+                                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                                            <strong>Attention !</strong> Cette action est irréversible.
+                                                        </div>
+                                                        <p><strong>Êtes-vous sûr de vouloir accepter cette demande ?</strong></p>
+                                                        <div class="border rounded p-3 bg-light">
+                                                            <h6 class="mb-2">Signalement concerné :</h6>
+                                                            <p class="mb-1"><strong>{{ signalement.titre }}</strong></p>
+                                                            <small class="text-muted">
+                                                                Par {{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}
+                                                                le {{ signalement.dateSignalement|date('d/m/Y') }}
+                                                            </small>
+                                                        </div>
+                                                        <p class="mt-3 mb-0">Le signalement sera <strong>marqué comme supprimé</strong> et l'utilisateur recevra un email de confirmation.</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                            <i class="fas fa-times me-1"></i>Annuler
+                                                        </button>
+                                                        <form method="post" action="{{ path('app_admin_traiter_demande_suppression', {'id': signalement.id}) }}" class="d-inline">
+                                                            <input type="hidden" name="_token" value="{{ csrf_token('traiter_suppression_' ~ signalement.id) }}">
+                                                            <input type="hidden" name="action" value="accepter">
+                                                            <button type="submit" class="btn btn-success">
+                                                                <i class="fas fa-check me-1"></i>Confirmer l'acceptation
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Modal Refuser -->
+                                        <div class="modal fade" id="refuserModal{{ signalement.id }}" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <form method="post" action="{{ path('app_admin_traiter_demande_suppression', {'id': signalement.id}) }}">
+                                                        <div class="modal-header bg-danger text-white">
+                                                            <h5 class="modal-title">
+                                                                <i class="fas fa-times me-2"></i>
+                                                                Refuser la demande de suppression
+                                                            </h5>
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <div class="border rounded p-3 bg-light mb-3">
+                                                                <h6 class="mb-2">Signalement concerné :</h6>
+                                                                <p class="mb-1"><strong>{{ signalement.titre }}</strong></p>
+                                                                <small class="text-muted">
+                                                                    Par {{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}
+                                                                    le {{ signalement.dateSignalement|date('d/m/Y') }}
+                                                                </small>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label for="commentaire{{ signalement.id }}" class="form-label">
+                                                                    <strong>Motif du refus <span class="text-danger">*</span></strong>
+                                                                </label>
+                                                                <textarea name="commentaire"
+                                                                          id="commentaire{{ signalement.id }}"
+                                                                          class="form-control"
+                                                                          rows="4"
+                                                                          placeholder="Expliquez pourquoi vous refusez cette demande de suppression..."
+                                                                          required></textarea>
+                                                                <small class="form-text text-muted">
+                                                                    Ce message sera envoyé par email à l'utilisateur pour l'informer du refus.
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <input type="hidden" name="_token" value="{{ csrf_token('traiter_suppression_' ~ signalement.id) }}">
+                                                            <input type="hidden" name="action" value="refuser">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                                <i class="fas fa-times me-1"></i>Annuler
+                                                            </button>
+                                                            <button type="submit" class="btn btn-danger">
+                                                                <i class="fas fa-times me-1"></i>Confirmer le refus
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% elseif statut in ['acceptee', 'refusee'] %}
+                                        <div class="d-flex gap-1">
+                                            <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}"
+                                               class="btn btn-sm btn-outline-primary"
+                                               target="_blank"
+                                               title="Voir le signalement">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if signalement.commentaireSuppressionStatut %}
+                                                <button type="button" class="btn btn-sm btn-outline-info"
+                                                        data-bs-toggle="tooltip"
+                                                        title="{{ signalement.commentaireSuppressionStatut }}">
+                                                    <i class="fas fa-comment"></i>
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">
+                                            <i class="fas fa-check-circle me-1"></i>
+                                            Traitement terminé
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-4x text-muted mb-4"></i>
+                    <h4 class="text-muted">
+                        {% if current_filters.statut or current_filters.search %}
+                            Aucune demande trouvée
+                        {% else %}
+                            Aucune demande de suppression
+                        {% endif %}
+                    </h4>
+                    <p class="text-muted mb-4">
+                        {% if current_filters.statut or current_filters.search %}
+                            Essayez de modifier vos critères de recherche.
+                        {% else %}
+                            Les demandes de suppression apparaîtront ici lorsque les utilisateurs en feront la demande.
+                        {% endif %}
+                    </p>
+
+                    <div class="row justify-content-center">
+                        <div class="col-md-8">
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                                {% if current_filters.statut or current_filters.search %}
+                                    <a href="{{ path('app_admin_demandes_suppression') }}" class="btn btn-primary">
+                                        <i class="fas fa-list me-2"></i>
+                                        Voir toutes les demandes
+                                    </a>
+                                {% else %}
+                                    <a href="{{ path('app_admin_signalements') }}" class="btn btn-primary">
+                                        <i class="fas fa-database me-2"></i>
+                                        Gérer tous les signalements
+                                    </a>
+                                {% endif %}
+                                <a href="{{ path('app_admin_dashboard') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Retour dashboard
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Informations sur le processus -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card admin-card">
+                <div class="card-header admin-card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-cogs me-2"></i>
+                        Processus de suppression
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0">
+                        <li class="mb-2">L'utilisateur soumet une demande de suppression</li>
+                        <li class="mb-2">La demande est examinée par un administrateur</li>
+                        <li class="mb-2">Validation ou rejet avec justification</li>
+                        <li class="mb-0">Notification automatique par email à l'utilisateur</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card admin-card">
+                <div class="card-header admin-card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        Règles de suppression
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li class="mb-2">Seul l'auteur peut demander la suppression</li>
+                        <li class="mb-2">Les signalements en cours de traitement nécessitent une validation spéciale</li>
+                        <li class="mb-2">Un délai de réflexion de 48h peut être appliqué</li>
+                        <li class="mb-0">L'historique est conservé pour audit</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-focus sur le textarea quand le modal de refus s'ouvre
+            const refusModals = document.querySelectorAll('[id^="refuserModal"]');
+            refusModals.forEach(modal => {
+                modal.addEventListener('shown.bs.modal', function() {
+                    const textarea = modal.querySelector('textarea[name="commentaire"]');
+                    if (textarea) {
+                        textarea.focus();
+                    }
+                });
+            });
+
+            // Initialiser les tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
+{% endblock %}

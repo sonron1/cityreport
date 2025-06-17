@@ -1,0 +1,563 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Statistiques - Administration{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 15px;
+            color: white;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+            pointer-events: none;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .stats-card.users {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stats-card.reports {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .stats-card.cities {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .stats-card.categories {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333;
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stats-label {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+
+        .stats-icon {
+            font-size: 3rem;
+            opacity: 0.3;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .recent-activity {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .activity-item {
+            border-bottom: 1px solid #f8f9fa;
+            padding: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .activity-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: white;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .activity-icon.new-user {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .activity-icon.new-report {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .activity-icon.validation {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .section-header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-subtitle {
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .metric-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .stats-number {
+                font-size: 2rem;
+            }
+
+            .stats-icon {
+                font-size: 2rem;
+            }
+
+            .chart-container {
+                padding: 1rem;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid py-4">
+        <!-- En-tête de section -->
+        <div class="section-header">
+            <h1 class="section-title">
+                <i class="fas fa-chart-bar me-2 text-primary"></i>
+                Tableau de bord statistiques
+            </h1>
+            <p class="section-subtitle">Analyse complète des données de la plateforme</p>
+        </div>
+
+        <!-- Cartes de statistiques principales -->
+        <div class="row g-4 mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="card stats-card users h-100">
+                    <div class="card-body position-relative">
+                        <div class="stats-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stats-number">{{ stats.total_users ?? 0 }}</div>
+                        <p class="stats-label">Utilisateurs inscrits</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="card stats-card reports h-100">
+                    <div class="card-body position-relative">
+                        <div class="stats-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stats-number">{{ stats.total_signalements ?? 0 }}</div>
+                        <p class="stats-label">Signalements</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="card stats-card cities h-100">
+                    <div class="card-body position-relative">
+                        <div class="stats-icon">
+                            <i class="fas fa-city"></i>
+                        </div>
+                        <div class="stats-number">{{ stats.total_villes ?? 0 }}</div>
+                        <p class="stats-label">Villes couvertes</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="card stats-card categories h-100">
+                    <div class="card-body position-relative">
+                        <div class="stats-icon">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div class="stats-number">{{ stats.total_categories ?? 0 }}</div>
+                        <p class="stats-label">Catégories</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Métriques de validation -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="metric-card">
+                    <div class="metric-value text-warning">{{ stats.validation.en_attente ?? 0 }}</div>
+                    <div class="metric-label">En attente de validation</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="metric-card">
+                    <div class="metric-value text-success">{{ stats.validation.valide ?? 0 }}</div>
+                    <div class="metric-label">Signalements validés</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="metric-card">
+                    <div class="metric-value text-danger">{{ stats.validation.rejete ?? 0 }}</div>
+                    <div class="metric-label">Signalements rejetés</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graphiques et analyses -->
+        <div class="row g-4 mb-4">
+            <!-- Graphique des signalements par mois -->
+            <div class="col-lg-8">
+                <div class="chart-container">
+                    <h3 class="chart-title">
+                        <i class="fas fa-chart-line text-primary"></i>
+                        Évolution des signalements ({{ "now"|date("Y") }})
+                    </h3>
+                    <canvas id="signalementsChart" height="100"></canvas>
+                </div>
+            </div>
+
+            <!-- Répartition par statut -->
+            <div class="col-lg-4">
+                <div class="chart-container">
+                    <h3 class="chart-title">
+                        <i class="fas fa-chart-pie text-success"></i>
+                        Statuts des signalements
+                    </h3>
+                    <canvas id="statutsChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graphiques supplémentaires -->
+        <div class="row g-4 mb-4">
+            <!-- Signalements par ville -->
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h3 class="chart-title">
+                        <i class="fas fa-map-marker-alt text-warning"></i>
+                        Top 10 - Signalements par ville
+                    </h3>
+                    <canvas id="villesChart" height="150"></canvas>
+                </div>
+            </div>
+
+            <!-- Signalements par catégorie -->
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h3 class="chart-title">
+                        <i class="fas fa-layer-group text-info"></i>
+                        Top 10 - Signalements par catégorie
+                    </h3>
+                    <canvas id="categoriesChart" height="150"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activité récente -->
+        <div class="row">
+            <div class="col-12">
+                <div class="recent-activity">
+                    <div class="card-header bg-transparent border-0 pt-3">
+                        <h3 class="chart-title mb-0">
+                            <i class="fas fa-clock text-primary"></i>
+                            Activité récente
+                        </h3>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if recent_activities is defined and recent_activities|length > 0 %}
+                            {% for activity in recent_activities %}
+                                <div class="activity-item d-flex align-items-center">
+                                    <div class="activity-icon {{ activity.type }}">
+                                        <i class="fas {{ activity.icon }}"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold">{{ activity.title }}</div>
+                                        <small class="text-muted">{{ activity.description }}</small>
+                                    </div>
+                                    <small class="text-muted">{{ activity.date|date('d/m H:i') }}</small>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="activity-item text-center text-muted py-4">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Aucune activité récente disponible
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour les détails -->
+    <div class="modal fade" id="detailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Détails</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalContent">
+                    <!-- Contenu dynamique -->
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configuration par défaut pour tous les graphiques
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = '#6c757d';
+
+            // Récupération des données depuis le contrôleur
+            const signalementsData = {{ stats.signalements_par_mois|json_encode|raw }};
+            const statutsData = {{ stats.signalements_par_statut|json_encode|raw }};
+            const villesData = {{ stats.signalements_par_ville|json_encode|raw }};
+            const categoriesData = {{ stats.signalements_par_categorie|json_encode|raw }};
+
+            // Graphique évolution des signalements
+            const signalementsCtx = document.getElementById('signalementsChart').getContext('2d');
+            new Chart(signalementsCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'],
+                    datasets: [{
+                        label: 'Signalements',
+                        data: signalementsData.length > 0 ? signalementsData : [0,0,0,0,0,0,0,0,0,0,0,0],
+                        borderColor: 'rgb(102, 126, 234)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Graphique statuts des signalements
+            const statutsCtx = document.getElementById('statutsChart').getContext('2d');
+            new Chart(statutsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Nouveau', 'En cours', 'Résolu', 'Annulé'],
+                    datasets: [{
+                        data: statutsData.length > 0 ? statutsData : [0, 0, 0, 0],
+                        backgroundColor: [
+                            '#17a2b8',
+                            '#ffc107',
+                            '#28a745',
+                            '#6c757d'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Graphique signalements par ville
+            const villesCtx = document.getElementById('villesChart').getContext('2d');
+            new Chart(villesCtx, {
+                type: 'bar',
+                data: {
+                    labels: villesData.length > 0 ? villesData.map(v => v.name) : ['Aucune donnée'],
+                    datasets: [{
+                        label: 'Signalements',
+                        data: villesData.length > 0 ? villesData.map(v => v.count) : [0],
+                        backgroundColor: 'rgba(250, 112, 154, 0.8)',
+                        borderColor: 'rgb(250, 112, 154)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Graphique signalements par catégorie
+            const categoriesCtx = document.getElementById('categoriesChart').getContext('2d');
+            new Chart(categoriesCtx, {
+                type: 'bar',
+                data: {
+                    labels: categoriesData.length > 0 ? categoriesData.map(c => c.name) : ['Aucune donnée'],
+                    datasets: [{
+                        label: 'Signalements',
+                        data: categoriesData.length > 0 ? categoriesData.map(c => c.count) : [0],
+                        backgroundColor: 'rgba(67, 233, 123, 0.8)',
+                        borderColor: 'rgb(67, 233, 123)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Animation des cartes au scroll
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+
+            // Observer toutes les cartes
+            document.querySelectorAll('.stats-card, .chart-container, .metric-card').forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = 'all 0.6s ease';
+                observer.observe(el);
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,394 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Journal des validations - CityFlow{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        /* Variables CSS pour cohérence avec la navbar bleue */
+        :root {
+            --primary-color: #007bff;
+            --primary-dark: #0056b3;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --light-gray: #f8f9fa;
+            --border-color: #e9ecef;
+            --text-muted: #6c757d;
+            --shadow: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-hover: 0 2px 6px rgba(0,0,0,0.08);
+            --border-radius: 8px;
+            --transition: all 0.2s ease;
+        }
+
+        .journal-dashboard {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            font-weight: 300;
+            line-height: 1.5;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+
+        /* En-tête avec accent bleu pour cohérence avec navbar */
+        .journal-header {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .journal-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--info-color));
+        }
+
+        .journal-title {
+            font-size: 2.25rem;
+            font-weight: 300;
+            color: #2c3e50;
+            margin: 0;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .journal-title i {
+            color: var(--primary-color) !important;
+        }
+
+        .journal-table {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .journal-table .table th {
+            background: var(--light-gray);
+            border: none;
+            padding: 1rem;
+            font-weight: 500;
+            color: #495057;
+            font-size: 0.875rem;
+        }
+
+        .journal-table .table td {
+            border: none;
+            padding: 1rem;
+            vertical-align: middle;
+            font-size: 0.875rem;
+        }
+
+        .journal-table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        .journal-table tbody tr:hover {
+            background-color: rgba(248, 249, 250, 0.8);
+        }
+
+        .badge-clean {
+            background: #e9ecef;
+            color: #495057;
+            padding: 0.4rem 0.75rem;
+            border-radius: 15px;
+            font-weight: 500;
+            font-size: 0.75rem;
+        }
+
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-danger { background: #f8d7da; color: #721c24; }
+
+        /* Boutons "voir" avec style cohérent avec la navbar bleue */
+        .btn-view {
+            background: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            color: white;
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+
+        .btn-view:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.25);
+        }
+
+        .btn-view i {
+            font-size: 0.875rem;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .pagination .page-link {
+            border: 1px solid var(--border-color);
+            color: #495057;
+            padding: 0.5rem 0.75rem;
+            margin: 0 0.25rem;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .pagination .page-link:hover {
+            background: var(--light-gray);
+            border-color: #adb5bd;
+            color: var(--primary-color);
+        }
+
+        .pagination .page-link.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .stats-summary {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stats-item {
+            text-align: center;
+        }
+
+        .stats-number {
+            font-size: 1.75rem;
+            font-weight: 300;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .stats-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin: 0.25rem 0 0 0;
+        }
+
+        /* Icônes utilisateur avec style bleu */
+        .user-info i {
+            color: var(--primary-color);
+        }
+
+        /* Bouton retour avec style cohérent */
+        .btn-back {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            transition: var(--transition);
+        }
+
+        .btn-back:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+            color: white;
+            transform: translateY(-1px);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="journal-dashboard">
+        <div class="container">
+            <!-- En-tête -->
+            <div class="journal-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="journal-title">
+                            <i class="fas fa-history me-3"></i>
+                            Journal des validations
+                        </h1>
+                        <p class="admin-subtitle">Historique de vos actions de modération</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="text-muted mb-2 fw-medium user-info">
+                            <i class="fas fa-user-shield me-2"></i>
+                            {{ app.user.prenom }} {{ app.user.nom }}
+                        </div>
+                        <div class="admin-date user-info">
+                            <i class="fas fa-calendar me-2"></i>
+                            {{ "now"|date("d/m/Y à H:i") }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistiques résumées -->
+            {% if stats is defined %}
+                <div class="stats-summary">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="stats-item">
+                                <div class="stats-number text-success">{{ stats.signalementsValides|default(0) }}</div>
+                                <div class="stats-label">Signalements validés</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-item">
+                                <div class="stats-number text-danger">{{ stats.signalementsRejetes|default(0) }}</div>
+                                <div class="stats-label">Signalements rejetés</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-item">
+                                <div class="stats-number text-primary">{{ totalItems|default(0) }}</div>
+                                <div class="stats-label">Total actions</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-item">
+                                <div class="stats-number text-warning">{{ stats.signalementsEnAttente|default(0) }}</div>
+                                <div class="stats-label">En attente</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Journal des validations -->
+            <div class="journal-table">
+                <div class="table-responsive">
+                    {% if journal|length > 0 %}
+                        <table class="table mb-0">
+                            <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Signalement</th>
+                                <th>Action</th>
+                                <th>Commentaire</th>
+                                <th>Utilisateur</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for entry in journal %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-medium">{{ entry.dateValidation|date('d/m/Y') }}</div>
+                                        <small class="text-muted">{{ entry.dateValidation|date('H:i') }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="text-truncate fw-medium" style="max-width: 250px;" title="{{ entry.signalement.titre }}">
+                                            {{ entry.signalement.titre }}
+                                        </div>
+                                        <small class="text-muted">
+                                            {% if entry.signalement.categorie %}
+                                                {{ entry.signalement.categorie.nom }}
+                                            {% else %}
+                                                <span class="fst-italic">Catégorie non définie</span>
+                                            {% endif %}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if entry.action == 'validé' %}
+                                            <span class="badge-clean badge-success">
+                                                    <i class="fas fa-check me-1"></i>Validé
+                                                </span>
+                                        {% elseif entry.action == 'rejeté' %}
+                                            <span class="badge-clean badge-danger">
+                                                    <i class="fas fa-times me-1"></i>Rejeté
+                                                </span>
+                                        {% else %}
+                                            <span class="badge-clean">
+                                                    <i class="fas fa-cog me-1"></i>{{ entry.action|default('Action') }}
+                                                </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if entry.commentaire %}
+                                            <div class="text-truncate" style="max-width: 200px;" title="{{ entry.commentaire }}">
+                                                {{ entry.commentaire }}
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted fst-italic">Aucun commentaire</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if entry.signalement.utilisateur %}
+                                            <span class="fw-medium">
+                                                    {{ entry.signalement.utilisateur.prenom }} {{ entry.signalement.utilisateur.nom }}
+                                                </span>
+                                        {% else %}
+                                            <span class="text-muted fst-italic">Anonyme</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ path('app_signalement_show', {'id': entry.signalement.id}) }}"
+                                           class="btn-view"
+                                           title="Voir le signalement">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-history text-muted mb-3" style="font-size: 3rem; opacity: 0.5;"></i>
+                            <h5 class="text-muted fw-normal">Aucune validation effectuée</h5>
+                            <p class="text-muted">Vos futures actions de modération apparaîtront ici.</p>
+                            <a href="{{ path('app_moderateur_dashboard') }}" class="btn btn-primary btn-back">
+                                <i class="fas fa-arrow-left me-2"></i>Retour au tableau de bord
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            {% if totalPages > 1 %}
+                <div class="pagination">
+                    {% if currentPage > 1 %}
+                        <a href="{{ path('app_moderateur_journal', {'page': currentPage - 1}) }}" class="page-link">
+                            <i class="fas fa-chevron-left"></i> Précédent
+                        </a>
+                    {% endif %}
+
+                    {% for page in 1..totalPages %}
+                        {% if page == currentPage %}
+                            <span class="page-link active">{{ page }}</span>
+                        {% else %}
+                            <a href="{{ path('app_moderateur_journal', {'page': page}) }}" class="page-link">{{ page }}</a>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if currentPage < totalPages %}
+                        <a href="{{ path('app_moderateur_journal', {'page': currentPage + 1}) }}" class="page-link">
+                            Suivant <i class="fas fa-chevron-right"></i>
+                        </a>
+                    {% endif %}
+                </div>
+
+                <div class="text-center mt-3 text-muted">
+                    Page {{ currentPage }} sur {{ totalPages }} ({{ totalItems }} entrées au total)
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

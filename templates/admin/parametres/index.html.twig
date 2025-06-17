@@ -1,0 +1,504 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Paramètres Système - Administration{% endblock %}
+
+{% block admin_breadcrumb %}
+    <li class="breadcrumb-item active">Paramètres</li>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .parametres-container {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            font-weight: 300;
+            line-height: 1.5;
+        }
+
+        .param-card {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transition: all 0.3s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        .param-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .param-card .card-header {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            border-radius: 12px 12px 0 0;
+            padding: 1.25rem;
+        }
+
+        .param-section-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .param-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .param-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+
+        .param-description {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-bottom: 0.75rem;
+        }
+
+        .param-input {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 0.75rem;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+        }
+
+        .param-input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.1);
+        }
+
+        .system-info-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .info-value {
+            font-family: 'Courier New', monospace;
+            background: rgba(255,255,255,0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .actions-toolbar {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .action-btn {
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-mini {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-mini {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-mini-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #007bff;
+        }
+
+        .stat-mini-label {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #007bff;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+{% endblock %}
+
+{% block admin_content %}
+    <div class="parametres-container">
+        <!-- En-tête -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-1">Paramètres Système</h1>
+                <p class="text-muted mb-0">Configuration et maintenance de l'application</p>
+            </div>
+            <div>
+                <a href="{{ path('app_admin_parametres_logs') }}" class="btn btn-outline-info">
+                    <i class="fas fa-file-alt me-2"></i>Logs
+                </a>
+            </div>
+        </div>
+
+        <!-- Barre d'actions rapides -->
+        <div class="actions-toolbar">
+            <h6 class="mb-3">
+                <i class="fas fa-tools me-2"></i>Actions Système
+            </h6>
+            <form style="display: inline;" method="POST" action="{{ path('app_admin_parametres_backup') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('backup') }}">
+                <button type="submit" class="btn btn-success action-btn">
+                    <i class="fas fa-download me-1"></i>Créer Sauvegarde
+                </button>
+            </form>
+
+            <form style="display: inline;" method="POST" action="{{ path('app_admin_parametres_cache_clear') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('cache_clear') }}">
+                <button type="submit" class="btn btn-warning action-btn">
+                    <i class="fas fa-broom me-1"></i>Vider Cache
+                </button>
+            </form>
+
+            <button type="button" class="btn btn-info action-btn" onclick="location.reload()">
+                <i class="fas fa-sync me-1"></i>Actualiser
+            </button>
+        </div>
+
+        <!-- Statistiques mini -->
+        <div class="stats-mini">
+            <div class="stat-mini">
+                <div class="stat-mini-value">{{ stats.database_size }}</div>
+                <div class="stat-mini-label">Base de données</div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-mini-value">{{ stats.total_files }}</div>
+                <div class="stat-mini-label">Fichiers uploadés</div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-mini-value">{{ stats.cache_size }}</div>
+                <div class="stat-mini-label">Taille cache</div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-mini-value">{{ stats.log_size }}</div>
+                <div class="stat-mini-label">Taille logs</div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Formulaire des paramètres -->
+            <div class="col-lg-8">
+                <form method="POST" action="{{ path('app_admin_parametres') }}">
+                    <!-- Paramètres généraux -->
+                    <div class="param-card">
+                        <div class="card-header">
+                            <h5 class="param-section-title">
+                                <i class="fas fa-cog me-2 text-primary"></i>
+                                Paramètres Généraux
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="param-group">
+                                <label class="param-label">Nom du site</label>
+                                <div class="param-description">Nom affiché dans l'interface utilisateur</div>
+                                <input type="text" class="form-control param-input"
+                                       name="param_site_name" value="{{ parametres.site_name }}">
+                            </div>
+
+                            <div class="param-group">
+                                <label class="param-label">Description du site</label>
+                                <div class="param-description">Description courte pour les métadonnées</div>
+                                <textarea class="form-control param-input" rows="3"
+                                          name="param_site_description">{{ parametres.site_description }}</textarea>
+                            </div>
+
+                            <div class="param-group">
+                                <label class="param-label">Email de contact</label>
+                                <div class="param-description">Adresse email principale pour les notifications</div>
+                                <input type="email" class="form-control param-input"
+                                       name="param_contact_email" value="{{ parametres.contact_email }}">
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="param-group">
+                                        <label class="param-label">Fuseau horaire</label>
+                                        <select class="form-select param-input" name="param_timezone">
+                                            <option value="Africa/Porto-Novo" {{ parametres.timezone == 'Africa/Porto-Novo' ? 'selected' : '' }}>Afrique/Porto-Novo</option>
+                                            <option value="Europe/Paris" {{ parametres.timezone == 'Europe/Paris' ? 'selected' : '' }}>Europe/Paris</option>
+                                            <option value="UTC" {{ parametres.timezone == 'UTC' ? 'selected' : '' }}>UTC</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="param-group">
+                                        <label class="param-label">Langue</label>
+                                        <select class="form-select param-input" name="param_language">
+                                            <option value="fr" {{ parametres.language == 'fr' ? 'selected' : '' }}>Français</option>
+                                            <option value="en" {{ parametres.language == 'en' ? 'selected' : '' }}>English</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Paramètres de fonctionnement -->
+                    <div class="param-card">
+                        <div class="card-header">
+                            <h5 class="param-section-title">
+                                <i class="fas fa-sliders-h me-2 text-success"></i>
+                                Fonctionnement
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="param-group">
+                                <label class="param-label">Maximum signalements par utilisateur</label>
+                                <div class="param-description">Nombre maximum de signalements qu'un utilisateur peut créer par mois</div>
+                                <input type="number" class="form-control param-input"
+                                       name="param_max_signalements_per_user" value="{{ parametres.max_signalements_per_user }}" min="1" max="100">
+                            </div>
+
+                            <div class="param-group">
+                                <label class="param-label">Taille maximum des fichiers (MB)</label>
+                                <div class="param-description">Taille maximale autorisée pour les uploads</div>
+                                <input type="number" class="form-control param-input"
+                                       name="param_max_file_size" value="{{ parametres.max_file_size }}" min="1" max="50">
+                            </div>
+
+                            <div class="param-group">
+                                <label class="param-label">Éléments par page</label>
+                                <div class="param-description">Nombre d'éléments affichés dans les listes paginées</div>
+                                <select class="form-select param-input" name="param_items_per_page">
+                                    <option value="10" {{ parametres.items_per_page == 10 ? 'selected' : '' }}>10</option>
+                                    <option value="20" {{ parametres.items_per_page == 20 ? 'selected' : '' }}>20</option>
+                                    <option value="50" {{ parametres.items_per_page == 50 ? 'selected' : '' }}>50</option>
+                                    <option value="100" {{ parametres.items_per_page == 100 ? 'selected' : '' }}>100</option>
+                                </select>
+                            </div>
+
+                            <!-- Interrupteurs -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="param-group">
+                                        <label class="param-label">Validation automatique</label>
+                                        <div class="param-description">Valider automatiquement les nouveaux signalements</div>
+                                        <label class="switch">
+                                            <input type="checkbox" name="param_auto_validation"
+                                                    {{ parametres.auto_validation ? 'checked' : '' }}>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="param-group">
+                                        <label class="param-label">Inscriptions ouvertes</label>
+                                        <div class="param-description">Autoriser les nouvelles inscriptions</div>
+                                        <label class="switch">
+                                            <input type="checkbox" name="param_registration_enabled"
+                                                    {{ parametres.registration_enabled ? 'checked' : '' }}>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="param-group">
+                                        <label class="param-label">Mode maintenance</label>
+                                        <div class="param-description">Activer le mode maintenance</div>
+                                        <label class="switch">
+                                            <input type="checkbox" name="param_maintenance_mode"
+                                                    {{ parametres.maintenance_mode ? 'checked' : '' }}>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="param-group">
+                                        <label class="param-label">Notifications email</label>
+                                        <div class="param-description">Envoyer des notifications par email</div>
+                                        <label class="switch">
+                                            <input type="checkbox" name="param_notification_email"
+                                                    {{ parametres.notification_email ? 'checked' : '' }}>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- API et Intégrations -->
+                    <div class="param-card">
+                        <div class="card-header">
+                            <h5 class="param-section-title">
+                                <i class="fas fa-plug me-2 text-warning"></i>
+                                API et Intégrations
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="param-group">
+                                <label class="param-label">Clé API Google Maps</label>
+                                <div class="param-description">Clé pour l'utilisation des cartes Google (optionnel)</div>
+                                <input type="text" class="form-control param-input"
+                                       name="param_google_maps_api_key" value="{{ parametres.google_maps_api_key }}"
+                                       placeholder="Votre clé API Google Maps">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bouton de sauvegarde -->
+                    <div class="text-end mb-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save me-2"></i>Sauvegarder les paramètres
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Informations système -->
+            <div class="col-lg-4">
+                <div class="system-info-card">
+                    <h5 class="mb-3">
+                        <i class="fas fa-server me-2"></i>
+                        Informations Système
+                    </h5>
+
+                    <div class="info-item">
+                        <span class="info-label">PHP Version</span>
+                        <span class="info-value">{{ system_info.php_version }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Symfony Version</span>
+                        <span class="info-value">{{ system_info.symfony_version }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Serveur</span>
+                        <span class="info-value">{{ system_info.server_software|slice(0, 20) }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Limite mémoire</span>
+                        <span class="info-value">{{ system_info.memory_limit }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Temps d'exécution max</span>
+                        <span class="info-value">{{ system_info.max_execution_time }}s</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Upload max</span>
+                        <span class="info-value">{{ system_info.upload_max_filesize }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Utilisation disque</span>
+                        <span class="info-value">{{ system_info.disk_usage }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Uptime système</span>
+                        <span class="info-value">{{ system_info.uptime|slice(0, 15) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        // Confirmation pour les actions système
+        document.querySelectorAll('form[action*="backup"], form[action*="cache"]').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                if (!confirm('Êtes-vous sûr de vouloir effectuer cette action ?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // Auto-save indication
+        const form = document.querySelector('form[action*="parametres"]');
+        if (form) {
+            let timeout;
+            form.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    console.log('Paramètres modifiés - pensez à sauvegarder');
+                }, 2000);
+            });
+        }
+    </script>
+{% endblock %}

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Votre compte a été validé</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .header { background: #28a745; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { padding: 20px; }
+        .btn { display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; margin: 10px 0; font-weight: bold; }
+        .alert { background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 4px; margin: 15px 0; }
+        .footer { background: #f8f9fa; padding: 15px; text-align: center; color: #6c757d; border-radius: 0 0 8px 8px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>✅ Compte validé</h1>
+    </div>
+
+    <div class="content">
+        <p>Bonjour {{ utilisateur.prenom }} {{ utilisateur.nom }},</p>
+
+        <div class="alert">
+            <strong>Excellente nouvelle !</strong><br>
+            Votre compte CityReport a été validé par notre équipe de modération.
+        </div>
+
+        <p>Vous avez maintenant accès à toutes les fonctionnalités de la plateforme :</p>
+        <ul>
+            <li>Créer des signalements</li>
+            <li>Consulter tous les signalements publics</li>
+            <li>Commenter et interagir</li>
+            <li>Suivre l'évolution des signalements</li>
+        </ul>
+
+        <a href="#" class="btn">Accéder à mon compte</a>
+    </div>
+
+    <div class="footer">
+        <p>Bienvenue dans la communauté CityReport !<br>
+            L'équipe CityReport</p>
+    </div>
+</div>
+</body>
+</html>

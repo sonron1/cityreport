@@ -1,0 +1,18 @@
+framework:
+  cache:
+    app: cache.adapter.filesystem
+    system: cache.adapter.system
+
+    pools:
+      cache.signalements:
+        adapter: cache.adapter.redis
+        default_lifetime: 3600
+
+      cache.statistics:
+        adapter: cache.adapter.filesystem
+        default_lifetime: 86400
+
+      cache.frequent:
+        # ✅ Utilise APCu si disponible, sinon filesystem
+        adapter: '%env(default::cache.adapter.filesystem:CACHE_ADAPTER)%'
+        default_lifetime: 300

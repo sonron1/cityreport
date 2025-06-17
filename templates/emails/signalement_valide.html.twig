@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Signalement validé</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .header { background: #28a745; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { padding: 20px; }
+        .btn { display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; margin: 10px 0; }
+        .footer { background: #f8f9fa; padding: 15px; text-align: center; color: #6c757d; border-radius: 0 0 8px 8px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>✅ Signalement validé</h1>
+    </div>
+
+    <div class="content">
+        <p>Bonjour {{ utilisateur.prenom }} {{ utilisateur.nom }},</p>
+
+        <p>Bonne nouvelle ! Votre signalement <strong>"{{ signalement.titre }}"</strong> a été validé par notre équipe de modération.</p>
+
+        <p><strong>Détails du signalement :</strong></p>
+        <ul>
+            <li><strong>Titre :</strong> {{ signalement.titre }}</li>
+            <li><strong>Ville :</strong> {{ signalement.ville.nom }}</li>
+            <li><strong>Catégorie :</strong> {{ signalement.categorie.nom }}</li>
+            <li><strong>Date :</strong> {{ signalement.dateSignalement|date('d/m/Y à H:i') }}</li>
+        </ul>
+
+        <p>Votre signalement est maintenant visible publiquement et sera traité par les services compétents.</p>
+
+        <a href="{{ signalementUrl }}" class="btn">Voir mon signalement</a>
+    </div>
+
+    <div class="footer">
+        <p>Merci de contribuer à l'amélioration de notre ville !<br>
+            L'équipe CityReport</p>
+    </div>
+</div>
+</body>
+</html>

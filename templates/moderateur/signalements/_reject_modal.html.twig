@@ -1,0 +1,155 @@
+{# templates/moderateur/signalements/_reject_modal.html.twig #}
+<div class="modal" id="rejectModal{{ signalement.id }}" tabindex="-1" aria-labelledby="rejectModalLabel{{ signalement.id }}" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="rejectModalLabel{{ signalement.id }}">
+                    <i class="fas fa-times me-2"></i>Rejeter le signalement
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ path('app_moderateur_rejeter', {'id': signalement.id}) }}" method="post" class="reject-form">
+                <div class="modal-body">
+                    <div class="alert alert-danger d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle me-3"></i>
+                        <div>
+                            <strong>Confirmer le rejet de ce signalement ?</strong>
+                            <div class="small mt-1">Cette action est définitive et l'utilisateur sera notifié.</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="mb-2"><i class="fas fa-file-alt me-2"></i>Signalement #{{ signalement.id }}</h6>
+                        <div class="p-3 bg-light rounded">
+                            <p class="mb-1 fw-semibold">{{ signalement.titre }}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-map-marker-alt me-1"></i>
+                                {% if signalement.ville %}{{ signalement.ville.nom }}{% else %}Localisation non définie{% endif %}
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="commentaire_reject_{{ signalement.id }}" class="form-label fw-semibold">
+                            <i class="fas fa-comment-slash me-2"></i>Motif du rejet
+                            <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control stable-textarea"
+                                  id="commentaire_reject_{{ signalement.id }}"
+                                  name="commentaire"
+                                  rows="4"
+                                  required
+                                  placeholder="Expliquez clairement pourquoi ce signalement est rejeté..."></textarea>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Ce motif sera communiqué à l'utilisateur par email.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary stable-btn" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Annuler
+                    </button>
+                    <button type="submit" class="btn btn-danger stable-btn">
+                        <i class="fas fa-ban me-2"></i>Rejeter définitivement
+                    </button>
+                </div>
+                <input type="hidden" name="_token" value="{{ csrf_token('reject' ~ signalement.id) }}">
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const rejectModal{{ signalement.id }} = document.getElementById('rejectModal{{ signalement.id }}');
+
+        if (rejectModal{{ signalement.id }}) {
+            // Désactiver toutes les animations Bootstrap
+            rejectModal{{ signalement.id }}.classList.remove('fade');
+
+            // Stabiliser tous les éléments du modal
+            const allElements = rejectModal{{ signalement.id }}.querySelectorAll('*');
+            allElements.forEach(element => {
+                element.style.transition = 'none';
+                element.style.animation = 'none';
+                element.style.transform = 'none';
+                element.style.willChange = 'auto';
+            });
+
+            // Fixer le modal en place
+            const modalDialog = rejectModal{{ signalement.id }}.querySelector('.modal-dialog');
+            if (modalDialog) {
+                modalDialog.style.transform = 'none';
+                modalDialog.style.transition = 'none';
+                modalDialog.style.animation = 'none';
+            }
+
+            // Stabiliser le textarea
+            const textarea = rejectModal{{ signalement.id }}.querySelector('textarea');
+            if (textarea) {
+                textarea.style.transition = 'none';
+                textarea.style.transform = 'none';
+                textarea.style.resize = 'vertical';
+
+                // Empêcher les tremblements au focus/blur
+                textarea.addEventListener('focus', function() {
+                    this.style.transition = 'none';
+                    this.style.transform = 'none';
+                });
+
+                textarea.addEventListener('blur', function() {
+                    this.style.transition = 'none';
+                    this.style.transform = 'none';
+                });
+
+                textarea.addEventListener('input', function() {
+                    this.style.transition = 'none';
+                    this.style.transform = 'none';
+                });
+            }
+
+            // Stabiliser les boutons
+            const buttons = rejectModal{{ signalement.id }}.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.style.transition = 'none';
+                button.style.transform = 'none';
+
+                button.addEventListener('mouseenter', function() {
+                    this.style.transition = 'none';
+                    this.style.transform = 'none';
+                });
+
+                button.addEventListener('mouseleave', function() {
+                    this.style.transition = 'none';
+                    this.style.transform = 'none';
+                });
+            });
+
+            // Empêcher les tremblements lors de l'ouverture/fermeture
+            rejectModal{{ signalement.id }}.addEventListener('show.bs.modal', function() {
+                this.style.transition = 'none';
+                this.style.animation = 'none';
+            });
+
+            rejectModal{{ signalement.id }}.addEventListener('shown.bs.modal', function() {
+                this.style.transition = 'none';
+                this.style.animation = 'none';
+
+                // Focus sur le textarea sans animation
+                const textarea = this.querySelector('textarea');
+                if (textarea) {
+                    setTimeout(() => {
+                        textarea.focus();
+                        textarea.style.transition = 'none';
+                    }, 50);
+                }
+            });
+
+            rejectModal{{ signalement.id }}.addEventListener('hide.bs.modal', function() {
+                this.style.transition = 'none';
+                this.style.animation = 'none';
+            });
+        }
+    });
+</script>

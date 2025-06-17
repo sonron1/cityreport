@@ -1,0 +1,661 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Signalements - CityFlow Bénin{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .status-badge {
+            border-radius: 30px;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-nouveau { background-color: #3498db; color: white; }
+        .status-en_cours { background-color: #f39c12; color: white; }
+        .status-resolu { background-color: #2ecc71; color: white; }
+        .status-rejete { background-color: #e74c3c; color: white; }
+
+        .category-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 10px;
+        }
+
+        .signalement-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .signalement-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+        }
+
+        .card-img-container {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .card-img-overlay-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            padding: 20px 15px 10px;
+            color: white;
+        }
+
+        .card-img-overlay-top {
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding: 10px;
+        }
+
+        .filter-container {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background-color: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #d1d1d1;
+            margin-bottom: 20px;
+        }
+
+        .nav-pills .nav-link {
+            border-radius: 30px;
+            padding: 8px 20px;
+            font-weight: 600;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .pagination .page-item .page-link {
+            border-radius: 50%;
+            margin: 0 3px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .author-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            z-index: 1;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container py-4">
+        <!-- Fil d'Ariane -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Signalements</li>
+            </ol>
+        </nav>
+
+        <!-- En-tête avec titre et bouton d'action -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-1">Signalements</h1>
+                <p class="text-muted mb-0">Découvrez et suivez les signalements dans votre région</p>
+            </div>
+            <a href="{{ path('app_signalement_nouveau') }}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i> Nouveau signalement
+            </a>
+        </div>
+
+        <!-- Messages de notification -->
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-dismissible fade show">
+                <i class="fas fa-check-circle me-2"></i> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+
+        <!-- Navigation entre Mes signalements et Tous les signalements -->
+        <ul class="nav nav-pills mb-4" id="signalementsTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active"
+                   id="my-tab"
+                   data-bs-toggle="tab"
+                   href="#my-signalements"
+                   role="tab"
+                   aria-controls="my-signalements"
+                   aria-selected="true">
+                    <i class="fas fa-user-circle me-2"></i>Mes signalements
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link"
+                   id="all-tab"
+                   data-bs-toggle="tab"
+                   href="#all-signalements"
+                   role="tab"
+                   aria-controls="all-signalements"
+                   aria-selected="false">
+                    <i class="fas fa-globe-africa me-2"></i>Tous les signalements
+                </a>
+            </li>
+        </ul>
+
+        <!-- Filtres de recherche -->
+        <div class="filter-container shadow-sm mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="fas fa-filter me-2"></i> Filtres</h5>
+                <button class="btn btn-sm btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+            <div class="collapse" id="filterCollapse">
+                <form action="" method="get" class="row g-3">
+                    <input type="hidden" name="tab" value="{{ app.request.query.get('tab', 'my') }}">
+
+                    <div class="col-md-3">
+                        <label class="form-label">Statut</label>
+                        <select class="form-select" name="statut">
+                            <option value="">Tous les statuts</option>
+                            <option value="nouveau" {% if app.request.query.get('statut') == 'nouveau' %}selected{% endif %}>Nouveau</option>
+                            <option value="en_cours" {% if app.request.query.get('statut') == 'en_cours' %}selected{% endif %}>En cours</option>
+                            <option value="resolu" {% if app.request.query.get('statut') == 'resolu' %}selected{% endif %}>Résolu</option>
+                            <option value="rejete" {% if app.request.query.get('statut') == 'rejete' %}selected{% endif %}>Rejeté</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Catégorie</label>
+                        <select class="form-select" name="categorie">
+                            <option value="">Toutes les catégories</option>
+                            {% for categorie in categories %}
+                                <option value="{{ categorie.id }}" {% if app.request.query.get('categorie') == categorie.id|number_format(0, '', '') %}selected{% endif %}>
+                                    {{ categorie.nom }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Ville</label>
+                        <select class="form-select" name="ville">
+                            <option value="">Toutes les villes</option>
+                            {% for ville in villes %}
+                                <option value="{{ ville.id }}" {% if app.request.query.get('ville') == ville.id|number_format(0, '', '') %}selected{% endif %}>
+                                    {{ ville.nom }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Date</label>
+                        <select class="form-select" name="date">
+                            <option value="">Toutes les dates</option>
+                            <option value="today" {% if app.request.query.get('date') == 'today' %}selected{% endif %}>Aujourd'hui</option>
+                            <option value="week" {% if app.request.query.get('date') == 'week' %}selected{% endif %}>Cette semaine</option>
+                            <option value="month" {% if app.request.query.get('date') == 'month' %}selected{% endif %}>Ce mois-ci</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 text-end">
+                        <button type="reset" class="btn btn-outline-secondary me-2" onclick="window.location='{{ path('app_signalements', {'tab': app.request.query.get('tab', 'my')}) }}'">
+                            <i class="fas fa-undo me-1"></i> Réinitialiser
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i> Filtrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Contenu des onglets -->
+        <div class="tab-content" id="signalementsTabsContent">
+            <!-- Mes signalements -->
+            <div class="tab-pane fade show active" id="my-signalements" role="tabpanel" aria-labelledby="my-tab">
+                <!-- Statistiques pour mes signalements -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 p-3 rounded-circle mb-3">
+                                    <i class="fas fa-list text-primary fa-2x"></i>
+                                </div>
+                                <h3 class="h2 mb-0">{{ user_signalements_paginator.totalItems }}</h3>
+                                <p class="text-muted mb-0">Total</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-10 p-3 rounded-circle mb-3">
+                                    <i class="fas fa-clock text-warning fa-2x"></i>
+                                </div>
+                                <h3 class="h2 mb-0">{{ user_signalements_en_cours }}</h3>
+                                <p class="text-muted mb-0">En cours</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 p-3 rounded-circle mb-3">
+                                    <i class="fas fa-check-circle text-success fa-2x"></i>
+                                </div>
+                                <h3 class="h2 mb-0">{{ user_signalements_resolus }}</h3>
+                                <p class="text-muted mb-0">Résolus</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 p-3 rounded-circle mb-3">
+                                    <i class="fas fa-exclamation-circle text-danger fa-2x"></i>
+                                </div>
+                                <h3 class="h2 mb-0">{{ user_signalements_rejetes }}</h3>
+                                <p class="text-muted mb-0">Rejetés</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if user_signalements_paginator.totalItems > 0 %}
+                    <div class="row">
+                        {% for signalement in user_signalements_paginator.items %}
+                            <div class="col-md-4 mb-4">
+                                <div class="card signalement-card h-100 shadow-sm">
+                                    <div class="card-img-container">
+                                        {% if signalement.photoUrl %}
+                                            <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}" class="card-img-top" alt="{{ signalement.titre }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                        {% else %}
+                                            <div class="w-100 h-100 bg-light d-flex align-items-center justify-content-center">
+                                                <i class="fas fa-image fa-3x text-muted"></i>
+                                            </div>
+                                        {% endif %}
+
+                                        <!-- Overlay pour le statut -->
+                                        <div class="card-img-overlay-top">
+                                        <span class="status-badge status-{{ signalement.statut.value }}">
+                                            <i class="fas {% if signalement.statut.value == 'nouveau' %}fa-clock
+                                                        {% elseif signalement.statut.value == 'en_cours' %}fa-tools
+                                                        {% elseif signalement.statut.value == 'resolu' %}fa-check-circle
+                                                        {% elseif signalement.statut.value == 'rejete' %}fa-times-circle
+                                                        {% endif %} me-1"></i>
+                                            {{ signalement.statut.value|replace({'_': ' '})|capitalize }}
+                                        </span>
+                                        </div>
+
+                                        <!-- Overlay pour les informations de base -->
+                                        <div class="card-img-overlay-bottom">
+                                            <h5 class="text-white mb-0">{{ signalement.titre }}</h5>
+                                            <small class="text-white-50">
+                                                <i class="fas fa-calendar-alt me-1"></i> {{ signalement.dateSignalement|date('d/m/Y') }}
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="category-icon" style="background-color: {{ signalement.categorie.couleur ?? '#6c757d' }}">
+                                                <i class="{{ signalement.categorie.icone ?? 'fas fa-exclamation-circle' }}"></i>
+                                            </div>
+                                            <div>
+                                                <p class="mb-0 fw-bold">{{ signalement.categorie.nom }}</p>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-map-marker-alt me-1"></i> {{ signalement.ville.nom }}
+                                                    {% if signalement.arrondissement %}
+                                                        , {{ signalement.arrondissement.nom }}
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </div>
+
+                                        <p class="card-text">{{ signalement.description|u.truncate(80, '...') }}</p>
+
+                                        <!-- État de validation avec enum -->
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <span class="badge {{ signalement.etatValidation.badgeClass }}">
+                                                <i class="fas fa-{{ signalement.etatValidation.icon }} me-1"></i>
+                                                {{ signalement.etatValidation.label }}
+                                            </span>
+
+                                            <!-- Nombre de commentaires -->
+                                            <span class="badge bg-light text-dark">
+                                            <i class="fas fa-comments me-1"></i> {{ signalement.commentaires|length }}
+                                        </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="card-footer bg-white border-0">
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-primary flex-fill">
+                                                <i class="fas fa-eye me-2"></i> Consulter le détail
+                                            </a>
+
+                                            {% if is_granted('ROLE_MODERATOR') and not signalement.reparation %}
+                                                <a href="{{ path('app_reparation_new', {'signalement_id': signalement.id}) }}"
+                                                   class="btn btn-success"
+                                                   title="Planifier une réparation">
+                                                    <i class="fas fa-tools"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Pagination pour mes signalements -->
+                    {% if user_signalements_paginator.totalPages > 1 %}
+                        <nav aria-label="Pagination des signalements">
+                            <ul class="pagination justify-content-center">
+                                {% if user_signalements_paginator.hasPreviousPage %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ path('app_signalements', {'page': user_signalements_paginator.previousPage, 'tab': 'my'}) }}" aria-label="Précédent">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                                    </li>
+                                {% endif %}
+
+                                {% for page in user_signalements_paginator.pageRange %}
+                                    <li class="page-item {% if page == user_signalements_paginator.currentPage %}active{% endif %}">
+                                        <a class="page-link" href="{{ path('app_signalements', {'page': page, 'tab': 'my'}) }}">{{ page }}</a>
+                                    </li>
+                                {% endfor %}
+
+
+                                {% if user_signalements_paginator.hasNextPage %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ path('app_signalements', {'page': user_signalements_paginator.nextPage, 'tab': 'my'}) }}" aria-label="Suivant">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                {% else %}
+                    <div class="empty-state shadow-sm">
+                        <i class="fas fa-clipboard-list"></i>
+                        <h3>Vous n'avez pas encore de signalements</h3>
+                        <p class="text-muted mb-4">Créez votre premier signalement pour contribuer à l'amélioration de votre commune.</p>
+                        <a href="{{ path('app_signalement_nouveau') }}" class="btn btn-primary">
+                            <i class="fas fa-plus-circle me-2"></i> Créer mon premier signalement
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Tous les signalements -->
+            <div class="tab-pane fade" id="all-signalements" role="tabpanel" aria-labelledby="all-tab">
+                <!-- Résumé pour tous les signalements -->
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle me-2"></i> Consultez les {{ all_signalements_paginator.totalItems }} signalements créés par la communauté dans toutes les communes du Bénin.
+                </div>
+
+                {% if all_signalements_paginator.totalItems > 0 %}
+                    <div class="row">
+                        {% for signalement in all_signalements_paginator.items %}
+                            <div class="col-md-4 mb-4">
+                                <div class="card signalement-card h-100 shadow-sm">
+                                    <div class="card-img-container">
+                                        {% if signalement.photoUrl %}
+                                            <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}" class="card-img-top" alt="{{ signalement.titre }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                        {% else %}
+                                            <div class="w-100 h-100 bg-light d-flex align-items-center justify-content-center">
+                                                <i class="fas fa-image fa-3x text-muted"></i>
+                                            </div>
+                                        {% endif %}
+
+                                        <!-- Badge auteur -->
+                                        <div class="author-badge">
+                                            <i class="fas fa-user me-1"></i> {{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom|first }}.
+                                        </div>
+
+                                        <!-- Overlay pour le statut -->
+                                        <div class="card-img-overlay-top">
+                                        <span class="status-badge status-{{ signalement.statut.value }}">
+                                            <i class="fas {% if signalement.statut.value == 'nouveau' %}fa-clock
+                                                        {% elseif signalement.statut.value == 'en_cours' %}fa-tools
+                                                        {% elseif signalement.statut.value == 'resolu' %}fa-check-circle
+                                                        {% elseif signalement.statut.value == 'rejete' %}fa-times-circle
+                                                        {% endif %} me-1"></i>
+                                            {{ signalement.statut.value|replace({'_': ' '})|capitalize }}
+                                        </span>
+                                        </div>
+
+                                        <!-- Overlay pour les informations de base -->
+                                        <div class="card-img-overlay-bottom">
+                                            <h5 class="text-white mb-0">{{ signalement.titre }}</h5>
+                                            <small class="text-white-50">
+                                                <i class="fas fa-calendar-alt me-1"></i> {{ signalement.dateSignalement|date('d/m/Y') }}
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="category-icon" style="background-color: {{ signalement.categorie.couleur ?? '#6c757d' }}">
+                                                <i class="{{ signalement.categorie.icone ?? 'fas fa-exclamation-circle' }}"></i>
+                                            </div>
+                                            <div>
+                                                <p class="mb-0 fw-bold">{{ signalement.categorie.nom }}</p>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-map-marker-alt me-1"></i> {{ signalement.ville.nom }}
+                                                    {% if signalement.arrondissement %}
+                                                        , {{ signalement.arrondissement.nom }}
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </div>
+
+                                        <p class="card-text">{{ signalement.description|u.truncate(80, '...') }}</p>
+
+                                        <!-- État de validation et commentaires avec enum -->
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <span class="badge {{ signalement.etatValidation.badgeClass }}">
+                                                <i class="fas fa-{{ signalement.etatValidation.icon }} me-1"></i>
+                                                {{ signalement.etatValidation.label }}
+                                            </span>
+
+                                            <span class="badge bg-light text-dark">
+                                            <i class="fas fa-comments me-1"></i> {{ signalement.commentaires|length }}
+                                        </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="card-footer bg-white border-0">
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-primary flex-fill">
+                                                <i class="fas fa-eye me-2"></i> Consulter le détail
+                                            </a>
+
+                                            {% if is_granted('ROLE_MODERATOR') and not signalement.reparation %}
+                                                <a href="{{ path('app_reparation_new', {'signalement_id': signalement.id}) }}"
+                                                   class="btn btn-success"
+                                                   title="Planifier une réparation">
+                                                    <i class="fas fa-tools"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Pagination pour tous les signalements -->
+                    {% if all_signalements_paginator.totalPages > 1 %}
+                        <nav aria-label="Pagination des signalements">
+                            <ul class="pagination justify-content-center">
+                                {% if all_signalements_paginator.hasPreviousPage %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ path('app_signalements', {'page': all_signalements_paginator.previousPage, 'tab': 'all'}) }}" aria-label="Précédent">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                                    </li>
+                                {% endif %}
+
+                                {% for page in all_signalements_paginator.pageRange %}
+                                    <li class="page-item {% if page == all_signalements_paginator.currentPage %}active{% endif %}">
+                                        <a class="page-link" href="{{ path('app_signalements', {'page': page, 'tab': 'all'}) }}">{{ page }}</a>
+                                    </li>
+                                {% endfor %}
+
+                                {% if all_signalements_paginator.hasNextPage %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ path('app_signalements', {'page': all_signalements_paginator.nextPage, 'tab': 'all'}) }}" aria-label="Suivant">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                {% else %}
+                    <div class="empty-state shadow-sm">
+                        <i class="fas fa-globe-africa"></i>
+                        <h3>Aucun signalement public disponible</h3>
+                        <p class="text-muted mb-4">Soyez le premier à créer un signalement dans votre commune !</p>
+                        <a href="{{ path('app_signalement_nouveau') }}" class="btn btn-primary">
+                            <i class="fas fa-plus-circle me-2"></i> Créer un signalement
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Conserver l'onglet actif après rafraîchissement de la page
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab');
+
+            if (tab === 'all') {
+                const allTab = document.getElementById('all-tab');
+                const allPane = document.getElementById('all-signalements');
+                const myTab = document.getElementById('my-tab');
+                const myPane = document.getElementById('my-signalements');
+
+                if (allTab && allPane && myTab && myPane) {
+                    allTab.classList.add('active');
+                    allPane.classList.add('show', 'active');
+                    myTab.classList.remove('active');
+                    myPane.classList.remove('show', 'active');
+                }
+            }
+
+            // Animation au défilement - CORRECTION DE LA CLASSE
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('show');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+
+            // ✅ CORRECTION ICI : signalement-card (sans 's')
+            document.querySelectorAll('.signalement-card').forEach(card => {
+                observer.observe(card);
+            });
+
+            // Gestion des onglets - ajouter le paramètre tab à l'URL lors du changement d'onglet
+            const signalementsTabsLinks = document.querySelectorAll('#signalementsTabs .nav-link');
+            signalementsTabsLinks.forEach(tabLink => {
+                tabLink.addEventListener('click', function() {
+                    const tabId = this.id;
+                    let tabParam = '';
+
+                    if (tabId === 'my-tab') {
+                        tabParam = 'my';
+                    } else if (tabId === 'all-tab') {
+                        tabParam = 'all';
+                    }
+
+                    // Mettre à jour l'URL sans recharger la page
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('tab', tabParam);
+                    window.history.pushState({}, '', url);
+                });
+            });
+        });
+    </script>
+    <style>
+        .signalement-card {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .signalement-card.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+{% endblock %}

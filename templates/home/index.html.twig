@@ -1,0 +1,867 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}CityFlow Bénin - Améliorons nos villes ensemble{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        /* ✅ HERO SECTION - Couleur bleue originale conservée */
+        .hero-section {
+            background: linear-gradient(135deg, #1e4b8c 0%, #2980b9 100%);
+            color: white;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ✅ RESTE EN COULEURS NEUTRES SOBRES */
+        .card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 1rem;
+            background: #6c757d;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .ville-grid-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            text-decoration: none !important;
+            color: #212529 !important;
+            transition: background-color 0.2s ease;
+        }
+
+        .ville-grid-item:hover {
+            background: #f8f9fa;
+            color: #212529 !important;
+        }
+
+        .local-video {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .animated-card {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .animated-card.fadeIn {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ✅ NOUVELLES AMÉLIORATIONS */
+
+        /* Animation des statistiques */
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        /* Témoignages */
+        .testimonial-card {
+            border: none;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            transition: transform 0.3s ease;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .testimonial-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #6c757d, #495057);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            margin: 0 auto;
+        }
+
+        /* Mini carte */
+        .mini-map {
+            height: 250px;
+            background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .mini-map:hover {
+            transform: scale(1.02);
+        }
+
+        .map-marker {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+
+        /* Activité récente */
+        .activity-item {
+            border-left: 3px solid #dee2e6;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 0 6px 6px 0;
+            transition: all 0.3s ease;
+        }
+
+        .activity-item:hover {
+            border-left-color: #28a745;
+            background: #e8f5e8;
+        }
+
+        .activity-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        /* Impact section */
+        .impact-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 3rem 0;
+        }
+
+        .impact-stat {
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .impact-number {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Bouton flottant */
+        .floating-cta {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Notification banner */
+        .notification-banner {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+            color: white;
+            border: none;
+            border-radius: 0;
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                border-radius: 0;
+                margin-bottom: 1rem !important;
+            }
+
+            .floating-cta {
+                bottom: 10px;
+                right: 10px;
+            }
+
+            .impact-number {
+                font-size: 2rem;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <!-- ✅ NOTIFICATION BANNER -->
+    <div class="alert notification-banner alert-dismissible fade show m-0" role="alert">
+        <div class="container d-flex align-items-center">
+            <i class="fas fa-bullhorn me-2"></i>
+            <span class="flex-grow-1"><strong>Nouveau !</strong> Bientôt , Vous pouvez maintenant suivre vos signalements par SMS.</span>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+
+    <!-- ✅ HERO SECTION - Couleur bleue originale conservée -->
+    <div class="hero-section py-5 mb-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="display-4 fw-bold mb-3">
+                        Signaler les problèmes urbains au Bénin
+                    </h1>
+                    <p class="lead mb-4">
+                        Participez activement à l'amélioration de votre ville en signalant
+                        les problèmes rencontrés dans votre commune.
+                    </p>
+                    <div class="d-flex flex-wrap gap-3 mb-4">
+                        <span class="badge bg-light text-dark px-3 py-2">
+                            <i class="fas fa-road me-1"></i> Nids de poule
+                        </span>
+                        <span class="badge bg-light text-dark px-3 py-2">
+                            <i class="fas fa-lightbulb me-1"></i> Éclairage défectueux
+                        </span>
+                        <span class="badge bg-light text-dark px-3 py-2">
+                            <i class="fas fa-trash me-1"></i> Ordures non collectées
+                        </span>
+                        <span class="badge bg-light text-dark px-3 py-2">
+                            <i class="fas fa-tint me-1"></i> Eaux stagnantes
+                        </span>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <div class="d-grid gap-2">
+                        {% if app.user and app.user.estValide %}
+                            <a class="btn btn-warning btn-lg" href="{{ path('app_signalement_nouveau') }}">
+                                <i class="fas fa-plus-circle me-2"></i> Signaler un problème
+                            </a>
+                            <a class="btn btn-outline-light btn-lg" href="{{ path('app_carte') }}">
+                                <i class="fas fa-map-marked-alt me-2"></i> Explorer la carte
+                            </a>
+                        {% else %}
+                            <a class="btn btn-warning btn-lg" href="{{ path('app_register') }}">
+                                <i class="fas fa-user-plus me-2"></i> S'inscrire pour signaler
+                            </a>
+                            <small class="text-light mt-2">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Inscription gratuite requise
+                            </small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- ✅ STATISTIQUES ANIMÉES -->
+        <div class="row mb-5">
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3 class="stat-number" data-target="{{ derniers_signalements|length }}">0</h3>
+                    <p class="text-muted small mb-0">Signalements récents</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-city"></i>
+                    </div>
+                    <h3 class="stat-number" data-target="{{ villes|length }}">0</h3>
+                    <p class="text-muted small mb-0">Communes actives</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3 class="stat-number text-success" data-target="{% set resolved = 0 %}{% for ville in villes %}{% for s in ville.signalements %}{% if s.statut.value == 'resolu' %}{% set resolved = resolved + 1 %}{% endif %}{% endfor %}{% endfor %}{{ resolved }}">0</h3>
+                    <p class="text-muted small mb-0">Problèmes résolus</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-info">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="stat-number text-info" data-target="12000">0</h3>
+                    <p class="text-muted small mb-0">Citoyens engagés</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Section principale -->
+            <div class="col-lg-8">
+                <!-- ✅ MINI-CARTE DÉMONSTRATION -->
+                <div class="card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h6 class="mb-0">🗺️ Signalements en temps réel</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="mini-map" onclick="window.location.href='{{ app.user and app.user.estValide ? path('app_carte') : path('app_register') }}'">
+                            <!-- Markers simulés -->
+                            <div class="map-marker bg-danger" style="top: 30%; left: 40%;">3</div>
+                            <div class="map-marker bg-warning" style="top: 60%; left: 70%;">2</div>
+                            <div class="map-marker bg-info" style="top: 45%; left: 25%;">5</div>
+                            <div class="position-absolute top-50 start-50 translate-middle text-center">
+                                <i class="fas fa-map-marked-alt fa-3x text-muted mb-2"></i>
+                                <p class="text-muted">Cliquez pour explorer la carte complète</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Derniers signalements -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="h3 fw-bold">
+                        <i class="fas fa-bell me-2 text-muted"></i>
+                        Derniers signalements
+                    </h2>
+                    {% if app.user and app.user.estValide %}
+                        <a href="{{ path('app_signalements') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-list me-1"></i> Tout voir
+                        </a>
+                    {% endif %}
+                </div>
+
+                {% if derniers_signalements|length > 0 %}
+                    <div class="row">
+                        {% for signalement in derniers_signalements %}
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100 animated-card"
+                                     style="animation-delay: {{ loop.index * 0.1 }}s; border-top: 4px solid {{ signalement.categorie.couleur ?? '#6c757d' }};">
+                                    <div class="position-relative">
+                                        <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}"
+                                             class="card-img-top"
+                                             alt="{{ signalement.titre }}"
+                                             style="height: 200px; object-fit: cover;">
+                                        <span class="badge position-absolute top-0 end-0 m-3"
+                                              style="background-color: {{ signalement.categorie.couleur ?? '#6c757d' }};">
+                                            <i class="{{ signalement.categorie.icone ?? 'fas fa-exclamation-circle' }} me-1"></i>
+                                            {{ signalement.categorie.nom ?? 'Non catégorisé' }}
+                                        </span>
+                                    </div>
+                                    <div class="card-body">
+                                        <h5 class="card-title fw-bold">{{ signalement.titre }}</h5>
+                                        <p class="card-text text-muted">
+                                            {{ signalement.description|u.truncate(100, '...') }}
+                                        </p>
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <small class="text-muted">
+                                                <i class="fas fa-map-marker-alt me-1"></i>
+                                                {{ signalement.ville.nom }}
+                                            </small>
+                                            <span class="badge bg-secondary px-2 py-1">
+                                                {{ signalement.statut.value|replace({'_': ' '})|title }}
+                                            </span>
+                                        </div>
+                                        <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}"
+                                           class="btn btn-dark w-100">
+                                            <i class="fas fa-eye me-1"></i> Voir les détails
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-light border">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-info-circle fa-2x me-3 text-muted"></i>
+                            <div>
+                                <h6 class="alert-heading">Aucun signalement pour le moment</h6>
+                                <p class="mb-0">Soyez le premier à contribuer à l'amélioration de votre ville !</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- ✅ ACTIVITÉ RÉCENTE -->
+                <div class="card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h6 class="mb-0">🔥 Activité récente</h6>
+                    </div>
+                    <div class="card-body p-2">
+                        <div class="activity-item">
+                            <div class="d-flex align-items-center">
+                                <div class="activity-avatar bg-success me-3">
+                                    ✓
+                                </div>
+                                <div class="flex-grow-1">
+                                    <small class="text-muted">Il y a 2h</small>
+                                    <p class="mb-0 small">Problème résolu à Parakou</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="d-flex align-items-center">
+                                <div class="activity-avatar bg-primary me-3">
+                                    <i class="fas fa-plus"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <small class="text-muted">Il y a 4h</small>
+                                    <p class="mb-0 small">Nouveau signalement à Cotonou</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="d-flex align-items-center">
+                                <div class="activity-avatar bg-warning me-3">
+                                    <i class="fas fa-wrench"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <small class="text-muted">Il y a 6h</small>
+                                    <p class="mb-0 small">Intervention en cours à Abomey</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Communes principales -->
+                <div class="card mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-city me-2"></i>
+                            Communes principales
+                        </h5>
+                    </div>
+                    <div class="card-body p-2">
+                        {% set topCommunesCount = 8 %}
+                        {% set topCommunes = villes|slice(0, topCommunesCount) %}
+                        {% for ville in topCommunes %}
+                            {% if app.user and app.user.estValide %}
+                                <a href="{{ path('app_ville_show', {'slug': ville.slug}) }}" class="ville-grid-item d-flex justify-content-between align-items-center">
+                                    <span>
+                                        <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                                        {{ ville.nom }}
+                                    </span>
+                                    <span class="badge bg-secondary rounded-pill">
+                                        {{ ville.signalements|length }}
+                                    </span>
+                                </a>
+                            {% else %}
+                                <div class="ville-grid-item d-flex justify-content-between align-items-center opacity-75">
+                                    <span>
+                                        <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                                        {{ ville.nom }}
+                                    </span>
+                                    <span class="badge bg-secondary rounded-pill">
+                                        {{ ville.signalements|length }}
+                                    </span>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="card-footer bg-light text-center">
+                        <button class="btn btn-outline-secondary btn-sm"
+                                type="button" data-bs-toggle="modal" data-bs-target="#allCommunesModal">
+                            <i class="fas fa-list me-1"></i> Voir toutes les communes
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ✅ FAQ ACCORDÉON -->
+                <div class="card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h6 class="mb-0">❓ Questions fréquentes</h6>
+                    </div>
+                    <div class="accordion accordion-flush" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    Comment signaler anonymement ?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    <small>Votre identité reste confidentielle. Seules vos initiales sont affichées publiquement.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    Combien de temps pour une résolution ?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    <small>En moyenne 7 jours, selon la complexité du problème et la commune concernée.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comment ça marche -->
+                <div class="card mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-question-circle me-2"></i>
+                            Comment ça marche ?
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            <div class="timeline-item mb-3">
+                                <div class="d-flex">
+                                    <span class="badge bg-dark rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">1</span>
+                                    <p class="mb-0">Inscrivez-vous en indiquant votre commune</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item mb-3">
+                                <div class="d-flex">
+                                    <span class="badge bg-dark rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">2</span>
+                                    <p class="mb-0">Prenez une photo du problème</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item mb-3">
+                                <div class="d-flex">
+                                    <span class="badge bg-dark rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">3</span>
+                                    <p class="mb-0">Localisez le problème sur la carte</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item mb-3">
+                                <div class="d-flex">
+                                    <span class="badge bg-success rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">4</span>
+                                    <p class="mb-0">Suivez l'avancement en temps réel</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white text-center">
+                        {% if app.user and app.user.estValide %}
+                            <a href="{{ path('app_signalement_nouveau') }}" class="btn btn-success">
+                                <i class="fas fa-plus-circle me-2"></i> Créer un signalement
+                            </a>
+                        {% else %}
+                            <a href="{{ path('app_register') }}" class="btn btn-success">
+                                <i class="fas fa-user-plus me-2"></i> Commencer maintenant
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Application mobile -->
+                <div class="card bg-light border-0">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-mobile-alt fa-3x text-muted"></i>
+                        </div>
+                        <h5 class="mb-3">Application mobile</h5>
+                        <p class="card-text">Signalez encore plus facilement depuis votre smartphone !</p>
+                        <div class="d-grid gap-2">
+                            <a href="#" class="btn btn-dark">
+                                <i class="fab fa-google-play me-1"></i> Google Play
+                            </a>
+                            <a href="#" class="btn btn-dark">
+                                <i class="fab fa-app-store-ios me-1"></i> App Store
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ SECTION TÉMOIGNAGES -->
+    <div class="container my-5">
+        <h3 class="text-center mb-4">Ce que disent nos citoyens</h3>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card testimonial-card h-100">
+                    <div class="card-body text-center">
+                        <div class="testimonial-avatar mb-3">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <p class="fst-italic">"Grâce à CityFlow, le nid de poule devant chez moi a été réparé en 2 semaines !"</p>
+                        <small class="text-muted">- Marie, Cotonou</small>
+                        <div class="mt-2">
+                            <span class="text-warning">⭐⭐⭐⭐⭐</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card testimonial-card h-100">
+                    <div class="card-body text-center">
+                        <div class="testimonial-avatar mb-3">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <p class="fst-italic">"Interface simple et efficace. J'ai pu signaler un problème d'éclairage en 2 minutes."</p>
+                        <small class="text-muted">- Jean, Porto-Novo</small>
+                        <div class="mt-2">
+                            <span class="text-warning">⭐⭐⭐⭐⭐</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card testimonial-card h-100">
+                    <div class="card-body text-center">
+                        <div class="testimonial-avatar mb-3">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <p class="fst-italic">"Excellent suivi ! Je reçois des notifications à chaque étape de résolution."</p>
+                        <small class="text-muted">- Fatou, Parakou</small>
+                        <div class="mt-2">
+                            <span class="text-warning">⭐⭐⭐⭐⭐</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ SECTION IMPACT -->
+    <div class="impact-section my-5">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-md-12 mb-4">
+                    <h3>Notre Impact</h3>
+                    <p class="lead">Ensemble, nous transformons nos villes</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="impact-stat">
+                        <div class="impact-number">85%</div>
+                        <p>Problèmes résolus</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="impact-stat">
+                        <div class="impact-number text-info">7j</div>
+                        <p>Temps moyen de résolution</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="impact-stat">
+                        <div class="impact-number text-warning">77</div>
+                        <p>Communes partenaires</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal toutes les communes -->
+    <div class="modal fade" id="allCommunesModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-city me-2"></i>
+                        Toutes les communes du Bénin
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        {% for ville in villes %}
+                            <div class="col-md-4 col-6">
+                                {% if app.user and app.user.estValide %}
+                                    <a href="{{ path('app_ville_show', {'slug': ville.slug}) }}" class="ville-grid-item d-flex justify-content-between align-items-center">
+                                        <span>
+                                            <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                                            {{ ville.nom }}
+                                        </span>
+                                        <span class="badge bg-secondary rounded-pill">{{ ville.signalements|length }}</span>
+                                    </a>
+                                {% else %}
+                                    <div class="ville-grid-item d-flex justify-content-between align-items-center opacity-75">
+                                        <span>
+                                            <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                                            {{ ville.nom }}
+                                        </span>
+                                        <span class="badge bg-secondary rounded-pill">{{ ville.signalements|length }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if not app.user or not app.user.estValide %}
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Connectez-vous</strong> pour explorer les signalements par commune.
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    {% if app.user and app.user.estValide %}
+                        <a href="{{ path('app_carte') }}" class="btn btn-dark">
+                            <i class="fas fa-map me-1"></i> Voir la carte
+                        </a>
+                    {% else %}
+                        <a href="{{ path('app_register') }}" class="btn btn-dark">
+                            <i class="fas fa-user-plus me-1"></i> S'inscrire
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section finale avec vidéo locale -->
+    <div class="bg-light mt-5 py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h3 class="fw-bold">Ensemble, améliorons nos villes</h3>
+                    <p class="lead">CityFlow Bénin permet de signaler facilement les problèmes urbains dans toutes les communes du pays.</p>
+                    {% if app.user and app.user.estValide %}
+                        <a href="{{ path('app_signalement_nouveau') }}" class="btn btn-dark">
+                            <i class="fas fa-plus-circle me-2"></i> Créer un signalement
+                        </a>
+                    {% else %}
+                        <a href="{{ path('app_register') }}" class="btn btn-dark">
+                            <i class="fas fa-user-plus me-2"></i> Rejoindre la communauté
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <video
+                            class="local-video"
+                            controls
+                            preload="metadata"
+                            poster="{{ asset('images/video-poster.jpg') }}"
+                    >
+                        <source src="{{ asset('videos/presentation.mp4') }}" type="video/mp4">
+                        <source src="{{ asset('videos/presentation.webm') }}" type="video/webm">
+
+                        <p class="text-center p-4 bg-white rounded border">
+                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                            Votre navigateur ne supporte pas la lecture vidéo HTML5.
+                            <br>
+                            <a href="{{ asset('videos/presentation.mp4') }}" class="btn btn-outline-secondary btn-sm mt-2">
+                                <i class="fas fa-download me-1"></i> Télécharger la vidéo
+                            </a>
+                        </p>
+                    </video>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ BOUTON FLOTTANT -->
+    {% if not app.user or not app.user.estValide %}
+        <a href="{{ path('app_register') }}" class="btn btn-warning floating-cta">
+            <i class="fas fa-plus-circle me-2"></i> Signaler
+        </a>
+    {% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ✅ Animation des statistiques
+            function animateNumbers() {
+                const stats = document.querySelectorAll('.stat-number');
+                stats.forEach(stat => {
+                    const target = parseInt(stat.getAttribute('data-target'));
+                    let current = 0;
+                    const increment = target / 50;
+
+                    const timer = setInterval(() => {
+                        current += increment;
+                        if (current >= target) {
+                            current = target;
+                            clearInterval(timer);
+                        }
+                        stat.textContent = Math.floor(current);
+                    }, 50);
+                });
+            }
+
+            // ✅ Animation des cartes
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('fadeIn');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.animated-card').forEach(card => {
+                observer.observe(card);
+            });
+
+            // ✅ Animation des statistiques au scroll
+            const statsObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        animateNumbers();
+                        statsObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            const statsSection = document.querySelector('.stat-card');
+            if (statsSection) {
+                statsObserver.observe(statsSection);
+            }
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,56 @@
+{# Modal simple de validation pour /validation #}
+<div class="modal" id="validateModal{{ signalement.id }}" tabindex="-1" aria-labelledby="validateModalLabel{{ signalement.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="validateModalLabel{{ signalement.id }}">
+                    <i class="fas fa-check-circle me-2"></i>Valider le signalement
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{{ path('app_validation_valider', {'id': signalement.id}) }}">
+                <div class="modal-body">
+                    <div class="alert alert-success">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Confirmer la validation de ce signalement ?</strong>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="mb-2">
+                            <i class="fas fa-file-alt me-2"></i>Signalement #{{ signalement.id }}
+                        </h6>
+                        <div class="p-3 bg-light rounded">
+                            <p class="mb-1 fw-bold">{{ signalement.titre }}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-map-marker-alt me-1"></i>{{ signalement.ville.nom }}
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="commentaire_validation{{ signalement.id }}" class="form-label">
+                            <i class="fas fa-comment me-2"></i>Commentaire (optionnel)
+                        </label>
+                        <textarea name="commentaire"
+                                  id="commentaire_validation{{ signalement.id }}"
+                                  class="form-control"
+                                  rows="3"
+                                  placeholder="Commentaire de validation..."></textarea>
+                        <div class="form-text">
+                            Ce commentaire sera visible dans l'historique.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Annuler
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check me-2"></i>Confirmer la validation
+                    </button>
+                </div>
+                <input type="hidden" name="_token" value="{{ csrf_token('validate' ~ signalement.id) }}">
+            </form>
+        </div>
+    </div>
+</div>

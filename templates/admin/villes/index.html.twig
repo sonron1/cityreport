@@ -1,0 +1,267 @@
+{# templates/admin/villes/index.html.twig #}
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Gestion des villes{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous" />
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .city-card {
+            transition: all 0.3s;
+        }
+        .city-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .city-marker {
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            background-color: #0d6efd;
+            color: white;
+            font-weight: bold;
+            border: 2px solid white;
+        }
+    </style>
+{% endblock %}
+
+{% block admin_content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Gestion des villes</h1>
+        <div>
+            <a href="{{ path('app_admin_dashboard') }}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+            <a href="{{ path('app_admin_villes_new') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Ajouter une ville
+            </a>
+        </div>
+    </div>
+
+    {# Filtres de recherche #}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Filtres de recherche</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Nom de la ville</label>
+                    <input type="text" class="form-control" id="search" name="search"
+                           value="{{ current_filters.search }}" placeholder="Rechercher une ville...">
+                </div>
+                <div class="col-md-4">
+                    <label for="departement" class="form-label">Département</label>
+                    <select class="form-control" id="departement" name="departement">
+                        <option value="">-- Tous les départements --</option>
+                        {% for dept in departements %}
+                            <option value="{{ dept.id }}" {{ current_filters.departement == dept.id ? 'selected' : '' }}>
+                                {{ dept.nom }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="tri" class="form-label">Tri</label>
+                    <select class="form-control" id="tri" name="tri">
+                        <option value="nom_asc" {{ current_filters.tri == 'nom_asc' ? 'selected' : '' }}>Nom A-Z</option>
+                        <option value="nom_desc" {{ current_filters.tri == 'nom_desc' ? 'selected' : '' }}>Nom Z-A</option>
+                        <option value="departement_asc" {{ current_filters.tri == 'departement_asc' ? 'selected' : '' }}>Département A-Z</option>
+                        <option value="departement_desc" {{ current_filters.tri == 'departement_desc' ? 'selected' : '' }}>Département Z-A</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Rechercher
+                    </button>
+                    <a href="{{ path('app_admin_villes') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-undo me-2"></i>Réinitialiser
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# Carte des villes #}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Carte des villes</h5>
+        </div>
+        <div class="card-body p-0">
+            <div id="map"></div>
+        </div>
+    </div>
+
+    {# Liste des villes #}
+    <div class="row">
+        {% for ville in villes %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 city-card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ ville.nom }}</h5>
+                        <p class="card-text">
+                            <strong>Département:</strong> {{ ville.departement ? ville.departement.nom : 'Non défini' }}<br>
+                            <strong>Slug:</strong> {{ ville.slug ?? 'Non défini' }}
+                        </p>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">{{ ville.signalements|length }} signalement(s)</span>
+                            <small class="text-muted">
+                                Coordonnées: {{ ville.latitudeCentre|number_format(6) }}, {{ ville.longitudeCentre|number_format(6) }}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="btn-group w-100">
+                            <a href="{{ path('app_admin_villes_edit', {'id': ville.id}) }}" class="btn btn-outline-primary">
+                                <i class="fas fa-edit me-2"></i>Modifier
+                            </a>
+                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ ville.id }}">
+                                <i class="fas fa-trash-alt me-2"></i>Supprimer
+                            </button>
+                        </div>
+
+                        {# Modal de suppression #}
+                        <div class="modal fade" id="deleteModal{{ ville.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-danger text-white">
+                                        <h5 class="modal-title">Confirmer la suppression</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Êtes-vous sûr de vouloir supprimer la ville "<strong>{{ ville.nom }}</strong>" ?</p>
+                                        {% if ville.signalements|length > 0 %}
+                                            <div class="alert alert-warning">
+                                                <i class="fas fa-exclamation-triangle me-2"></i>Cette ville est utilisée par {{ ville.signalements|length }} signalement(s). La suppression sera impossible.
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                        <form action="{{ path('app_admin_villes_delete', {'id': ville.id}) }}" method="post" style="display: inline;">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ ville.id) }}">
+                                            <button type="submit" class="btn btn-danger" {% if ville.signalements|length > 0 %}disabled{% endif %}>Confirmer</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>Aucune ville n'a encore été créée.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    {# Pagination #}
+    {% if paginator.totalPages > 1 %}
+        <nav aria-label="Navigation des pages" class="my-4">
+            <ul class="pagination justify-content-center">
+                {% if paginator.hasPreviousPage %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ path('app_admin_villes', current_filters|merge({'page': paginator.previousPage})) }}" aria-label="Précédent">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo;</span>
+                    </li>
+                {% endif %}
+
+                {% for page in paginator.pageRange %}
+                    <li class="page-item {{ page == paginator.currentPage ? 'active' : '' }}">
+                        <a class="page-link" href="{{ path('app_admin_villes', current_filters|merge({'page': page})) }}">
+                            {{ page }}
+                        </a>
+                    </li>
+                {% endfor %}
+
+                {% if paginator.hasNextPage %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ path('app_admin_villes', current_filters|merge({'page': paginator.nextPage})) }}" aria-label="Suivant">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&raquo;</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        <div class="text-center text-muted mb-4">
+            <small>Page {{ paginator.currentPage }} sur {{ paginator.totalPages }} ({{ paginator.totalItems }} villes au total)</small>
+        </div>
+    {% endif %}
+
+    {# Formulaire de création rapide #}
+    <div class="card mt-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Ajouter rapidement une ville</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ path('app_admin_villes_new') }}" method="post" class="row g-3">
+                <div class="col-md-4">
+                    <label for="nom" class="form-label">Nom de la ville</label>
+                    <input type="text" class="form-control" id="nom" name="nom" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="departement" class="form-label">Département</label>
+                    <select class="form-control" id="departement" name="departement" required>
+                        <option value="">-- Sélectionner un département --</option>
+                        {% for departement in departements %}
+                            <option value="{{ departement.id }}">{{ departement.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="latitude" class="form-label">Latitude</label>
+                    <input type="number" class="form-control" id="latitude" name="latitude" step="0.000001" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="longitude" class="form-label">Longitude</label>
+                    <input type="number" class="form-control" id="longitude" name="longitude" step="0.000001" required>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Ajouter la ville
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+    <script>
+        // Initialiser la carte
+        var map = L.map('map').setView([9.30769, 2.315834], 7); // Centre du Bénin
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Ajouter les marqueurs pour chaque ville
+        {% for ville in villes %}
+        var marker{{ ville.id }} = L.marker([{{ ville.latitudeCentre }}, {{ ville.longitudeCentre }}]).addTo(map);
+        marker{{ ville.id }}.bindPopup('<b>{{ ville.nom }}</b><br>{{ ville.signalements|length }} signalement(s)');
+        {% endfor %}
+    </script>
+{% endblock %}

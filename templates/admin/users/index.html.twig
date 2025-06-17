@@ -1,0 +1,952 @@
+
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Gestion des utilisateurs - Administration{% endblock %}
+
+{% block admin_breadcrumb %}
+    <li class="breadcrumb-item active">Utilisateurs</li>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        /* Thème sobre et attrayant avec bordures visibles */
+        :root {
+            --color-gray-50: #f9fafb;
+            --color-gray-100: #f3f4f6;
+            --color-gray-200: #e5e7eb;
+            --color-gray-300: #d1d5db;
+            --color-gray-400: #9ca3af;
+            --color-gray-500: #6b7280;
+            --color-gray-600: #4b5563;
+            --color-gray-700: #374151;
+            --color-gray-800: #1f2937;
+            --color-gray-900: #111827;
+            --color-blue-50: #eff6ff;
+            --color-blue-100: #dbeafe;
+            --color-blue-200: #bfdbfe;
+            --color-blue-300: #93c5fd;
+            --color-blue-400: #60a5fa;
+            --color-blue-500: #3b82f6;
+            --color-blue-600: #2563eb;
+            --color-blue-700: #1d4ed8;
+            --color-blue-800: #1e40af;
+            --color-emerald-50: #ecfdf5;
+            --color-emerald-500: #10b981;
+            --color-amber-50: #fffbeb;
+            --color-amber-500: #f59e0b;
+        }
+
+        .admin-dashboard {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            font-weight: 400;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            color: var(--color-gray-800);
+            min-height: 100vh;
+        }
+
+        /* En-tête avec gradient subtil */
+        .page-header {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 2px solid var(--color-gray-200);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .page-title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--color-gray-900);
+            margin: 0 0 0.5rem 0;
+            background: linear-gradient(135deg, var(--color-gray-900) 0%, var(--color-gray-700) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: var(--color-gray-600);
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        /* Avatar utilisateur avec bordure */
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--color-blue-50) 0%, var(--color-blue-100) 100%);
+            border: 2px solid var(--color-blue-200);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-blue-700);
+            font-weight: 600;
+            font-size: 0.875rem;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            border: 2px solid white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Cards avec bordures attrayantes */
+        .clean-card {
+            background: white;
+            border: 2px solid var(--color-gray-200);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .clean-card:hover {
+            border-color: var(--color-blue-300);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .clean-card-header {
+            background: linear-gradient(135deg, var(--color-gray-50) 0%, var(--color-gray-100) 100%);
+            border-bottom: 2px solid var(--color-gray-200);
+            padding: 1.25rem 1.5rem;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .clean-card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--color-gray-800);
+            margin: 0;
+        }
+
+        /* Statistiques avec design attrayant */
+        .stats-container {
+            background: linear-gradient(135deg, white 0%, var(--color-gray-50) 100%);
+            border: 2px solid var(--color-gray-200);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: white;
+            border: 1px solid var(--color-gray-200);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            border-color: var(--color-blue-300);
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--color-gray-900);
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--color-gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 500;
+        }
+
+        /* Formulaires avec bordures visibles */
+        .form-control-clean {
+            border: 2px solid var(--color-gray-300);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-control-clean:focus {
+            border-color: var(--color-blue-500);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        .form-control-clean:hover {
+            border-color: var(--color-gray-400);
+        }
+
+        .form-select-clean {
+            border: 2px solid var(--color-gray-300);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+            background: white;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+
+        .form-select-clean:focus {
+            border-color: var(--color-blue-500);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        .form-label-clean {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--color-gray-700);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .input-group-text-clean {
+            background: linear-gradient(135deg, var(--color-gray-50) 0%, var(--color-gray-100) 100%);
+            border: 2px solid var(--color-gray-300);
+            border-right: none;
+            color: var(--color-gray-500);
+            border-radius: 8px 0 0 8px;
+        }
+
+        /* Boutons attrayants */
+        .btn-clean {
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            border: 2px solid;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-clean-primary {
+            background: linear-gradient(135deg, var(--color-blue-600) 0%, var(--color-blue-700) 100%);
+            border-color: var(--color-blue-600);
+            color: white;
+        }
+
+        .btn-clean-primary:hover {
+            background: linear-gradient(135deg, var(--color-blue-700) 0%, var(--color-blue-800) 100%);
+            border-color: var(--color-blue-700);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-clean-secondary {
+            background: white;
+            border-color: var(--color-gray-300);
+            color: var(--color-gray-700);
+        }
+
+        .btn-clean-secondary:hover {
+            background: var(--color-gray-50);
+            border-color: var(--color-gray-400);
+            color: var(--color-gray-800);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Action buttons avec bordures */
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            border: 2px solid var(--color-gray-300);
+            background: white;
+            color: var(--color-gray-600);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .action-btn:hover {
+            background: var(--color-gray-50);
+            border-color: var(--color-gray-400);
+            color: var(--color-gray-700);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-decoration: none;
+        }
+
+        .action-btn-primary {
+            background: linear-gradient(135deg, var(--color-blue-50) 0%, var(--color-blue-100) 100%);
+            border-color: var(--color-blue-300);
+            color: var(--color-blue-700);
+        }
+
+        .action-btn-primary:hover {
+            background: linear-gradient(135deg, var(--color-blue-100) 0%, var(--color-blue-200) 100%);
+            border-color: var(--color-blue-400);
+            color: var(--color-blue-800);
+        }
+
+        .action-btn-success {
+            background: linear-gradient(135deg, var(--color-emerald-50) 0%, #d1fae5 100%);
+            border-color: #a7f3d0;
+            color: #059669;
+        }
+
+        .action-btn-success:hover {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-color: #6ee7b7;
+            color: #047857;
+        }
+
+        .action-btn-warning {
+            background: linear-gradient(135deg, var(--color-amber-50) 0%, #fef3c7 100%);
+            border-color: #fcd34d;
+            color: #92400e;
+        }
+
+        .action-btn-warning:hover {
+            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+            border-color: #f59e0b;
+            color: #78350f;
+        }
+
+        .action-btn-danger {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-color: #f87171;
+            color: #991b1b;
+        }
+
+        .action-btn-danger:hover {
+            background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+            border-color: #ef4444;
+            color: #7f1d1d;
+        }
+
+        /* Menu déroulant personnalisé */
+        .custom-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .custom-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 2px solid var(--color-gray-200);
+            border-radius: 8px;
+            min-width: 200px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .custom-dropdown.active .custom-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .custom-dropdown-item {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: var(--color-gray-700);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .custom-dropdown-item:hover {
+            background: var(--color-gray-50);
+            color: var(--color-gray-900);
+            text-decoration: none;
+        }
+
+        .custom-dropdown-item.text-danger {
+            color: #dc3545;
+        }
+
+        .custom-dropdown-item.text-danger:hover {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .custom-dropdown-divider {
+            height: 1px;
+            background: var(--color-gray-200);
+            margin: 0.5rem 0;
+        }
+
+        /* Table attrayante */
+        .table-clean {
+            background: white;
+            border: 2px solid var(--color-gray-200);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-clean thead th {
+            background: linear-gradient(135deg, var(--color-gray-50) 0%, var(--color-gray-100) 100%);
+            border-bottom: 2px solid var(--color-gray-200);
+            color: var(--color-gray-700);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 1rem;
+        }
+
+        .table-clean tbody td {
+            border-bottom: 1px solid var(--color-gray-100);
+            padding: 1.25rem 1rem;
+            vertical-align: middle;
+        }
+
+        .table-clean tbody tr:hover {
+            background: linear-gradient(135deg, var(--color-blue-50) 0%, var(--color-gray-50) 100%);
+        }
+
+        .table-clean tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Badges avec bordures */
+        .badge-clean {
+            padding: 0.375rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid;
+            display: inline-block;
+        }
+
+        .badge-clean-success {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            color: #166534;
+            border-color: #86efac;
+        }
+
+        .badge-clean-warning {
+            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+            color: #92400e;
+            border-color: #fcd34d;
+        }
+
+        .badge-clean-info {
+            background: linear-gradient(135deg, var(--color-blue-50) 0%, var(--color-blue-100) 100%);
+            color: var(--color-blue-800);
+            border-color: var(--color-blue-300);
+        }
+
+        .badge-clean-danger {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+            border-color: #f87171;
+        }
+
+        /* Icônes avec couleurs douces */
+        .icon-clean {
+            color: var(--color-gray-500);
+        }
+
+        /* Animations subtiles */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .loading {
+            animation: pulse 2s infinite;
+        }
+
+        /* Dividers avec style */
+        .divider-clean {
+            border-top: 2px solid var(--color-gray-200);
+            margin: 1.5rem 0;
+            position: relative;
+        }
+
+        .divider-clean::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 2px;
+            background: linear-gradient(135deg, var(--color-blue-500) 0%, var(--color-blue-600) 100%);
+        }
+    </style>
+{% endblock %}
+
+{% block admin_content %}
+    <div class="admin-dashboard">
+        <!-- En-tête avec gradient -->
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="page-title">
+                        <i class="fas fa-users icon-clean me-3"></i>
+                        Gestion des utilisateurs
+                    </h1>
+                    <p class="page-subtitle">Administration de tous les comptes utilisateurs de la plateforme</p>
+                </div>
+                <div class="d-flex gap-3">
+                    <a href="{{ path('app_admin_user_new') }}" class="btn btn-clean btn-clean-primary">
+                        <i class="fas fa-plus me-2"></i>Créer un utilisateur
+                    </a>
+                    <a href="{{ path('app_admin_users', {'status': 'non_valide'}) }}" class="btn btn-clean btn-clean-secondary">
+                        <i class="fas fa-clock me-2"></i>En attente
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques avec design attrayant -->
+        <div class="stats-container">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <span class="stat-number">{{ utilisateurs|length }}</span>
+                        <span class="stat-label">Total affiché</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <span class="stat-number">{{ utilisateurs|filter(u => u.estValide)|length }}</span>
+                        <span class="stat-label">Validés</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <span class="stat-number">{{ utilisateurs|filter(u => not u.estValide)|length }}</span>
+                        <span class="stat-label">En attente</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <span class="stat-number">{{ utilisateurs|filter(u => 'ROLE_ADMIN' in u.roles)|length }}</span>
+                        <span class="stat-label">Administrateurs</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtres avec bordures visibles -->
+        <div class="clean-card mb-4">
+            <div class="clean-card-header">
+                <h5 class="clean-card-title">
+                    <i class="fas fa-filter icon-clean me-2"></i>
+                    Filtres et recherche
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="GET" class="row g-4">
+                    <div class="col-md-4">
+                        <label for="search" class="form-label-clean">Recherche globale</label>
+                        <div class="input-group">
+                            <span class="input-group-text input-group-text-clean">
+                                <i class="fas fa-search icon-clean"></i>
+                            </span>
+                            <input type="text" class="form-control form-control-clean" id="search" name="search"
+                                   placeholder="Nom, prénom, email..."
+                                   value="{{ app.request.query.get('search', '') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="status" class="form-label-clean">Statut</label>
+                        <select class="form-select form-select-clean" id="status" name="status">
+                            <option value="">Tous</option>
+                            <option value="valide" {{ app.request.query.get('status') == 'valide' ? 'selected' : '' }}>✓ Validés</option>
+                            <option value="non_valide" {{ app.request.query.get('status') == 'non_valide' ? 'selected' : '' }}>⏳ En attente</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="role" class="form-label-clean">Rôle</label>
+                        <select class="form-select form-select-clean" id="role" name="role">
+                            <option value="">Tous</option>
+                            <option value="ROLE_USER" {{ app.request.query.get('role') == 'ROLE_USER' ? 'selected' : '' }}>👤 Utilisateur</option>
+                            <option value="ROLE_MODERATOR" {{ app.request.query.get('role') == 'ROLE_MODERATOR' ? 'selected' : '' }}>🛡️ Modérateur</option>
+                            <option value="ROLE_ADMIN" {{ app.request.query.get('role') == 'ROLE_ADMIN' ? 'selected' : '' }}>👑 Administrateur</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="tri" class="form-label-clean">Trier par</label>
+                        <select class="form-select form-select-clean" id="tri" name="tri">
+                            <option value="inscription_desc" {{ app.request.query.get('tri') == 'inscription_desc' ? 'selected' : '' }}>Plus récents</option>
+                            <option value="inscription_asc" {{ app.request.query.get('tri') == 'inscription_asc' ? 'selected' : '' }}>Plus anciens</option>
+                            <option value="nom_asc" {{ app.request.query.get('tri') == 'nom_asc' ? 'selected' : '' }}>Nom A-Z</option>
+                            <option value="nom_desc" {{ app.request.query.get('tri') == 'nom_desc' ? 'selected' : '' }}>Nom Z-A</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label-clean">&nbsp;</label>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-clean btn-clean-primary flex-fill">
+                                <i class="fas fa-search"></i> Filtrer
+                            </button>
+                            <a href="{{ path('app_admin_users') }}" class="btn btn-clean btn-clean-secondary">
+                                <i class="fas fa-undo"></i>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Liste des utilisateurs -->
+        <div class="clean-card">
+            <div class="clean-card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="clean-card-title">
+                        <i class="fas fa-list icon-clean me-2"></i>
+                        Liste des utilisateurs
+                    </h5>
+                    <div class="d-flex align-items-center gap-3">
+                        {% set currentFilters = app.request.query.all() %}
+                        {% if currentFilters|length > 0 %}
+                            <div class="d-flex gap-2">
+                                {% for key, value in currentFilters %}
+                                    <span class="badge badge-clean badge-clean-info">{{ key }}: {{ value }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <span class="badge badge-clean" style="background: linear-gradient(135deg, var(--color-gray-100) 0%, var(--color-gray-200) 100%); color: var(--color-gray-700); border-color: var(--color-gray-300);">
+                            {{ utilisateurs|length }} utilisateur(s)
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-clean mb-0">
+                    <thead>
+                    <tr>
+                        <th>Utilisateur</th>
+                        <th>Contact</th>
+                        <th>Rôles</th>
+                        <th>Statut</th>
+                        <th>Activité</th>
+                        <th>Inscription</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for utilisateur in utilisateurs %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="position-relative me-3">
+                                        <div class="user-avatar">
+                                            {{ utilisateur.prenom|first|upper }}{{ utilisateur.nom|first|upper }}
+                                        </div>
+                                        {% if utilisateur.estValide %}
+                                            <div class="status-indicator bg-success"></div>
+                                        {% else %}
+                                            <div class="status-indicator bg-warning"></div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600; color: var(--color-gray-900); font-size: 0.875rem;">
+                                            {{ utilisateur.prenom }} {{ utilisateur.nom }}
+                                        </div>
+                                        {% if utilisateur.villeResidence %}
+                                            <small style="color: var(--color-gray-500); font-size: 0.75rem;">
+                                                <i class="fas fa-map-marker-alt me-1"></i>{{ utilisateur.villeResidence.nom }}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <a href="mailto:{{ utilisateur.email }}" style="color: var(--color-blue-600); text-decoration: none; font-size: 0.875rem; font-weight: 500;">
+                                    <i class="fas fa-envelope icon-clean me-1"></i>{{ utilisateur.email }}
+                                </a>
+                            </td>
+                            <td>
+                                {% for role in utilisateur.roles %}
+                                    {% if role == 'ROLE_ADMIN' %}
+                                        <span class="badge badge-clean badge-clean-danger mb-1">👑 Administrateur</span>
+                                    {% elseif role == 'ROLE_MODERATOR' %}
+                                        <span class="badge badge-clean badge-clean-warning mb-1">🛡️ Modérateur</span>
+                                    {% elseif role == 'ROLE_USER' %}
+                                        <span class="badge badge-clean badge-clean-info mb-1">👤 Utilisateur</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% if utilisateur.estValide %}
+                                    <span class="badge badge-clean badge-clean-success">✓ Validé</span>
+                                {% else %}
+                                    <span class="badge badge-clean badge-clean-warning">⏳ En attente</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="font-size: 0.875rem;">
+                                    <div style="font-weight: 600; color: var(--color-gray-900);">
+                                        {{ utilisateur.signalements|length }} signalements
+                                    </div>
+                                    <div style="color: var(--color-gray-500); font-size: 0.75rem;">
+                                        {{ utilisateur.commentaires|length }} commentaires
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.875rem; font-weight: 500; color: var(--color-gray-900);">
+                                    {{ utilisateur.dateInscription|date('d/m/Y') }}
+                                </div>
+                                <small style="color: var(--color-gray-500); font-size: 0.75rem;">
+                                    {{ utilisateur.dateInscription|date('H:i') }}
+                                </small>
+                            </td>
+                            <td>
+                                <div class="d-flex justify-content-center gap-1">
+                                    <!-- Voir profil -->
+                                    <a href="{{ path('app_admin_user_profile', {'id': utilisateur.id}) }}"
+                                       class="action-btn action-btn-primary"
+                                       title="Voir le profil complet">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+
+                                    <!-- Éditer -->
+                                    <a href="{{ path('app_admin_user_edit', {'id': utilisateur.id}) }}"
+                                       class="action-btn action-btn-primary"
+                                       title="Modifier l'utilisateur">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+
+                                    <!-- Basculer statut -->
+                                    <form method="POST"
+                                          action="{{ path('app_admin_toggle_user_status', {'id': utilisateur.id}) }}"
+                                          class="d-inline"
+                                          onsubmit="return confirm('{% if utilisateur.estValide %}Désactiver{% else %}Valider{% endif %} le compte de {{ utilisateur.prenom }} {{ utilisateur.nom }} ?')">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('toggle_user_status_' ~ utilisateur.id) }}">
+                                        <button type="submit"
+                                                class="action-btn {% if utilisateur.estValide %}action-btn-warning{% else %}action-btn-success{% endif %}"
+                                                title="{% if utilisateur.estValide %}Désactiver{% else %}Valider{% endif %} le compte">
+                                            <i class="fas {% if utilisateur.estValide %}fa-ban{% else %}fa-check{% endif %}"></i>
+                                        </button>
+                                    </form>
+
+                                    <!-- Actions avancées avec menu déroulant personnalisé -->
+                                    <div class="custom-dropdown">
+                                        <button class="action-btn dropdown-toggle-btn"
+                                                type="button"
+                                                title="Plus d'actions">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <div class="custom-dropdown-menu">
+                                            <a class="custom-dropdown-item"
+                                               href="{{ path('app_admin_user_login_as', {'id': utilisateur.id}) }}">
+                                                <i class="fas fa-sign-in-alt me-2"></i>Se connecter en tant que
+                                            </a>
+                                            <a class="custom-dropdown-item"
+                                               href="{{ path('app_admin_user_reset_password', {'id': utilisateur.id}) }}">
+                                                <i class="fas fa-key me-2"></i>Réinitialiser mot de passe
+                                            </a>
+                                            <div class="custom-dropdown-divider"></div>
+                                            <a class="custom-dropdown-item text-danger"
+                                               href="{{ path('app_admin_user_suspend', {'id': utilisateur.id}) }}"
+                                               onclick="return confirm('Suspendre ce compte ?')">
+                                                <i class="fas fa-ban me-2"></i>Suspendre
+                                            </a>
+                                            <div class="custom-dropdown-divider"></div>
+                                            <form method="POST"
+                                                  action="{{ path('app_admin_user_delete', {'id': utilisateur.id}) }}"
+                                                  class="d-inline w-100"
+                                                  onsubmit="return confirmDeletion('{{ utilisateur.prenom|e('js') }}', '{{ utilisateur.nom|e('js') }}')">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete_user_' ~ utilisateur.id) }}">
+                                                <button type="submit" class="custom-dropdown-item text-danger w-100">
+                                                    <i class="fas fa-trash me-2"></i>Supprimer définitivement
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 3rem;">
+                                <i class="fas fa-users-slash fa-3x icon-clean mb-3"></i>
+                                <h5 style="color: var(--color-gray-500); font-weight: 500;">Aucun utilisateur trouvé</h5>
+                                {% set currentFilters = app.request.query.all() %}
+                                {% if currentFilters|length > 0 %}
+                                    <p style="color: var(--color-gray-400); font-size: 0.875rem;">Essayez de modifier vos critères de recherche</p>
+                                    <a href="{{ path('app_admin_users') }}" class="btn btn-clean btn-clean-secondary mt-2">
+                                        <i class="fas fa-undo me-1"></i>Voir tous les utilisateurs
+                                    </a>
+                                {% else %}
+                                    <p style="color: var(--color-gray-400); font-size: 0.875rem;">Commencez par créer votre premier utilisateur</p>
+                                    <a href="{{ path('app_admin_user_new') }}" class="btn btn-clean btn-clean-primary mt-2">
+                                        <i class="fas fa-plus me-1"></i>Créer un utilisateur
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Actions rapides avec style -->
+        {% if utilisateurs|length > 0 %}
+            <div class="clean-card mt-4">
+                <div class="clean-card-header">
+                    <h5 class="clean-card-title">
+                        <i class="fas fa-tools icon-clean me-2"></i>
+                        Actions rapides
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 style="font-size: 0.875rem; font-weight: 600; color: var(--color-gray-700); margin-bottom: 1rem;">Statistiques rapides</h6>
+                            <ul class="list-unstyled" style="font-size: 0.875rem;">
+                                <li style="margin-bottom: 0.75rem; padding: 0.5rem; background: var(--color-gray-50); border-radius: 6px; border-left: 3px solid var(--color-blue-500);">
+                                    <i class="fas fa-users icon-clean me-2"></i>{{ utilisateurs|length }} utilisateurs affichés
+                                </li>
+                                <li style="margin-bottom: 0.75rem; padding: 0.5rem; background: var(--color-emerald-50); border-radius: 6px; border-left: 3px solid #10b981;">
+                                    <i class="fas fa-check-circle me-2" style="color: #10b981;"></i>{{ utilisateurs|filter(u => u.estValide)|length }} comptes validés
+                                </li>
+                                <li style="padding: 0.5rem; background: var(--color-amber-50); border-radius: 6px; border-left: 3px solid var(--color-amber-500);">
+                                    <i class="fas fa-clock me-2" style="color: var(--color-amber-500);"></i>{{ utilisateurs|filter(u => not u.estValide)|length }} en attente de validation
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 style="font-size: 0.875rem; font-weight: 600; color: var(--color-gray-700); margin-bottom: 1rem;">Actions d'administration</h6>
+                            <div class="d-grid gap-3">
+                                <a href="{{ path('app_admin_users', {'status': 'non_valide'}) }}" class="btn btn-clean btn-clean-secondary">
+                                    <i class="fas fa-clock me-2"></i>Valider les comptes en attente
+                                </a>
+                                <a href="{{ path('app_admin_user_export') }}" class="btn btn-clean btn-clean-secondary">
+                                    <i class="fas fa-download me-2"></i>Exporter la liste (CSV)
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        // Auto-submit du formulaire lors du changement de tri
+        document.getElementById('tri').addEventListener('change', function() {
+            this.form.submit();
+        });
+
+        // Gestion des menus déroulants personnalisés
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdowns = document.querySelectorAll('.custom-dropdown');
+
+            dropdowns.forEach(function(dropdown) {
+                const toggle = dropdown.querySelector('.dropdown-toggle-btn');
+
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Fermer tous les autres dropdowns
+                    dropdowns.forEach(function(otherDropdown) {
+                        if (otherDropdown !== dropdown) {
+                            otherDropdown.classList.remove('active');
+                        }
+                    });
+
+                    // Basculer le dropdown actuel
+                    dropdown.classList.toggle('active');
+                });
+            });
+
+            // Fermer les dropdowns en cliquant ailleurs
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.custom-dropdown')) {
+                    dropdowns.forEach(function(dropdown) {
+                        dropdown.classList.remove('active');
+                    });
+                }
+            });
+
+            // Fermer les dropdowns avec la touche Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    dropdowns.forEach(function(dropdown) {
+                        dropdown.classList.remove('active');
+                    });
+                }
+            });
+        });
+
+        // Confirmation pour les actions critiques
+        document.querySelectorAll('[data-confirm]').forEach(function(element) {
+            element.addEventListener('click', function(e) {
+                if (!confirm(this.dataset.confirm)) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // Animation subtile au chargement
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.clean-card, .stats-container').forEach(function(element, index) {
+                element.style.opacity = '0';
+                element.style.transform = 'translateY(20px)';
+
+                setTimeout(function() {
+                    element.style.transition = 'all 0.6s ease';
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+
+        function confirmDeletion(prenom, nom) {
+            const message = `⚠️ ATTENTION ⚠️
+                Supprimer définitivement ${prenom} ${nom} ?
+
+                Cette action est IRRÉVERSIBLE et supprimera :
+                - Le compte utilisateur
+                - Tous ses signalements
+                - Tous ses commentaires
+                - Toutes ses données
+
+                Êtes-vous absolument certain ?`;
+
+            return confirm(message);
+        }
+    </script>
+{% endblock %}

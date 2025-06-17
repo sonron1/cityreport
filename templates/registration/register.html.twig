@@ -1,0 +1,996 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inscription - CityFlow Bénin{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #1e4b8c 0%, #2980b9 100%);
+            --success-gradient: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            --danger-gradient: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            --card-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            --border-radius: 15px;
+            --input-focus: 0 0 0 3px rgba(41, 128, 185, 0.1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .register-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            position: relative;
+        }
+
+        .register-wrapper {
+            width: 100%;
+            max-width: 680px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        .register-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            border: none;
+            width: 100%;
+            animation: slideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .register-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 3rem 2rem 2.5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .register-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="white" opacity="0.1"><polygon points="0,0 1000,0 1000,60 0,100"/></svg>') repeat-x;
+            background-size: 100% 100%;
+        }
+
+        .register-header::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-top: 25px solid #2980b9;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1));
+        }
+
+        .app-logo {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            animation: float 3s ease-in-out infinite;
+            position: relative;
+            z-index: 2;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .register-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 2;
+        }
+
+        .register-subtitle {
+            margin: 0.5rem 0 0;
+            opacity: 0.9;
+            font-size: 1rem;
+            font-weight: 400;
+            position: relative;
+            z-index: 2;
+        }
+
+        .register-body {
+            padding: 3rem 2.5rem;
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        }
+
+        /* ✅ NOUVELLES AMÉLIORATIONS */
+
+        /* Progress indicator */
+        .progress-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .progress-step::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: #e9ecef;
+            z-index: 1;
+        }
+
+        .progress-step:last-child::before {
+            display: none;
+        }
+
+        .step-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            position: relative;
+            z-index: 2;
+            transition: var(--transition);
+        }
+
+        .step-circle.active {
+            background: var(--primary-gradient);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .step-circle.completed {
+            background: var(--success-gradient);
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.75rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        /* Form sections améliorées */
+        .form-section {
+            margin-bottom: 2.5rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .form-section:nth-child(1) { animation-delay: 0.1s; }
+        .form-section:nth-child(2) { animation-delay: 0.2s; }
+        .form-section:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            border-left: 4px solid #2980b9;
+        }
+
+        /* Inputs améliorés */
+        .input-group {
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: stretch;
+            position: relative;
+        }
+
+        .input-group-text {
+            border: 2px solid #e9ecef;
+            border-right: none;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px 0 0 12px;
+            color: #6c757d;
+            transition: var(--transition);
+            width: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.1rem;
+        }
+
+        .form-floating {
+            flex: 1;
+            position: relative;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            height: 58px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background: #f8f9fa;
+            width: 100%;
+            font-weight: 500;
+        }
+
+        .input-group .form-control,
+        .input-group .form-select {
+            border-left: none;
+            border-radius: 0 12px 12px 0;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #2980b9;
+            box-shadow: var(--input-focus);
+            background: white;
+            transform: translateY(-1px);
+        }
+
+        .input-group:focus-within .input-group-text {
+            border-color: #2980b9;
+            background: white;
+            color: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        /* Validation visuelle en temps réel */
+        .input-group.is-valid .input-group-text {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #28a745;
+        }
+
+        .input-group.is-valid .form-control {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fff9 100%);
+        }
+
+        .input-group.is-invalid .input-group-text {
+            border-color: #dc3545;
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #dc3545;
+        }
+
+        .input-group.is-invalid .form-control {
+            border-color: #dc3545;
+            background: linear-gradient(135deg, #ffffff 0%, #fff8f8 100%);
+        }
+
+        /* Force indicator pour le mot de passe */
+        .password-strength {
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+        }
+
+        .strength-meter {
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .strength-bar {
+            height: 100%;
+            transition: var(--transition);
+            border-radius: 2px;
+        }
+
+        .strength-text {
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* Checkbox personnalisée améliorée */
+        .custom-checkbox {
+            margin: 2.5rem 0;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8f0fe 100%);
+            border-radius: 12px;
+            border: 2px solid #e3f2fd;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .custom-checkbox::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 49%, rgba(41, 128, 185, 0.05) 50%, transparent 51%);
+        }
+
+        .custom-checkbox .form-check {
+            position: relative;
+            z-index: 2;
+        }
+
+        .custom-checkbox .form-check-input {
+            width: 1.4rem;
+            height: 1.4rem;
+            border: 2px solid #2980b9;
+            border-radius: 6px;
+            margin-right: 1rem;
+            transition: var(--transition);
+        }
+
+        .custom-checkbox .form-check-input:checked {
+            background: var(--primary-gradient);
+            border-color: #2980b9;
+            transform: scale(1.05);
+        }
+
+        .custom-checkbox .form-check-label {
+            font-weight: 500;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+
+        /* Bouton amélioré */
+        .btn-register {
+            background: var(--success-gradient);
+            border: none;
+            border-radius: 12px;
+            padding: 1.2rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+            transition: var(--transition);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-register::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s;
+        }
+
+        .btn-register:hover::before {
+            left: 100%;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(46, 204, 113, 0.4);
+            background: var(--success-gradient);
+        }
+
+        .btn-register:active {
+            transform: translateY(-1px);
+        }
+
+        /* Loading state */
+        .btn-register.loading {
+            pointer-events: none;
+            background: #6c757d;
+        }
+
+        /* Messages d'erreur stylés */
+        .form-text.text-danger {
+            color: #dc3545 !important;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Tooltip d'aide */
+        .help-tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 0.5rem;
+            cursor: help;
+        }
+
+        .help-tooltip .tooltip-text {
+            visibility: hidden;
+            width: 220px;
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            border-radius: 8px;
+            padding: 0.75rem;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -110px;
+            opacity: 0;
+            transition: var(--transition);
+            font-size: 0.8rem;
+            font-weight: 400;
+        }
+
+        .help-tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Amélioration des éléments flottants */
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .floating-element {
+            position: absolute;
+            opacity: 0.03;
+            animation: float 12s ease-in-out infinite;
+        }
+
+        .floating-element:nth-child(1) {
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .floating-element:nth-child(2) {
+            top: 20%;
+            right: 15%;
+            animation-delay: 4s;
+        }
+
+        .floating-element:nth-child(3) {
+            bottom: 30%;
+            left: 20%;
+            animation-delay: 8s;
+        }
+
+        .floating-element:nth-child(4) {
+            bottom: 15%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+
+        .floating-element:nth-child(5) {
+            top: 50%;
+            left: 50%;
+            animation-delay: 6s;
+        }
+
+        /* Responsive amélioré */
+        @media (max-width: 768px) {
+            .register-container {
+                padding: 1rem 0.5rem;
+            }
+
+            .register-wrapper {
+                max-width: 100%;
+            }
+
+            .register-header {
+                padding: 2.5rem 1.5rem 2rem;
+            }
+
+            .register-body {
+                padding: 2rem 1.5rem;
+            }
+
+            .app-logo {
+                font-size: 3rem;
+            }
+
+            .register-title {
+                font-size: 1.6rem;
+            }
+
+            .form-control, .form-select {
+                height: 52px;
+                font-size: 0.95rem;
+            }
+
+            .input-group-text {
+                width: 50px;
+            }
+
+            .progress-indicator {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .register-container {
+                padding: 0.5rem;
+            }
+
+            .register-header {
+                padding: 2rem 1rem 1.5rem;
+            }
+
+            .register-body {
+                padding: 1.5rem 1rem;
+            }
+
+            .custom-checkbox {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <!-- Éléments flottants en arrière-plan améliorés -->
+    <div class="floating-elements">
+        <div class="floating-element">
+            <i class="fas fa-user-plus" style="font-size: 5rem; color: #2980b9;"></i>
+        </div>
+        <div class="floating-element">
+            <i class="fas fa-city" style="font-size: 4rem; color: #3498db;"></i>
+        </div>
+        <div class="floating-element">
+            <i class="fas fa-users" style="font-size: 3.5rem; color: #5dade2;"></i>
+        </div>
+        <div class="floating-element">
+            <i class="fas fa-map-marker-alt" style="font-size: 3rem; color: #85c1e9;"></i>
+        </div>
+        <div class="floating-element">
+            <i class="fas fa-shield-alt" style="font-size: 2.5rem; color: #a3c9f1;"></i>
+        </div>
+    </div>
+
+    <div class="register-container">
+        <div class="register-wrapper">
+            <div class="register-card">
+                <!-- En-tête amélioré -->
+                <div class="register-header">
+                    <div class="app-logo">🏙️</div>
+                    <h1 class="register-title">Rejoignez CityFlow</h1>
+                    <p class="register-subtitle">Créez votre compte citoyen en quelques étapes simples</p>
+                </div>
+
+                <!-- Corps du formulaire -->
+                <div class="register-body">
+                    <!-- ✅ INDICATEUR DE PROGRESSION -->
+                    <div class="progress-indicator">
+                        <div class="progress-step">
+                            <div class="step-circle active">1</div>
+                            <div class="step-label">Informations</div>
+                        </div>
+                        <div class="progress-step">
+                            <div class="step-circle">2</div>
+                            <div class="step-label">Sécurité</div>
+                        </div>
+                        <div class="progress-step">
+                            <div class="step-circle">3</div>
+                            <div class="step-label">Validation</div>
+                        </div>
+                    </div>
+
+                    <!-- Messages d'erreur généraux -->
+                    {% for flash_error in app.flashes('error') %}
+                        <div class="alert alert-danger alert-modern d-flex align-items-center" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <div class="flex-grow-1">{{ flash_error }}</div>
+                            <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                        </div>
+                    {% endfor %}
+
+                    {{ form_start(registrationForm, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate', 'id': 'registrationForm'}}) }}
+                    {{ form_errors(registrationForm) }}
+
+                    <!-- Section Informations personnelles -->
+                    <div class="form-section" data-step="1">
+                        <div class="form-section-title">
+                            <i class="fas fa-user text-primary"></i>
+                            Informations personnelles
+                            <div class="help-tooltip">
+                                <i class="fas fa-question-circle text-muted"></i>
+                                <span class="tooltip-text">Ces informations nous permettent de vous identifier et de personnaliser votre expérience</span>
+                            </div>
+                        </div>
+
+                        <!-- Prénom et Nom -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <div class="form-floating">
+                                        {{ form_widget(registrationForm.prenom, {'attr': {'class': 'form-control', 'placeholder': ' '}}) }}
+                                        {{ form_label(registrationForm.prenom, null, {'label_attr': {'class': 'form-label'}}) }}
+                                    </div>
+                                </div>
+                                <div class="form-text text-danger">
+                                    {{ form_errors(registrationForm.prenom) }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <div class="form-floating">
+                                        {{ form_widget(registrationForm.nom, {'attr': {'class': 'form-control', 'placeholder': ' '}}) }}
+                                        {{ form_label(registrationForm.nom, null, {'label_attr': {'class': 'form-label'}}) }}
+                                    </div>
+                                </div>
+                                <div class="form-text text-danger">
+                                    {{ form_errors(registrationForm.nom) }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-envelope"></i>
+                            </span>
+                            <div class="form-floating">
+                                {{ form_widget(registrationForm.email, {'attr': {'class': 'form-control', 'placeholder': ' '}}) }}
+                                {{ form_label(registrationForm.email, null, {'label_attr': {'class': 'form-label'}}) }}
+                            </div>
+                        </div>
+                        <div class="form-text text-danger">
+                            {{ form_errors(registrationForm.email) }}
+                        </div>
+
+                        <!-- Ville de résidence -->
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </span>
+                            <div class="form-floating">
+                                {{ form_widget(registrationForm.villeResidence, {'attr': {'class': 'form-select'}}) }}
+                                {{ form_label(registrationForm.villeResidence, null, {'label_attr': {'class': 'form-label'}}) }}
+                            </div>
+                        </div>
+                        <div class="form-text text-danger">
+                            {{ form_errors(registrationForm.villeResidence) }}
+                        </div>
+                    </div>
+
+                    <!-- Section Sécurité -->
+                    <div class="form-section" data-step="2">
+                        <div class="form-section-title">
+                            <i class="fas fa-lock text-warning"></i>
+                            Sécurité de votre compte
+                            <div class="help-tooltip">
+                                <i class="fas fa-question-circle text-muted"></i>
+                                <span class="tooltip-text">Un mot de passe fort protège votre compte et vos données personnelles</span>
+                            </div>
+                        </div>
+
+                        <!-- Mot de passe -->
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <div class="form-floating">
+                                {{ form_widget(registrationForm.plainPassword, {'attr': {'class': 'form-control', 'placeholder': ' ', 'id': 'password-input'}}) }}
+                                {{ form_label(registrationForm.plainPassword, null, {'label_attr': {'class': 'form-label'}}) }}
+                            </div>
+                        </div>
+
+                        <!-- ✅ INDICATEUR DE FORCE DU MOT DE PASSE -->
+                        <div class="password-strength" id="password-strength" style="display: none;">
+                            <div class="strength-meter">
+                                <div class="strength-bar" id="strength-bar"></div>
+                            </div>
+                            <div class="strength-text" id="strength-text">Tapez votre mot de passe</div>
+                        </div>
+
+                        <div class="form-text text-muted mb-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Utilisez au moins 8 caractères avec des lettres, chiffres et symboles
+                        </div>
+                        <div class="form-text text-danger">
+                            {{ form_errors(registrationForm.plainPassword) }}
+                        </div>
+                    </div>
+
+                    <!-- Section Validation -->
+                    <div class="form-section" data-step="3">
+                        <div class="form-section-title">
+                            <i class="fas fa-check-circle text-success"></i>
+                            Finalisation
+                        </div>
+
+                        <!-- Conditions d'utilisation -->
+                        <div class="custom-checkbox">
+                            <div class="form-check">
+                                {{ form_widget(registrationForm.agreeTerms, {'attr': {'class': 'form-check-input', 'id': 'terms-checkbox'}}) }}
+                                {{ form_label(registrationForm.agreeTerms, null, {'label_attr': {'class': 'form-check-label'}}) }}
+                            </div>
+                            <div class="form-text text-danger mt-2">
+                                {{ form_errors(registrationForm.agreeTerms) }}
+                            </div>
+                        </div>
+
+                        <!-- Bouton d'inscription -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-register" id="submit-btn">
+                                <i class="fas fa-user-plus me-2"></i>
+                                <span>Créer mon compte</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{ form_end(registrationForm) }}
+
+                    <!-- Séparateur -->
+                    <div class="divider">
+                        <span>Déjà membre ?</span>
+                    </div>
+
+                    <!-- Lien de connexion -->
+                    <div class="login-link">
+                        <p class="mb-0">
+                            <i class="fas fa-sign-in-alt me-2 text-primary"></i>
+                            Vous avez déjà un compte ?<br>
+                            <a href="{{ path('app_login') }}">
+                                Connectez-vous maintenant
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informations supplémentaires -->
+            <div class="footer-info">
+                <small>
+                    <i class="fas fa-shield-alt me-1"></i>
+                    Vos données sont protégées selon la réglementation RGPD
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ SCRIPTS AMÉLIORÉS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ✅ Gestion de l'indicateur de progression
+            const steps = document.querySelectorAll('.step-circle');
+            const sections = document.querySelectorAll('.form-section');
+
+            function updateProgress() {
+                let currentStep = 1;
+
+                // Vérifier les champs de la première section
+                const firstSectionInputs = document.querySelectorAll('[data-step="1"] .form-control, [data-step="1"] .form-select');
+                let firstSectionValid = true;
+                firstSectionInputs.forEach(input => {
+                    if (!input.value.trim()) {
+                        firstSectionValid = false;
+                    }
+                });
+
+                if (firstSectionValid) {
+                    currentStep = 2;
+                    steps[0].classList.add('completed');
+                    steps[1].classList.add('active');
+
+                    // Vérifier le mot de passe
+                    const passwordInput = document.getElementById('password-input');
+                    if (passwordInput && passwordInput.value.length >= 6) {
+                        currentStep = 3;
+                        steps[1].classList.add('completed');
+                        steps[2].classList.add('active');
+                    }
+                }
+            }
+
+            // ✅ Indicateur de force du mot de passe
+            const passwordInput = document.getElementById('password-input');
+            const strengthIndicator = document.getElementById('password-strength');
+            const strengthBar = document.getElementById('strength-bar');
+            const strengthText = document.getElementById('strength-text');
+
+            if (passwordInput) {
+                passwordInput.addEventListener('input', function() {
+                    const password = this.value;
+                    const strength = calculatePasswordStrength(password);
+
+                    if (password.length > 0) {
+                        strengthIndicator.style.display = 'block';
+                        updateStrengthIndicator(strength);
+                    } else {
+                        strengthIndicator.style.display = 'none';
+                    }
+
+                    updateProgress();
+                });
+            }
+
+            function calculatePasswordStrength(password) {
+                let score = 0;
+                let feedback = [];
+
+                if (password.length >= 8) score += 25;
+                else feedback.push('Au moins 8 caractères');
+
+                if (/[a-z]/.test(password)) score += 25;
+                else feedback.push('lettres minuscules');
+
+                if (/[A-Z]/.test(password)) score += 25;
+                else feedback.push('lettres majuscules');
+
+                if (/[0-9]/.test(password)) score += 25;
+                else feedback.push('chiffres');
+
+                if (/[^A-Za-z0-9]/.test(password)) score += 25;
+                else feedback.push('symboles');
+
+                return { score: Math.min(score, 100), feedback };
+            }
+
+            function updateStrengthIndicator(strength) {
+                strengthBar.style.width = strength.score + '%';
+
+                if (strength.score < 50) {
+                    strengthBar.style.background = 'linear-gradient(90deg, #e74c3c, #c0392b)';
+                    strengthText.textContent = 'Faible - Ajoutez: ' + strength.feedback.slice(0, 2).join(', ');
+                    strengthText.style.color = '#e74c3c';
+                } else if (strength.score < 75) {
+                    strengthBar.style.background = 'linear-gradient(90deg, #f39c12, #e67e22)';
+                    strengthText.textContent = 'Moyen - Ajoutez: ' + strength.feedback.slice(0, 1).join(', ');
+                    strengthText.style.color = '#f39c12';
+                } else {
+                    strengthBar.style.background = 'linear-gradient(90deg, #27ae60, #2ecc71)';
+                    strengthText.textContent = 'Fort - Excellent mot de passe !';
+                    strengthText.style.color = '#27ae60';
+                }
+            }
+
+            // ✅ Validation en temps réel améliorée
+            const inputs = document.querySelectorAll('.form-control, .form-select');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    const inputGroup = this.closest('.input-group');
+
+                    if (this.value.trim().length > 0) {
+                        this.classList.add('has-content');
+
+                        // Validation spécifique par type
+                        if (this.type === 'email') {
+                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                            if (emailRegex.test(this.value)) {
+                                inputGroup.classList.add('is-valid');
+                                inputGroup.classList.remove('is-invalid');
+                            } else {
+                                inputGroup.classList.add('is-invalid');
+                                inputGroup.classList.remove('is-valid');
+                            }
+                        } else {
+                            inputGroup.classList.add('is-valid');
+                            inputGroup.classList.remove('is-invalid');
+                        }
+                    } else {
+                        this.classList.remove('has-content');
+                        inputGroup.classList.remove('is-valid', 'is-invalid');
+                    }
+
+                    updateProgress();
+                });
+
+                input.addEventListener('focus', function() {
+                    const inputGroup = this.closest('.input-group');
+                    if (inputGroup) {
+                        inputGroup.classList.add('focused');
+                    }
+                });
+
+                input.addEventListener('blur', function() {
+                    const inputGroup = this.closest('.input-group');
+                    if (inputGroup && !this.value) {
+                        inputGroup.classList.remove('focused');
+                    }
+                });
+            });
+
+            // ✅ Animation de soumission améliorée
+            const registerForm = document.getElementById('registrationForm');
+            const registerBtn = document.getElementById('submit-btn');
+
+            registerForm.addEventListener('submit', function(e) {
+                const originalText = registerBtn.innerHTML;
+                registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i><span>Création en cours...</span>';
+                registerBtn.classList.add('loading');
+                registerBtn.disabled = true;
+
+                // Simulation d'une vérification finale
+                setTimeout(() => {
+                    if (registerBtn.disabled) {
+                        registerBtn.innerHTML = originalText;
+                        registerBtn.classList.remove('loading');
+                        registerBtn.disabled = false;
+                    }
+                }, 10000);
+            });
+
+            // ✅ Animation d'entrée pour les sections
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.animationPlayState = 'running';
+                    }
+                });
+            });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+{% endblock %}

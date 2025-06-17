@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Nouveau commentaire sur votre signalement</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .header { background: #17a2b8; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { padding: 20px; }
+        .btn { display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; margin: 10px 0; font-weight: bold; }
+        .comment-box { background: #f8f9fa; border-left: 4px solid #17a2b8; padding: 15px; margin: 15px 0; border-radius: 4px; }
+        .footer { background: #f8f9fa; padding: 15px; text-align: center; color: #6c757d; border-radius: 0 0 8px 8px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>💬 Nouveau commentaire</h1>
+    </div>
+
+    <div class="content">
+        <p>Bonjour {{ utilisateur.prenom }} {{ utilisateur.nom }},</p>
+
+        <p>Un nouveau commentaire a été ajouté à votre signalement <strong>"{{ signalement.titre }}"</strong>.</p>
+
+        <div class="comment-box">
+            <strong>Commentaire de {{ auteur }} :</strong><br>
+            {{ commentaire }}
+        </div>
+
+        <p>Vous pouvez consulter votre signalement et répondre si nécessaire.</p>
+
+        <a href="{{ signalementUrl }}" class="btn">Voir le signalement</a>
+    </div>
+
+    <div class="footer">
+        <p>Pour toute question, n'hésitez pas à nous contacter.<br>
+            L'équipe CityReport</p>
+    </div>
+</div>
+</body>
+</html>

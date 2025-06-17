@@ -1,0 +1,156 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signalement résolu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            color: #28a745;
+            margin-bottom: 30px;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .success-box {
+            background: #d4edda;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            margin: 20px 0;
+        }
+        .signalement-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .status-badge {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background: #218838;
+        }
+        .thank-you-box {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .footer {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        .meta-info {
+            font-size: 14px;
+            color: #666;
+            margin: 5px 0;
+        }
+        .celebration {
+            font-size: 50px;
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🎉 Excellente nouvelle !</h1>
+        <h2>Votre signalement a été résolu</h2>
+    </div>
+
+    <div class="content">
+        <p>Bonjour {{ utilisateur.prenom }} {{ utilisateur.nom }},</p>
+
+        <div class="celebration">🎊</div>
+
+        <p>Nous avons le plaisir de vous informer que votre signalement a été <strong>résolu avec succès</strong> par nos équipes !</p>
+
+        <div class="success-box">
+            <h3>📍 {{ signalement.titre }}</h3>
+            <div style="margin: 15px 0;">
+                <span class="status-badge">✅ RÉSOLU</span>
+            </div>
+            <div class="signalement-details">
+                <p class="meta-info"><strong>📅 Date du signalement :</strong> {{ signalement.dateSignalement|date('d/m/Y à H:i') }}</p>
+                <p class="meta-info">
+                    <strong>📍 Localisation :</strong>
+                    {% if signalement.ville is defined and signalement.ville %}
+                        {{ signalement.ville.nom }}
+                    {% else %}
+                        Lat: {{ signalement.latitude|round(4) }}, Long: {{ signalement.longitude|round(4) }}
+                    {% endif %}
+                </p>
+                {% if signalement.categorie is defined and signalement.categorie %}
+                    <p class="meta-info"><strong>🏷️ Catégorie :</strong> {{ signalement.categorie.nom }}</p>
+                {% endif %}
+                {% if signalement.description %}
+                    <p class="meta-info"><strong>📝 Description :</strong> {{ signalement.description|slice(0, 200) }}{% if signalement.description|length > 200 %}...{% endif %}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="thank-you-box">
+            <h3>🙏 Merci pour votre contribution !</h3>
+            <p>Grâce à votre signalement, nous avons pu identifier et résoudre ce problème. Votre engagement citoyen contribue activement à l'amélioration de notre ville.</p>
+        </div>
+
+        <p>Vous pouvez consulter tous les détails de la résolution et voir l'historique complet de votre signalement en cliquant sur le bouton ci-dessous :</p>
+
+        <p style="text-align: center; margin: 30px 0;">
+            <a href="{{ signalementUrl }}" class="btn">📋 Voir les détails de la résolution</a>
+        </p>
+
+        <div style="background: #e7f3ff; padding: 20px; border-radius: 8px; border-left: 4px solid #007bff; margin: 25px 0;">
+            <h4>💡 Le saviez-vous ?</h4>
+            <p style="margin: 0;">Vous pouvez continuer à créer de nouveaux signalements pour nous aider à maintenir notre ville en parfait état. Ensemble, nous construisons un environnement meilleur pour tous !</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Cet email a été envoyé automatiquement, merci de ne pas répondre.</p>
+        <p>© {{ "now"|date("Y") }} Plateforme de signalement - Votre ville, notre priorité</p>
+    </div>
+</div>
+</body>
+</html>

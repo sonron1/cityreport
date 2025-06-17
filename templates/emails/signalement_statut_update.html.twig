@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mise à jour de votre signalement</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            color: #007bff;
+            margin-bottom: 30px;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .status-change-box {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+            margin: 20px 0;
+        }
+        .status-comparison {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .status-item {
+            text-align: center;
+            flex: 1;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        .status-old {
+            background: #dc3545;
+            color: white;
+        }
+        .status-new {
+            background: #28a745;
+            color: white;
+        }
+        .status-arrow {
+            font-size: 24px;
+            color: #007bff;
+            margin: 0 15px;
+        }
+        .signalement-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            border-left: 3px solid #007bff;
+        }
+        .timeline-icon {
+            margin-right: 15px;
+            font-size: 18px;
+        }
+        .footer {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        .meta-info {
+            font-size: 14px;
+            color: #666;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🔄 Mise à jour de votre signalement</h1>
+    </div>
+
+    <div class="content">
+        <p>Bonjour {{ utilisateur.prenom }} {{ utilisateur.nom }},</p>
+
+        <p>Le statut de votre signalement vient d'être mis à jour. Voici les dernières informations :</p>
+
+        <div class="signalement-info">
+            <h3>📍 {{ signalement.titre }}</h3>
+            <p class="meta-info"><strong>📅 Date du signalement :</strong> {{ signalement.dateSignalement|date('d/m/Y à H:i') }}</p>
+            <p class="meta-info">
+                <strong>📍 Localisation :</strong>
+                {% if signalement.ville is defined and signalement.ville %}
+                    {{ signalement.ville.nom }}
+                {% else %}
+                    Lat: {{ signalement.latitude|round(4) }}, Long: {{ signalement.longitude|round(4) }}
+                {% endif %}
+            </p>
+            {% if signalement.categorie is defined and signalement.categorie %}
+                <p class="meta-info"><strong>🏷️ Catégorie :</strong> {{ signalement.categorie.nom }}</p>
+            {% endif %}
+        </div>
+
+        <div class="status-change-box">
+            <h3>📊 Évolution du statut</h3>
+            <div class="status-comparison">
+                <div class="status-item">
+                    <div>Ancien statut</div>
+                    <div class="status-badge status-old">{{ ancienStatut|title|replace({'_': ' '}) }}</div>
+                </div>
+                <div class="status-arrow">➡️</div>
+                <div class="status-item">
+                    <div>Nouveau statut</div>
+                    <div class="status-badge status-new">{{ nouveauStatut|title|replace({'_': ' '}) }}</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                {% if nouveauStatut == 'en_cours' %}
+                    <div class="timeline-item">
+                        <span class="timeline-icon">🔧</span>
+                        <div>
+                            <strong>Traitement en cours</strong><br>
+                            <small>Nos équipes travaillent activement sur votre signalement</small>
+                        </div>
+                    </div>
+                {% elseif nouveauStatut == 'en_attente' %}
+                    <div class="timeline-item">
+                        <span class="timeline-icon">⏳</span>
+                        <div>
+                            <strong>En attente de traitement</strong><br>
+                            <small>Votre signalement a été reçu et sera traité prochainement</small>
+                        </div>
+                    </div>
+                {% elseif nouveauStatut == 'planifie' %}
+                    <div class="timeline-item">
+                        <span class="timeline-icon">📅</span>
+                        <div>
+                            <strong>Intervention planifiée</strong><br>
+                            <small>Une intervention a été programmée pour résoudre ce problème</small>
+                        </div>
+                    </div>
+                {% elseif nouveauStatut == 'resolu' %}
+                    <div class="timeline-item">
+                        <span class="timeline-icon">✅</span>
+                        <div>
+                            <strong>Problème résolu</strong><br>
+                            <small>Votre signalement a été traité avec succès !</small>
+                        </div>
+                    </div>
+                {% elseif nouveauStatut == 'rejete' %}
+                    <div class="timeline-item">
+                        <span class="timeline-icon">❌</span>
+                        <div>
+                            <strong>Signalement rejeté</strong><br>
+                            <small>Ce signalement n'a pas pu être validé</small>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <p>Cette mise à jour vous permet de suivre en temps réel l'avancement du traitement de votre signalement.</p>
+
+        <p style="text-align: center; margin: 30px 0;">
+            <a href="{{ signalementUrl }}" class="btn">👀 Voir tous les détails</a>
+        </p>
+
+        <div style="background: #fff3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #ffc107; margin: 20px 0;">
+            <p style="margin: 0;"><strong>💡 Rappel :</strong> Vous recevrez automatiquement un email à chaque changement de statut de vos signalements. Vous pouvez modifier vos préférences de notification dans votre profil.</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Cet email a été envoyé automatiquement, merci de ne pas répondre.</p>
+        <p>© {{ "now"|date("Y") }} Plateforme de signalement</p>
+    </div>
+</div>
+</body>
+</html>

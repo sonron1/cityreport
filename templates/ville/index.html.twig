@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des villes - CityFlow{% endblock %}
+
+{% block body %}
+<h1 class="mb-4">Liste des villes</h1>
+
+<div class="row">
+    {% for ville in villes %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ ville.nom }}</h5>
+                    <p class="card-text">
+                        <strong>{{ ville.signalements|length }}</strong> signalements
+                    </p>
+                    <a href="{{ path('app_ville_show', {'id': ville.id}) }}" class="btn btn-primary">Voir les signalements</a>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">Aucune ville n'a été trouvée.</div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

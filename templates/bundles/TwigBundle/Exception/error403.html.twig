@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accès refusé - CityFlow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 15px;
+        }
+
+        .error-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            max-width: 450px;
+            width: 100%;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .error-header {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .error-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            animation: shake 2s ease-in-out infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-2deg); }
+            75% { transform: rotate(2deg); }
+        }
+
+        .error-code {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .error-title {
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .error-body {
+            padding: 1.5rem;
+        }
+
+        .btn-compact {
+            border-radius: 25px;
+            padding: 10px 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-compact:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-warning-custom {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+        }
+
+        .btn-secondary-custom {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+        }
+
+        @media (max-width: 576px) {
+            .error-card { margin: 10px; }
+            .error-header { padding: 1rem; }
+            .error-body { padding: 1rem; }
+            .error-code { font-size: 2.5rem; }
+            .error-icon { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="error-card">
+    <div class="error-header">
+        <div class="error-icon">
+            <i class="fas fa-shield-alt"></i>
+        </div>
+        <h1 class="error-code">403</h1>
+        <h2 class="error-title">Accès refusé</h2>
+    </div>
+
+    <div class="error-body">
+        <p class="text-muted text-center mb-3">
+            Vous n'avez pas les permissions nécessaires pour accéder à cette ressource.
+        </p>
+
+        <div class="d-grid gap-2">
+            <a href="/login" class="btn btn-warning-custom btn-compact">
+                <i class="fas fa-sign-in-alt me-2"></i>
+                Se connecter
+            </a>
+            <button onclick="history.back()" class="btn btn-secondary-custom btn-compact">
+                <i class="fas fa-arrow-left me-2"></i>
+                Retour
+            </button>
+        </div>
+    </div>
+</div>
+</body>
+</html>

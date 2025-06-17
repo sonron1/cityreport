@@ -1,0 +1,176 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ message.sujet }} - Messages{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .message-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .message-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+        }
+
+        .message-body {
+            padding: 2rem;
+        }
+
+        .user-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-admin {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .badge-moderator {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        .badge-user {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .signalement-link {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container my-4">
+        <!-- Fil d'Ariane -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
+                <li class="breadcrumb-item"><a href="{{ path('app_messages_inbox') }}">Messages</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ message.sujet }}</li>
+            </ol>
+        </nav>
+
+        <div class="message-container">
+            <!-- En-tête du message -->
+            <div class="message-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="h3 mb-2">{{ message.sujet }}</h1>
+                        <div class="d-flex align-items-center">
+                            <div class="me-4">
+                                <strong>De :</strong>
+                                {{ message.expediteur.prenom }} {{ message.expediteur.nom }}
+                                {% if 'ROLE_ADMIN' in message.expediteur.roles %}
+                                    <span class="user-badge badge-admin ms-2">Admin</span>
+                                {% elseif 'ROLE_MODERATOR' in message.expediteur.roles %}
+                                    <span class="user-badge badge-moderator ms-2">Modérateur</span>
+                                {% else %}
+                                    <span class="user-badge badge-user ms-2">Utilisateur</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <strong>À :</strong>
+                                {{ message.destinataire.prenom }} {{ message.destinataire.nom }}
+                                {% if 'ROLE_ADMIN' in message.destinataire.roles %}
+                                    <span class="user-badge badge-admin ms-2">Admin</span>
+                                {% elseif 'ROLE_MODERATOR' in message.destinataire.roles %}
+                                    <span class="user-badge badge-moderator ms-2">Modérateur</span>
+                                {% else %}
+                                    <span class="user-badge badge-user ms-2">Utilisateur</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <small class="opacity-75">
+                            <i class="fas fa-calendar-alt me-1"></i>
+                            {{ message.dateEnvoi|date('d/m/Y à H:i') }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Corps du message -->
+            <div class="message-body">
+                {% if message.signalementConcerne %}
+                    <div class="signalement-link">
+                        <h6 class="mb-2">
+                            <i class="fas fa-link me-2 text-primary"></i>
+                            Signalement concerné
+                        </h6>
+                        <p class="mb-2">
+                            <strong>{{ message.signalementConcerne.titre }}</strong>
+                        </p>
+                        <p class="text-muted small mb-2">
+                            {{ message.signalementConcerne.ville.nom }} -
+                            {{ message.signalementConcerne.categorie.nom }}
+                        </p>
+                        <a href="{{ path('app_signalement_show', {'id': message.signalementConcerne.id}) }}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye me-1"></i>Voir le signalement
+                        </a>
+                    </div>
+                {% endif %}
+
+                <div class="message-content">
+                    <h6 class="text-muted mb-3">Message :</h6>
+                    <div class="bg-light p-3 rounded">
+                        {{ message.contenu|nl2br }}
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="mt-4 d-flex gap-2">
+                    {% if canReply %}
+                        <a href="{{ path('app_message_new', {'reply': message.id}) }}"
+                           class="btn btn-primary">
+                            <i class="fas fa-reply me-2"></i>Répondre
+                        </a>
+                    {% else %}
+                        <span class="text-muted small">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Vous ne pouvez pas répondre à ce message selon les règles de communication.
+                    </span>
+                    {% endif %}
+
+                    {% if message.destinataire == app.user %}
+                        <form method="post" action="{{ path('app_message_archive', {'id': message.id}) }}" class="d-inline">
+                            <button type="submit" class="btn btn-outline-secondary"
+                                    onclick="return confirm('Archiver ce message ?')">
+                                <i class="fas fa-archive me-1"></i>Archiver
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    <form method="post" action="{{ path('app_message_delete', {'id': message.id}) }}" class="d-inline">
+                        <button type="submit" class="btn btn-outline-danger"
+                                onclick="return confirm('Supprimer ce message ?')">
+                            <i class="fas fa-trash me-1"></i>Supprimer
+                        </button>
+                    </form>
+
+                    <a href="{{ path('app_messages_inbox') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Retour aux messages
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

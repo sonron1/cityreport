@@ -1,0 +1,687 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Administration - CityFlow{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .admin-wrapper {
+            min-height: calc(100vh - 80px);
+            background: #f8f9fa;
+        }
+
+        .admin-sidebar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: calc(100vh - 80px);
+            padding: 0;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+
+        .admin-sidebar .sidebar-header {
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .admin-sidebar .sidebar-header h5 {
+            color: white;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .admin-nav {
+            padding: 1rem 0;
+        }
+
+        .admin-nav-group {
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-nav-group-title {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.5rem 1.5rem;
+            margin-bottom: 0.25rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Menu principal */
+        .admin-nav-item {
+            position: relative;
+        }
+
+        .admin-nav-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 1.5rem;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .admin-nav-link:hover {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+        }
+
+        .admin-nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-left-color: white;
+            font-weight: 500;
+        }
+
+        .admin-nav-link.has-submenu {
+            cursor: pointer;
+        }
+
+        .nav-link-content {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        .nav-link-content i {
+            width: 16px;
+            margin-right: 0.75rem;
+        }
+
+        .submenu-toggle {
+            color: rgba(255, 255, 255, 0.6);
+            transition: transform 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .submenu-toggle.expanded {
+            transform: rotate(90deg);
+        }
+
+        /* Sous-menus */
+        .admin-submenu {
+            background: rgba(0, 0, 0, 0.1);
+            border-left: 2px solid rgba(255, 255, 255, 0.2);
+            margin: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .admin-submenu.expanded {
+            max-height: 500px;
+        }
+
+        .admin-submenu .admin-nav-link {
+            padding: 8px 1rem 8px 2.5rem;
+            font-size: 0.85rem;
+            border-left: none;
+            background: transparent;
+        }
+
+        .admin-submenu .admin-nav-link:before {
+            content: "→";
+            margin-right: 0.5rem;
+            opacity: 0.6;
+            font-size: 0.8rem;
+        }
+
+        .admin-submenu .admin-nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .admin-submenu .admin-nav-link.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-left: 2px solid rgba(255, 255, 255, 0.8);
+        }
+
+        /* Badge notifications */
+        .badge {
+            font-size: 0.65rem;
+            padding: 0.25rem 0.5rem;
+            margin-left: 0.5rem;
+            border-radius: 10px;
+        }
+
+        /* Séparateur */
+        .admin-nav-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 1rem 1.5rem;
+        }
+
+        /* Contenu principal */
+        .admin-content {
+            padding: 2rem;
+            background-color: #f8f9fa;
+            min-height: calc(100vh - 80px);
+        }
+
+        .admin-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .admin-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .admin-card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+            border: none;
+            padding: 1rem 1.5rem;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(79, 172, 254, 0.3);
+        }
+
+        .stats-card h3 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .breadcrumb-admin {
+            background: transparent;
+            padding: 0 0 1rem 0;
+        }
+
+        .breadcrumb-admin .breadcrumb-item {
+            color: #6c757d;
+        }
+
+        .breadcrumb-admin .breadcrumb-item.active {
+            color: #495057;
+        }
+
+        .alert-admin {
+            border: none;
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+        }
+
+        .table-admin {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .table-admin th {
+            background: #f8f9fa;
+            border: none;
+            padding: 1rem;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .table-admin td {
+            border: none;
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        .table-admin tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        .table-admin tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Responsive */
+        @media (max-width: 991.98px) {
+            .admin-sidebar {
+                position: fixed;
+                top: 80px;
+                left: -280px;
+                width: 280px;
+                height: calc(100vh - 80px);
+                transition: left 0.3s ease;
+                z-index: 1000;
+            }
+
+            .admin-sidebar.show {
+                left: 0;
+            }
+
+            .admin-content {
+                margin-left: 0;
+            }
+
+            .sidebar-overlay {
+                position: fixed;
+                top: 80px;
+                left: 0;
+                width: 100%;
+                height: calc(100vh - 80px);
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+            }
+
+            .sidebar-overlay.show {
+                opacity: 1;
+                visibility: visible;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="admin-wrapper">
+        <div class="row g-0">
+            <!-- Sidebar Admin -->
+            <div class="col-lg-2">
+                <div class="admin-sidebar" id="adminSidebar">
+                    <div class="sidebar-header">
+                        <h5>
+                            <i class="fas fa-shield-alt me-2"></i>
+                            Administration
+                        </h5>
+                    </div>
+
+                    <nav class="admin-nav">
+                        <!-- Dashboard -->
+                        <div class="admin-nav-group">
+                            <div class="admin-nav-item">
+                                <a class="admin-nav-link {{ app.request.get('_route') == 'app_admin_dashboard' ? 'active' : '' }}"
+                                   href="{{ path('app_admin_dashboard') }}">
+                                    <div class="nav-link-content">
+                                        <i class="fas fa-tachometer-alt"></i>
+                                        Dashboard
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Signalements -->
+                        <div class="admin-nav-group">
+                            <div class="admin-nav-group-title">Signalements</div>
+
+                            <div class="admin-nav-item">
+                                <div class="admin-nav-link has-submenu" onclick="toggleSubmenu(this)">
+                                    <div class="nav-link-content">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        Gestion Signalements
+                                    </div>
+                                    <i class="fas fa-chevron-right submenu-toggle"></i>
+                                </div>
+                                <div class="admin-submenu">
+                                    <a class="admin-nav-link {{ app.request.get('_route') starts with 'app_admin_signalements' ? 'active' : '' }}"
+                                       href="{{ path('app_admin_signalements') }}">
+                                        Tous les signalements
+                                    </a>
+                                    <a class="admin-nav-link {{ app.request.get('_route') == 'app_admin_signalements_validation' ? 'active' : '' }}"
+                                       href="{{ path('app_moderateur_validation') }}">
+                                        En attente validation
+                                    </a>
+                                    <a class="admin-nav-link"
+                                       href="#">
+                                        Archives
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Utilisateurs -->
+                        <div class="admin-nav-group">
+                            <div class="admin-nav-group-title">Utilisateurs</div>
+
+                            <div class="admin-nav-item">
+                                <div class="admin-nav-link has-submenu" onclick="toggleSubmenu(this)">
+                                    <div class="nav-link-content">
+                                        <i class="fas fa-users"></i>
+                                        Gestion Utilisateurs
+                                    </div>
+                                    <i class="fas fa-chevron-right submenu-toggle"></i>
+                                </div>
+                                <div class="admin-submenu">
+                                    <a class="admin-nav-link {{ app.request.get('_route') starts with 'app_admin_users' or app.request.get('_route') starts with 'app_admin_utilisateurs' ? 'active' : '' }}"
+                                       href="{{ path('app_admin_utilisateurs') }}">
+                                        Liste utilisateurs
+                                    </a>
+                                    <a class="admin-nav-link {{ app.request.get('_route') == 'app_admin_user_new' ? 'active' : '' }}"
+                                       href="{{ path('app_admin_user_new') }}">
+                                        Nouvel utilisateur
+                                    </a>
+                                    <a class="admin-nav-link"
+                                       href="{{ path('app_admin_users_roles') }}">
+                                        Gestion des rôles
+                                    </a>
+                                    <a class="admin-nav-link {{ app.request.get('_route') == 'app_admin_users_validation' ? 'active' : '' }}"
+                                       href="{{ path('app_moderateur_validation') }}">
+                                        Validation comptes
+                                        {% if pending_users_count is defined and pending_users_count > 0 %}
+                                            <span class="badge bg-warning">{{ pending_users_count }}</span>
+                                        {% endif %}
+                                    </a>
+                                    <a class="admin-nav-link {{ app.request.get('_route') == 'app_admin_user_export' ? 'active' : '' }}"
+                                       href="{{ path('app_admin_user_export') }}">
+                                        Exporter utilisateurs
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modération -->
+                        <div class="admin-nav-group">
+                            <div class="admin-nav-group-title">Modération</div>
+
+                            <div class="admin-nav-item">
+                                <div class="admin-nav-link has-submenu" onclick="toggleSubmenu(this)">
+                                    <div class="nav-link-content">
+                                        <i class="fas fa-gavel"></i>
+                                        Outils Modération
+                                    </div>
+                                    <i class="fas fa-chevron-right submenu-toggle"></i>
+                                </div>
+                                <div class="admin-submenu">
+                                    <a class="admin-nav-link {{ app.request.get('_route') starts with 'app_admin_demandes' ? 'active' : '' }}"
+                                       href="{{ path('app_admin_demandes_suppression') }}">
+                                        Demandes suppression
+                                        {% if pending_deletions_count is defined and pending_deletions_count > 0 %}
+                                            <span class="badge bg-danger">{{ pending_deletions_count }}</span>
+                                        {% endif %}
+                                    </a>
+                                    <a class="admin-nav-link {{ app.request.get('_route') == 'app_admin_journal_validations' ? 'active' : '' }}"
+                                       href="{{ path('app_admin_journal_validations') }}">
+                                        Journal validations
+                                    </a>
+                                    <a class="admin-nav-link"
+                                       href="{{ path('app_admin_signalements_rapports') }}">
+                                        Signalements rapportés
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Configuration -->
+                        <div class="admin-nav-group">
+                            <div class="admin-nav-group-title">Configuration</div>
+
+                            <div class="admin-nav-item">
+                                <div class="admin-nav-link has-submenu" onclick="toggleSubmenu(this)">
+                                    <div class="nav-link-content">
+                                        <i class="fas fa-cogs"></i>
+                                        Paramètres & Config
+                                    </div>
+                                    <i class="fas fa-chevron-right submenu-toggle"></i>
+                                </div>
+                                <div class="admin-submenu">
+                                    <a class="admin-nav-link {{ app.request.get('_route') starts with 'app_admin_categories' ? 'active' : '' }}"
+                                       href="{{ path('app_admin_categories') }}">
+                                        Catégories
+                                    </a>
+                                    <a class="admin-nav-link {{ app.request.get('_route') starts with 'app_admin_villes' ? 'active' : '' }}"
+                                       href="{{ path('app_admin_villes') }}">
+                                        Villes & Arrondissements
+                                    </a>
+                                    <a class="admin-nav-link {{ app.request.get('_route') starts with 'app_admin_parametres' ? 'active' : '' }}"
+                                       href="{{ path('app_admin_parametres') }}">
+                                        Paramètres système
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Statistiques et Rapports -->
+                        <div class="admin-nav-group">
+                            <div class="admin-nav-group-title">Analyse</div>
+
+                            <div class="admin-nav-item">
+                                <div class="admin-nav-link has-submenu" onclick="toggleSubmenu(this)">
+                                    <div class="nav-link-content">
+                                        <i class="fas fa-chart-bar"></i>
+                                        Statistiques & Rapports
+                                    </div>
+                                    <i class="fas fa-chevron-right submenu-toggle"></i>
+                                </div>
+                                <div class="admin-submenu">
+                                    <a class="admin-nav-link {{ app.request.get('_route') starts with 'app_admin_statistiques' ? 'active' : '' }}"
+                                       href="{{ path('app_admin_statistiques') }}">
+                                        Vue d'ensemble
+                                    </a>
+                                    <a class="admin-nav-link"
+                                       href="{{ path('app_admin_rapports_mensuel') }}">
+                                        Rapport mensuel
+                                    </a>
+                                    <a class="admin-nav-link"
+                                       href="#">
+                                        Analytics détaillées
+                                    </a>
+                                    <a class="admin-nav-link"
+                                       href="#">
+                                        Logs système
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Outils Admin -->
+                        <div class="admin-nav-group">
+                            <div class="admin-nav-group-title">Outils</div>
+
+                            <div class="admin-nav-item">
+                                <div class="admin-nav-link has-submenu" onclick="toggleSubmenu(this)">
+                                    <div class="nav-link-content">
+                                        <i class="fas fa-tools"></i>
+                                        Outils Système
+                                    </div>
+                                    <i class="fas fa-chevron-right submenu-toggle"></i>
+                                </div>
+                                <div class="admin-submenu">
+                                    <a class="admin-nav-link"
+                                       href="#">
+                                        Mode maintenance
+                                    </a>
+                                    <a class="admin-nav-link"
+                                       href="#">
+                                        Sauvegarde/Restauration
+                                    </a>
+                                    <a class="admin-nav-link"
+                                       href="#">
+                                        Notifications système
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="admin-nav-divider"></div>
+
+                        <!-- Navigation rapide -->
+                        <div class="admin-nav-group">
+                            <div class="admin-nav-group-title">Navigation</div>
+
+                            <div class="admin-nav-item">
+                                <a class="admin-nav-link" href="{{ path('app_moderateur_dashboard') }}">
+                                    <div class="nav-link-content">
+                                        <i class="fas fa-gavel"></i>
+                                        Mode Modération
+                                    </div>
+                                </a>
+                            </div>
+
+                            <div class="admin-nav-item">
+                                <a class="admin-nav-link" href="{{ path('app_home') }}">
+                                    <div class="nav-link-content">
+                                        <i class="fas fa-arrow-left"></i>
+                                        Retour au site
+                                    </div>
+                                </a>
+                            </div>
+
+                            <div class="admin-nav-item">
+                                <a class="admin-nav-link" href="{{ path('app_logout') }}">
+                                    <div class="nav-link-content">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        Déconnexion
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Contenu principal -->
+            <div class="col-lg-10">
+                <div class="admin-content">
+                    <!-- Bouton menu mobile -->
+                    <button class="btn btn-outline-secondary d-lg-none mb-3" type="button"
+                            onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i> Menu
+                    </button>
+
+                    <!-- Fil d'Ariane -->
+                    <nav aria-label="breadcrumb" class="breadcrumb-admin">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item">
+                                <a href="{{ path('app_admin_dashboard') }}">
+                                    <i class="fas fa-home me-1"></i>Administration
+                                </a>
+                            </li>
+                            {% block admin_breadcrumb %}{% endblock %}
+                        </ol>
+                    </nav>
+
+                    <!-- Messages Flash -->
+                    {% for type, messages in app.flashes %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ type == 'error' ? 'danger' : type }} alert-admin alert-dismissible fade show">
+                                {% if type == 'success' %}
+                                    <i class="fas fa-check-circle me-2"></i>
+                                {% elseif type == 'error' %}
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                {% elseif type == 'warning' %}
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                {% else %}
+                                    <i class="fas fa-info-circle me-2"></i>
+                                {% endif %}
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+
+                    <!-- Contenu de la page -->
+                    {% block admin_content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay pour mobile -->
+    <div class="sidebar-overlay d-lg-none" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        // Fonctions pour les sous-menus
+        function toggleSubmenu(element) {
+            const submenu = element.nextElementSibling;
+            const toggle = element.querySelector('.submenu-toggle');
+
+            if (submenu.classList.contains('expanded')) {
+                submenu.classList.remove('expanded');
+                toggle.classList.remove('expanded');
+            } else {
+                // Fermer les autres sous-menus ouverts
+                document.querySelectorAll('.admin-submenu.expanded').forEach(sub => {
+                    sub.classList.remove('expanded');
+                });
+                document.querySelectorAll('.submenu-toggle.expanded').forEach(tog => {
+                    tog.classList.remove('expanded');
+                });
+
+                // Ouvrir le sous-menu cliqué
+                submenu.classList.add('expanded');
+                toggle.classList.add('expanded');
+            }
+        }
+
+        // Auto-ouverture du sous-menu si page active
+        document.addEventListener('DOMContentLoaded', function() {
+            const activeLink = document.querySelector('.admin-submenu .admin-nav-link.active');
+            if (activeLink) {
+                const submenu = activeLink.closest('.admin-submenu');
+                const parentLink = submenu.previousElementSibling;
+                const toggle = parentLink.querySelector('.submenu-toggle');
+
+                submenu.classList.add('expanded');
+                toggle.classList.add('expanded');
+            }
+
+            // Auto-hide alerts après 5 secondes
+            const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    if (alert && alert.classList.contains('show')) {
+                        const bsAlert = new bootstrap.Alert(alert);
+                        bsAlert.close();
+                    }
+                }, 5000);
+            });
+        });
+
+        // Toggle sidebar pour mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            if (sidebar.classList.contains('show')) {
+                sidebar.classList.remove('show');
+                overlay.classList.remove('show');
+                document.body.style.overflow = '';
+            } else {
+                sidebar.classList.add('show');
+                overlay.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        // Fermer sidebar si on clique en dehors (mobile)
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('adminSidebar');
+            const toggleBtn = document.querySelector('[onclick="toggleSidebar()"]');
+
+            if (window.innerWidth <= 991.98 &&
+                !sidebar.contains(e.target) &&
+                !toggleBtn.contains(e.target) &&
+                sidebar.classList.contains('show')) {
+                toggleSidebar();
+            }
+        });
+    </script>
+{% endblock %}

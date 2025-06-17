@@ -1,0 +1,399 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Carte des signalements{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        #map {
+            height: 75vh;
+            width: 100%;
+            border-radius: 10px;
+        }
+        .leaflet-popup-content-wrapper {
+            max-width: 300px;
+        }
+        .custom-marker {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <h1 class="mb-4">Carte des signalements</h1>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Filtrer les signalements</h5>
+                        <form id="filter-form" class="row g-3">
+                            <div class="col-md-4">
+                                <select class="form-select" id="categorie" name="categorie">
+                                    <option value="">Toutes les catégories</option>
+                                    {% for categorie in categories %}
+                                        <option value="{{ categorie.id }}">{{ categorie.nom }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="ville" name="ville">
+                                    <option value="">Toutes les villes</option>
+                                    {% for ville in villes %}
+                                        <option value="{{ ville.id }}">{{ ville.nom }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div id="map"></div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Légende des marqueurs</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2 d-flex align-items-center">
+                            <img src="/images/markers/marker-red.png" width="20" height="34" alt="Cotonou">
+                            <span class="ms-2">Cotonou</span>
+                        </div>
+                        <div class="mb-2 d-flex align-items-center">
+                            <img src="/images/markers/marker-blue.png" width="20" height="34" alt="Porto-Novo">
+                            <span class="ms-2">Porto-Novo</span>
+                        </div>
+                        <div class="mb-2 d-flex align-items-center">
+                            <img src="/images/markers/marker-green.png" width="20" height="34" alt="Parakou">
+                            <span class="ms-2">Parakou</span>
+                        </div>
+                        <div class="mb-2 d-flex align-items-center">
+                            <img src="/images/markers/marker-yellow.png" width="20" height="34" alt="Abomey-Calavi">
+                            <span class="ms-2">Abomey-Calavi</span>
+                        </div>
+                        <div class="mb-2 d-flex align-items-center">
+                            <img src="/images/markers/marker-black.png" width="20" height="34" alt="Autres villes">
+                            <span class="ms-2">Autres villes</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0">Statistiques</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="legend-stats">
+                            <!-- Les statistiques seront insérées ici par JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialiser la carte centrée sur le Bénin
+            const map = L.map('map').setView([9.3077, 2.3158], 7);
+
+            // Ajouter la couche de tuiles (OpenStreetMap)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Définir les icônes personnalisées selon la documentation Leaflet
+            // https://leafletjs.com/examples/custom-icons/
+            
+            // Créer un dictionnaire d'icônes par ville
+            const villeIcons = {
+                'cotonou': L.icon({
+                    iconUrl: '/images/markers/marker-red.png',
+                    shadowUrl: '/images/markers/marker-shadow.png',
+                    iconSize: [25, 41],    // taille de l'icône
+                    shadowSize: [41, 41],  // taille de l'ombre
+                    iconAnchor: [12, 41],  // point de l'icône qui correspondra à la position du marqueur
+                    shadowAnchor: [12, 41],// même chose pour l'ombre
+                    popupAnchor: [1, -34]  // point à partir duquel la popup doit s'ouvrir par rapport à l'iconAnchor
+                }),
+                'porto-novo': L.icon({
+                    iconUrl: '/images/markers/marker-blue.png',
+                    shadowUrl: '/images/markers/marker-shadow.png',
+                    iconSize: [25, 41],
+                    shadowSize: [41, 41],
+                    iconAnchor: [12, 41],
+                    shadowAnchor: [12, 41],
+                    popupAnchor: [1, -34]
+                }),
+                'parakou': L.icon({
+                    iconUrl: '/images/markers/marker-green.png',
+                    shadowUrl: '/images/markers/marker-shadow.png',
+                    iconSize: [25, 41],
+                    shadowSize: [41, 41],
+                    iconAnchor: [12, 41],
+                    shadowAnchor: [12, 41],
+                    popupAnchor: [1, -34]
+                }),
+                'abomey-calavi': L.icon({
+                    iconUrl: '/images/markers/marker-yellow.png',
+                    shadowUrl: '/images/markers/marker-shadow.png',
+                    iconSize: [25, 41],
+                    shadowSize: [41, 41],
+                    iconAnchor: [12, 41],
+                    shadowAnchor: [12, 41],
+                    popupAnchor: [1, -34]
+                }),
+                'default': L.icon({
+                    iconUrl: '/images/markers/marker-black.png',
+                    shadowUrl: '/images/markers/marker-shadow.png',
+                    iconSize: [25, 41],
+                    shadowSize: [41, 41],
+                    iconAnchor: [12, 41],
+                    shadowAnchor: [12, 41],
+                    popupAnchor: [1, -34]
+                })
+            };
+
+            // Fonction pour déterminer quelle icône utiliser en fonction de la ville
+            function getIconForVille(villeName) {
+                if (!villeName) return villeIcons['default'];
+                
+                // Normaliser le nom de la ville (minuscules, sans accents)
+                const normalizedName = villeName.toLowerCase()
+                    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                    .replace(/[-\s]/g, '-'); // Remplacer espaces et tirets par un tiret
+                    
+                // Vérifier si une icône existe pour cette ville
+                return villeIcons[normalizedName] || villeIcons['default'];
+            }
+
+            // Fonction pour charger les signalements
+            function loadSignalements(filters = {}) {
+                // Construire l'URL avec les paramètres de filtre
+                let url = '/api/signalements';
+                let params = [];
+
+                if (filters.categorie) {
+                    params.push(`categorie=${filters.categorie}`);
+                }
+
+                if (filters.ville) {
+                    params.push(`ville=${filters.ville}`);
+                }
+
+                // Ajouter le filtre d'état (validé par défaut)
+                params.push('etat=validé');
+
+                if (params.length > 0) {
+                    url += '?' + params.join('&');
+                }
+
+                // Effacer les messages d'alerte précédents
+                document.querySelectorAll('.alert').forEach(alert => alert.remove());
+
+                // Afficher message de chargement
+                const mapContainer = document.getElementById('map');
+                const loadingAlert = document.createElement('div');
+                loadingAlert.className = 'alert alert-info';
+                loadingAlert.textContent = 'Chargement des signalements...';
+                loadingAlert.id = 'loading-alert';
+                mapContainer.parentNode.insertBefore(loadingAlert, mapContainer);
+
+                // Effectuer la requête
+                //console.log('Envoi de la requête à : ' + url);
+                fetch(url)
+                    .then(response => {
+                        //console.log('Statut de la réponse: ' + response.status);
+                        if (!response.ok) {
+                            throw new Error(`Erreur HTTP: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        //console.log('Données reçues de l\'API:');
+                        //console.log(data);
+                        //console.log('Nombre de signalements: ' + data.length);
+                        
+                        // Supprimer l'alerte de chargement
+                        if (document.getElementById('loading-alert')) {
+                            document.getElementById('loading-alert').remove();
+                        }
+
+                        // Effacer les marqueurs existants
+                        map.eachLayer(layer => {
+                            if (layer instanceof L.Marker) {
+                                map.removeLayer(layer);
+                            }
+                        });
+
+                        // Ajouter les nouveaux marqueurs avec des icônes personnalisées
+                        data.forEach(signalement => {
+                            // Extraire les infos
+                            const position = [signalement.lat, signalement.lng];
+                            const title = signalement.titre;
+                            const ville = signalement.ville;
+                            
+                            // Sélectionner l'icône appropriée pour la ville
+                            const icon = getIconForVille(ville);
+
+                            // Créer le contenu de la popup
+                            let popupContent = `
+                                <div class="popup-content">
+                                    <h5>${signalement.titre}</h5>
+                                    <p class="mb-1"><strong>Catégorie:</strong> ${signalement.categorie ? signalement.categorie.nom : 'Non catégorisé'}</p>
+                                    <p class="mb-1"><strong>Lieu:</strong> ${ville || 'Non précisé'}</p>
+                                    <p class="mb-1"><strong>Date:</strong> ${signalement.date}</p>
+                                    <p class="mb-3">${signalement.description}</p>`;
+
+                            // Ajouter l'image
+                            const imagePath = signalement.photoUrl ?
+                                `/uploads/${signalement.photoUrl}` :
+                                '/uploads/default.jpeg';
+
+                            popupContent += `
+                                <div class="text-center" id="img-loading-${signalement.id}"><div class="spinner-border" role="status"></div></div>
+                                <img src="${imagePath}" alt="Photo" class="img-fluid rounded mb-2" style="display:none;" 
+                                     onload="this.style.display='block'; document.getElementById('img-loading-${signalement.id}').style.display='none';"
+                                     onerror="this.src='/uploads/default.jpeg'; this.style.display='block'; document.getElementById('img-loading-${signalement.id}').style.display='none';">`;
+
+                            popupContent += `
+                                <a href="/signalement/${signalement.id}" class="btn btn-primary btn-sm w-100">Voir les détails</a>
+                            </div>`;
+
+                            // Créer le marqueur avec l'icône personnalisée
+                            const marker = L.marker(position, {
+                                icon: icon,
+                                title: title
+                            }).addTo(map);
+
+                            // Ajouter la popup au marqueur
+                            marker.bindPopup(popupContent, {
+                                maxWidth: 300
+                            });
+                        });
+
+                        // Si aucun marqueur n'a été ajouté, afficher un message
+                        if (data.length === 0) {
+                            const mapContainer = document.getElementById('map');
+                            const alert = document.createElement('div');
+                            alert.className = 'alert alert-info';
+                            alert.textContent = 'Aucun signalements trouvé avec les filtres actuels.';
+                            mapContainer.parentNode.insertBefore(alert, mapContainer);
+
+                            // Supprimer l'alerte après 5 secondes
+                            setTimeout(() => {
+                                alert.remove();
+                            }, 5000);
+                        } else {
+                            // Afficher le nombre de signalements trouvés
+                            const mapContainer = document.getElementById('map');
+                            const resultsAlert = document.createElement('div');
+                            resultsAlert.className = 'alert alert-success';
+                            resultsAlert.textContent = `${data.length} signalement(s) trouvé(s)`;
+                            mapContainer.parentNode.insertBefore(resultsAlert, mapContainer);
+
+                            // Supprimer l'alerte après 3 secondes
+                            setTimeout(() => {
+                                resultsAlert.remove();
+                            }, 3000);
+                        }
+
+                        // Code existant pour afficher les alertes...
+                        // Mettre à jour les statistiques
+                        updateStatistics(data);
+                    })
+                    .catch(error => {
+                        // Supprimer l'alerte de chargement en cas d'erreur
+                        if (document.getElementById('loading-alert')) {
+                            document.getElementById('loading-alert').remove();
+                        }
+
+                        // Afficher une erreur à l'utilisateur
+                        const mapContainer = document.getElementById('map');
+                        const alert = document.createElement('div');
+                        alert.className = 'alert alert-danger';
+                        alert.textContent = 'Erreur lors du chargement des signalements. Veuillez réessayer.';
+                        mapContainer.parentNode.insertBefore(alert, mapContainer);
+                    });
+            }
+
+            // Fonction pour mettre à jour les statistiques
+            function updateStatistics(data) {
+                // Créer un objet pour stocker le nombre de signalements par ville
+                const villeStats = {};
+                
+                // Comptabiliser les signalements par ville
+                data.forEach(signalement => {
+                    const ville = signalement.ville || 'Non précisé';
+                    if (!villeStats[ville]) {
+                        villeStats[ville] = 0;
+                    }
+                    villeStats[ville]++;
+                });
+                
+                // Mettre à jour la légende avec les statistiques
+                const legendContainer = document.getElementById('legend-stats');
+                if (legendContainer) {
+                    let legendHTML = '<h6 class="mb-3">Nombre de signalements par ville:</h6>';
+                    
+                    // Trier les villes par nombre de signalements (décroissant)
+                    const sortedVilles = Object.keys(villeStats).sort((a, b) => villeStats[b] - villeStats[a]);
+                    
+                    sortedVilles.forEach(ville => {
+                        const count = villeStats[ville];
+                        legendHTML += `
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>${ville}</span>
+                                <span class="badge bg-primary">${count}</span>
+                            </div>
+                        `;
+                    });
+                    
+                    legendContainer.innerHTML = legendHTML;
+                }
+            }
+            
+
+            // Gérer les événements de formulaire
+            document.getElementById('filter-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                // Récupérer les valeurs des filtres
+                const categorie = document.getElementById('categorie').value;
+                const ville = document.getElementById('ville').value;
+
+                // Charger les signalements avec les filtres
+                loadSignalements({
+                    categorie: categorie,
+                    ville: ville
+                });
+            });
+
+            // Chargement initial des signalements
+            loadSignalements();
+        });
+    </script>
+{% endblock %}

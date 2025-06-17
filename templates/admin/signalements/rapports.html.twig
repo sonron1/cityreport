@@ -1,0 +1,590 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Rapports et Analyses - Signalements{% endblock %}
+
+{% block admin_breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('app_admin_signalements') }}">Signalements</a></li>
+    <li class="breadcrumb-item active">Rapports</li>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .rapports-container {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            font-weight: 300;
+            line-height: 1.5;
+        }
+
+        .card-rapport {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transition: all 0.3s ease;
+        }
+
+        .card-rapport:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .card-rapport .card-header {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            border-radius: 12px 12px 0 0;
+            padding: 1.25rem;
+        }
+
+        .card-rapport .card-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            height: 100%;
+        }
+
+        .kpi-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .kpi-evolution {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            opacity: 0.8;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 1rem 0;
+        }
+
+        .chart-container.large {
+            height: 400px;
+        }
+
+        .filters-panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .filter-item {
+            margin-bottom: 1rem;
+        }
+
+        .filter-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .filter-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .comparison-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .comparison-up {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .comparison-down {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .comparison-neutral {
+            background: #e2e3e5;
+            color: #6c757d;
+        }
+
+        .table-rapport {
+            font-size: 0.875rem;
+        }
+
+        .table-rapport th {
+            background: #f8f9fa;
+            border: none;
+            padding: 1rem;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .table-rapport td {
+            border: none;
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        .periode-info {
+            background: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .export-toolbar {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+{% endblock %}
+
+{% block admin_content %}
+    <div class="rapports-container">
+        <!-- En-tête -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-1">Rapports et Analyses</h1>
+                <p class="text-muted mb-0">Analyses détaillées des signalements</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filtersModal">
+                    <i class="fas fa-filter me-2"></i>Filtres
+                </button>
+                <button class="btn btn-primary" onclick="exportRapport()">
+                    <i class="fas fa-download me-2"></i>Export PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Informations sur la période -->
+        <div class="periode-info">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-calendar me-2 text-primary"></i>
+                <strong>Période analysée :</strong>
+                <span class="ms-2">
+                    {{ periode_affichage.debut|date('d/m/Y') }} - {{ periode_affichage.fin|date('d/m/Y') }}
+                    ({{ periode_affichage.nb_jours }} jour{{ periode_affichage.nb_jours > 1 ? 's' : '' }})
+                </span>
+            </div>
+        </div>
+
+        <!-- Indicateurs clés (KPI) -->
+        <div class="stats-grid">
+            <div class="card-rapport">
+                <div class="kpi-card">
+                    <div class="kpi-value">{{ stats_generales.signalements_periode }}</div>
+                    <p class="kpi-label">Signalements</p>
+                    <div class="kpi-evolution">
+                        {{ stats_generales.moyenne_par_jour }}/jour en moyenne
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-rapport">
+                <div class="kpi-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <div class="kpi-value">{{ stats_generales.taux_resolution }}%</div>
+                    <p class="kpi-label">Taux de résolution</p>
+                    <div class="kpi-evolution">
+                        {% if comparaisons.resolution_evolution.evolution > 0 %}
+                            <span class="comparison-up">+{{ comparaisons.resolution_evolution.evolution }}%</span>
+                        {% elseif comparaisons.resolution_evolution.evolution < 0 %}
+                            <span class="comparison-down">{{ comparaisons.resolution_evolution.evolution }}%</span>
+                        {% else %}
+                            <span class="comparison-neutral">Stable</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-rapport">
+                <div class="kpi-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                    <div class="kpi-value">
+                        {% if stats_generales.temps_moyen_traitement %}
+                            {{ stats_generales.temps_moyen_traitement }}h
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </div>
+                    <p class="kpi-label">Temps moyen traitement</p>
+                    <div class="kpi-evolution">Délai de prise en charge</div>
+                </div>
+            </div>
+
+            <div class="card-rapport">
+                <div class="kpi-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #2c3e50;">
+                    <div class="kpi-value">{{ indicateurs.taux_validation }}%</div>
+                    <p class="kpi-label">Taux de validation</p>
+                    <div class="kpi-evolution">Efficacité modération</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graphiques principaux -->
+        <div class="row">
+            <!-- Évolution temporelle -->
+            <div class="col-lg-8 mb-4">
+                <div class="card-rapport">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-line me-2 text-primary"></i>
+                            Évolution temporelle
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container large">
+                            <canvas id="evolutionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Répartition par statuts -->
+            <div class="col-lg-4 mb-4">
+                <div class="card-rapport">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-pie me-2 text-success"></i>
+                            Répartition par statuts
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="statutsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analyses détaillées -->
+        <div class="row">
+            <!-- Top catégories -->
+            <div class="col-lg-6 mb-4">
+                <div class="card-rapport">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="fas fa-tags me-2 text-warning"></i>
+                            Top catégories
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-rapport">
+                                <thead>
+                                <tr>
+                                    <th>Catégorie</th>
+                                    <th class="text-end">Nombre</th>
+                                    <th class="text-end">%</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for categorie in donnees_graphiques.top_categories %}
+                                    <tr>
+                                        <td>{{ categorie.categorie ?? 'Non défini' }}</td>
+                                        <td class="text-end">{{ categorie.count }}</td>
+                                        <td class="text-end">
+                                            {% set pourcentage = (categorie.count / stats_generales.signalements_periode * 100)|round(1) %}
+                                            {{ pourcentage }}%
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top villes -->
+            <div class="col-lg-6 mb-4">
+                <div class="card-rapport">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="fas fa-map-marker-alt me-2 text-info"></i>
+                            Top villes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-rapport">
+                                <thead>
+                                <tr>
+                                    <th>Ville</th>
+                                    <th class="text-end">Nombre</th>
+                                    <th class="text-end">%</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for ville in donnees_graphiques.top_villes %}
+                                    <tr>
+                                        <td>{{ ville.ville ?? 'Non défini' }}</td>
+                                        <td class="text-end">{{ ville.count }}</td>
+                                        <td class="text-end">
+                                            {% set pourcentage = (ville.count / stats_generales.signalements_periode * 100)|round(1) %}
+                                            {{ pourcentage }}%
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- États de validation -->
+        <div class="row">
+            <div class="col-lg-12 mb-4">
+                <div class="card-rapport">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="fas fa-check-circle me-2 text-success"></i>
+                            Répartition par états de validation
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <canvas id="validationChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="table-responsive">
+                                    <table class="table table-rapport">
+                                        <thead>
+                                        <tr>
+                                            <th>État</th>
+                                            <th class="text-end">Nombre</th>
+                                            <th class="text-end">Pourcentage</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for validation in donnees_graphiques.repartition_validation %}
+                                            <tr>
+                                                <td>
+                                                        <span class="badge badge-clean validation-{{ validation.etatValidation }}">
+                                                            {{ validation.etatValidation|replace({'_': ' '})|title }}
+                                                        </span>
+                                                </td>
+                                                <td class="text-end">{{ validation.count }}</td>
+                                                <td class="text-end">
+                                                    {% set pourcentage = (validation.count / stats_generales.signalements_periode * 100)|round(1) %}
+                                                    {{ pourcentage }}%
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal filtres -->
+        <div class="modal fade" id="filtersModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Filtres du rapport</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form method="GET" action="{{ path('app_admin_signalements_rapports') }}">
+                            <div class="mb-3">
+                                <label class="form-label">Période</label>
+                                <select class="form-select" name="periode" id="periodeSelect">
+                                    <option value="7" {{ filtres_actifs.periode == '7' ? 'selected' : '' }}>7 derniers jours</option>
+                                    <option value="30" {{ filtres_actifs.periode == '30' ? 'selected' : '' }}>30 derniers jours</option>
+                                    <option value="90" {{ filtres_actifs.periode == '90' ? 'selected' : '' }}>3 derniers mois</option>
+                                    <option value="365" {{ filtres_actifs.periode == '365' ? 'selected' : '' }}>Dernière année</option>
+                                    <option value="custom" {{ filtres_actifs.periode == 'custom' ? 'selected' : '' }}>Personnalisée</option>
+                                </select>
+                            </div>
+
+                            <div id="customDateRange" style="display: {{ filtres_actifs.periode == 'custom' ? 'block' : 'none' }};">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label class="form-label">Date début</label>
+                                        <input type="date" class="form-control" name="date_debut" value="{{ filtres_actifs.date_debut }}">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">Date fin</label>
+                                        <input type="date" class="form-control" name="date_fin" value="{{ filtres_actifs.date_fin }}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Ville</label>
+                                <select class="form-select" name="ville">
+                                    <option value="">Toutes les villes</option>
+                                    {% for ville in villes %}
+                                        <option value="{{ ville.id }}" {{ filtres_actifs.ville == ville.id ? 'selected' : '' }}>
+                                            {{ ville.nom }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Catégorie</label>
+                                <select class="form-select" name="categorie">
+                                    <option value="">Toutes les catégories</option>
+                                    {% for categorie in categories %}
+                                        <option value="{{ categorie.id }}" {{ filtres_actifs.categorie == categorie.id ? 'selected' : '' }}>
+                                            {{ categorie.nom }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <button type="button" class="btn btn-outline-secondary" onclick="resetFilters()">
+                                    Réinitialiser
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    Appliquer filtres
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Gestion des filtres
+        document.getElementById('periodeSelect').addEventListener('change', function() {
+            const customRange = document.getElementById('customDateRange');
+            customRange.style.display = this.value === 'custom' ? 'block' : 'none';
+        });
+
+        function resetFilters() {
+            window.location.href = '{{ path('app_admin_signalements_rapports') }}';
+        }
+
+        function exportRapport() {
+            // TODO: Implémenter l'export PDF
+            alert('Export PDF en cours de développement');
+        }
+
+        // Données pour les graphiques
+        const evolutionData = {{ donnees_graphiques.evolution_temporelle|json_encode|raw }};
+        const statutsData = {{ donnees_graphiques.repartition_statuts|json_encode|raw }};
+        const validationData = {{ donnees_graphiques.repartition_validation|json_encode|raw }};
+
+        // Graphique évolution temporelle
+        const ctx1 = document.getElementById('evolutionChart').getContext('2d');
+        new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: evolutionData.map(d => d.date),
+                datasets: [{
+                    label: 'Signalements',
+                    data: evolutionData.map(d => d.count),
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Graphique statuts
+        const ctx2 = document.getElementById('statutsChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: statutsData.map(d => d.statut.replace('_', ' ')),
+                datasets: [{
+                    data: statutsData.map(d => d.count),
+                    backgroundColor: ['#667eea', '#4facfe', '#fa709a', '#a8edea']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Graphique validation
+        const ctx3 = document.getElementById('validationChart').getContext('2d');
+        new Chart(ctx3, {
+            type: 'pie',
+            data: {
+                labels: validationData.map(d => d.etatValidation.replace('_', ' ')),
+                datasets: [{
+                    data: validationData.map(d => d.count),
+                    backgroundColor: ['#ffc107', '#28a745', '#dc3545']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    </script>
+{% endblock %}

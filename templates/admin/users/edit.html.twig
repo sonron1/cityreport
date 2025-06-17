@@ -1,0 +1,422 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Modifier {{ utilisateur.prenom }} {{ utilisateur.nom }} - Administration{% endblock %}
+
+{% block admin_breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('app_admin_users') }}">Utilisateurs</a></li>
+    <li class="breadcrumb-item active">Modifier {{ utilisateur.prenom }} {{ utilisateur.nom }}</li>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .role-card {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 1.5rem;
+            height: 100%;
+        }
+
+        .role-card:hover {
+            border-color: #007bff;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .role-card.selected {
+            border-color: #007bff;
+            background-color: #f8f9ff;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+        }
+
+        .role-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .role-card input[type="checkbox"] {
+            display: none;
+        }
+
+        .role-user { border-color: #28a745; }
+        .role-user.selected { background-color: #f8fff9; border-color: #28a745; }
+        .role-user .role-icon { color: #28a745; }
+
+        .role-moderator { border-color: #ffc107; }
+        .role-moderator.selected { background-color: #fffef8; border-color: #ffc107; }
+        .role-moderator .role-icon { color: #ffc107; }
+
+        .role-admin { border-color: #dc3545; }
+        .role-admin.selected { background-color: #fff8f8; border-color: #dc3545; }
+        .role-admin .role-icon { color: #dc3545; }
+
+        .privilege-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .privilege-list li {
+            padding: 0.25rem 0;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .privilege-list li i {
+            width: 16px;
+            margin-right: 0.5rem;
+            color: inherit;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-section h5 {
+            margin-bottom: 1rem;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 0.5rem;
+        }
+
+        .user-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+    </style>
+{% endblock %}
+
+{% block admin_content %}
+    <!-- En-tête utilisateur -->
+    <div class="user-header">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <div class="user-avatar">
+                    {{ utilisateur.prenom|first|upper }}{{ utilisateur.nom|first|upper }}
+                </div>
+            </div>
+            <div class="col">
+                <h2 class="mb-1">Modifier {{ utilisateur.prenom }} {{ utilisateur.nom }}</h2>
+                <p class="mb-0 opacity-75">{{ utilisateur.email }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card admin-card">
+        <div class="card-header admin-card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-user-edit me-2"></i>
+                Modification de l'utilisateur
+            </h5>
+        </div>
+        <div class="card-body">
+            {{ form_start(form) }}
+
+            <!-- Informations personnelles -->
+            <div class="form-section">
+                <h5>
+                    <i class="fas fa-user me-2"></i>
+                    Informations personnelles
+                </h5>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        {{ form_label(form.prenom, 'Prénom', {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                        {{ form_widget(form.prenom, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_errors(form.prenom) }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form_label(form.nom, 'Nom de famille', {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                        {{ form_widget(form.nom, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_errors(form.nom) }}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        {{ form_label(form.email, 'Adresse email', {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                        {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_errors(form.email) }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form_label(form.villeResidence, 'Ville de résidence', {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                        {{ form_widget(form.villeResidence, {'attr': {'class': 'form-select'}}) }}
+                        {{ form_errors(form.villeResidence) }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sécurité -->
+            <div class="form-section">
+                <h5>
+                    <i class="fas fa-lock me-2"></i>
+                    Sécurité et statut
+                </h5>
+
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        {{ form_label(form.plainPassword, 'Nouveau mot de passe', {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                        {{ form_widget(form.plainPassword, {'attr': {'class': 'form-control', 'placeholder': 'Laisser vide pour conserver le mot de passe actuel'}}) }}
+                        {{ form_errors(form.plainPassword) }}
+                        <div class="form-text">{{ form_help(form.plainPassword) }}</div>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-center">
+                        <div class="form-check form-switch">
+                            {{ form_widget(form.estValide, {'attr': {'class': 'form-check-input', 'role': 'switch'}}) }}
+                            {{ form_label(form.estValide, 'Compte validé', {'label_attr': {'class': 'form-check-label fw-bold'}}) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rôles et permissions -->
+            <div class="form-section">
+                <h5>
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Rôles et permissions
+                </h5>
+
+                <div class="row g-3">
+                    <!-- Utilisateur Standard -->
+                    <div class="col-md-4">
+                        <div class="role-card role-user text-center" data-role="ROLE_USER">
+                            <div class="role-icon">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <h6 class="fw-bold mb-2">Utilisateur</h6>
+                            <p class="text-muted small mb-3">Accès de base à la plateforme</p>
+
+                            <ul class="privilege-list text-start">
+                                <li><i class="fas fa-plus"></i> Créer des signalements</li>
+                                <li><i class="fas fa-comment"></i> Commenter</li>
+                                <li><i class="fas fa-eye"></i> Consulter la carte</li>
+                                <li><i class="fas fa-user-edit"></i> Gérer son profil</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Modérateur -->
+                    <div class="col-md-4">
+                        <div class="role-card role-moderator text-center" data-role="ROLE_MODERATOR">
+                            <div class="role-icon">
+                                <i class="fas fa-user-shield"></i>
+                            </div>
+                            <h6 class="fw-bold mb-2">Modérateur</h6>
+                            <p class="text-muted small mb-3">Gestion et modération du contenu</p>
+
+                            <ul class="privilege-list text-start">
+                                <li><i class="fas fa-check"></i> Valider les signalements</li>
+                                <li><i class="fas fa-times"></i> Rejeter du contenu</li>
+                                <li><i class="fas fa-flag"></i> Modérer les commentaires</li>
+                                <li><i class="fas fa-chart-bar"></i> Voir les statistiques</li>
+                                <li><i class="fas fa-plus"></i> + Droits utilisateur</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Administrateur -->
+                    <div class="col-md-4">
+                        <div class="role-card role-admin text-center" data-role="ROLE_ADMIN">
+                            <div class="role-icon">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <h6 class="fw-bold mb-2">Administrateur</h6>
+                            <p class="text-muted small mb-3">Contrôle total de la plateforme</p>
+
+                            <ul class="privilege-list text-start">
+                                <li><i class="fas fa-users-cog"></i> Gérer les utilisateurs</li>
+                                <li><i class="fas fa-city"></i> Gérer les villes</li>
+                                <li><i class="fas fa-tags"></i> Gérer les catégories</li>
+                                <li><i class="fas fa-trash"></i> Supprimer du contenu</li>
+                                <li><i class="fas fa-cogs"></i> Configuration système</li>
+                                <li><i class="fas fa-plus"></i> + Tous les droits</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rendu des checkboxes de rôles -->
+                <div class="mt-3" style="display: none;">
+                    {{ form_widget(form.roles) }}
+                </div>
+                {{ form_errors(form.roles) }}
+
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Information :</strong> Un utilisateur peut avoir plusieurs rôles. Les permissions sont cumulatives (Administrateur ≥ Modérateur ≥ Utilisateur).
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="{{ path('app_admin_users') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Retour à la liste
+                </a>
+
+                <div>
+                    <button type="button" class="btn btn-outline-warning me-2" onclick="resetForm()">
+                        <i class="fas fa-undo me-1"></i> Réinitialiser
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Enregistrer les modifications
+                    </button>
+                </div>
+            </div>
+
+            {{ form_end(form) }}
+        </div>
+    </div>
+
+    <!-- Informations supplémentaires -->
+    <div class="card admin-card mt-4">
+        <div class="card-header admin-card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-info-circle me-2"></i>
+                Informations sur l'utilisateur
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-3">
+                    <div class="mb-2">
+                        <i class="fas fa-calendar fa-2x text-primary"></i>
+                    </div>
+                    <strong>Inscription</strong><br>
+                    <span class="text-muted">{{ utilisateur.dateInscription|date('d/m/Y à H:i') }}</span>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-2">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                    </div>
+                    <strong>Signalements</strong><br>
+                    <span class="text-muted">{{ utilisateur.signalements|length }} créé(s)</span>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-2">
+                        <i class="fas fa-comment fa-2x text-info"></i>
+                    </div>
+                    <strong>Commentaires</strong><br>
+                    <span class="text-muted">{{ utilisateur.commentaires|length }} posté(s)</span>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-2">
+                        <i class="fas fa-map-marker-alt fa-2x text-success"></i>
+                    </div>
+                    <strong>Ville</strong><br>
+                    <span class="text-muted">
+                        {% if utilisateur.villeResidence %}
+                            {{ utilisateur.villeResidence.nom }}
+                        {% else %}
+                            Non renseignée
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Récupérer les checkboxes de rôles réels
+            const roleCheckboxes = document.querySelectorAll('input[name*="[roles]"]');
+            const roleCards = document.querySelectorAll('.role-card');
+
+            // Créer un mapping entre les cartes et les checkboxes
+            const roleMapping = {};
+            roleCheckboxes.forEach(checkbox => {
+                const roleValue = checkbox.value;
+                const roleCard = document.querySelector(`[data-role="${roleValue}"]`);
+                if (roleCard) {
+                    roleMapping[roleValue] = {
+                        checkbox: checkbox,
+                        card: roleCard
+                    };
+                }
+            });
+
+            // Initialiser l'état des cartes
+            Object.values(roleMapping).forEach(({ checkbox, card }) => {
+                updateCardState(card, checkbox.checked);
+
+                // Event listener pour le clic sur la carte
+                card.addEventListener('click', function() {
+                    checkbox.checked = !checkbox.checked;
+                    updateCardState(card, checkbox.checked);
+
+                    // Déclencher l'événement change pour la validation du formulaire
+                    checkbox.dispatchEvent(new Event('change'));
+                });
+
+                // Event listener pour les changements directs du checkbox
+                checkbox.addEventListener('change', function() {
+                    updateCardState(card, this.checked);
+                });
+            });
+
+            function updateCardState(card, isChecked) {
+                if (isChecked) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            }
+
+            // Fonction de réinitialisation
+            window.resetForm = function() {
+                if (confirm('Êtes-vous sûr de vouloir réinitialiser le formulaire ? Toutes les modifications non sauvegardées seront perdues.')) {
+                    document.querySelector('form').reset();
+                    // Réinitialiser l'état des cartes
+                    Object.values(roleMapping).forEach(({ checkbox, card }) => {
+                        updateCardState(card, checkbox.checked);
+                    });
+                }
+            };
+
+            // Validation avant soumission
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function(e) {
+                const checkedRoles = Array.from(roleCheckboxes).filter(cb => cb.checked);
+
+                if (checkedRoles.length === 0) {
+                    e.preventDefault();
+                    alert('Veuillez sélectionner au moins un rôle pour cet utilisateur.');
+                    return false;
+                }
+
+                // Confirmation pour les changements de rôle Admin
+                const adminCheckbox = Array.from(roleCheckboxes).find(cb => cb.value === 'ROLE_ADMIN');
+                if (adminCheckbox && adminCheckbox.checked) {
+                    if (!confirm('Êtes-vous sûr de vouloir attribuer le rôle Administrateur ? Cette action donne un accès complet à la plateforme.')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+        });
+    </script>
+{% endblock %}

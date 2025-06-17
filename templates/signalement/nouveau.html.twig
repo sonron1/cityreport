@@ -1,0 +1,832 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouveau signalement - CityFlow{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        .map-container {
+            position: relative;
+        }
+        .coordinates-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .card-header {
+            font-weight: 600;
+        }
+        .accuracy-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            z-index: 1000;
+        }
+        .geolocation-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .method-btn {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .method-btn:hover {
+            border-color: #007bff;
+            background: #f8f9fa;
+        }
+        .method-btn.active {
+            border-color: #007bff;
+            background: #e7f3ff;
+        }
+        .location-status {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            z-index: 1000;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container mt-4 mb-5">
+        <!-- Fil d'Ariane -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
+                <li class="breadcrumb-item"><a href="{{ path('app_signalements') }}">Signalements</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Nouveau signalement</li>
+            </ol>
+        </nav>
+
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                {% for label, messages in app.flashes %}
+                    {% for message in messages %}
+                        <div class="alert alert-{% if label == 'error' %}danger{% else %}{{ label }}{% endif %} alert-dismissible fade show">
+                            <i class="fas fa-{% if label == 'success' %}check-circle{% elseif label == 'error' %}exclamation-triangle{% elseif label == 'warning' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+
+                <div class="card shadow border-0 rounded-lg mb-4">
+                    <div class="card-header bg-primary text-white py-3">
+                        <h1 class="h3 mb-0"><i class="bi bi-exclamation-triangle-fill me-2"></i>Nouveau signalement</h1>
+                    </div>
+                    <div class="card-body p-4">
+                        {{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate', 'id': 'signalements-form'}}) }}
+
+                        <!-- Informations générales -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informations générales</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    {{ form_label(form.titre, null, {'label_attr': {'class': 'form-label'}}) }}
+                                    {{ form_widget(form.titre) }}
+                                    <div class="form-text text-danger">
+                                        {{ form_errors(form.titre) }}
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    {{ form_label(form.description, null, {'label_attr': {'class': 'form-label'}}) }}
+                                    {{ form_widget(form.description) }}
+                                    <div class="form-text text-danger">
+                                        {{ form_errors(form.description) }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Catégorisation -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="bi bi-tag me-2"></i>Catégorisation</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        {{ form_label(form.categorie, null, {'label_attr': {'class': 'form-label'}}) }}
+                                        {{ form_widget(form.categorie) }}
+                                        <div class="form-text text-danger">
+                                            {{ form_errors(form.categorie) }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        {{ form_label(form.ville, null, {'label_attr': {'class': 'form-label'}}) }}
+                                        {{ form_widget(form.ville, {'id': 'ville-select', 'attr': {'class': 'form-select ville-select', 'data-arrondissement-url': path('api_arrondissements_by_ville', {'villeId': '__villeId__'})}}) }}
+                                        {{ form_help(form.ville) }}
+                                        <div class="form-text text-danger">
+                                            {{ form_errors(form.ville) }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        {{ form_label(form.arrondissement, null, {'label_attr': {'class': 'form-label'}}) }}
+                                        {{ form_widget(form.arrondissement, {'id': 'arrondissement-select', 'attr': {'class': 'form-select arrondissement-select'}}) }}
+                                        {{ form_help(form.arrondissement) }}
+                                        <div class="form-text text-danger">
+                                            {{ form_errors(form.arrondissement) }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Photo -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="bi bi-camera me-2"></i>Photo du problème</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    {{ form_label(form.photo, null, {'label_attr': {'class': 'form-label'}}) }}
+                                    {{ form_widget(form.photo) }}
+                                    <div class="form-text">
+                                        <small class="text-muted"><i class="bi bi-info-circle me-1"></i>Formats acceptés: JPG, PNG. Taille maximale: 5Mo</small>
+                                    </div>
+                                    <div class="form-text text-danger">
+                                        {{ form_errors(form.photo) }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Localisation AMÉLIORÉE -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Localisation précise du problème</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info mb-3">
+                                    <i class="bi bi-info-circle-fill me-2"></i>
+                                    <strong>Plusieurs options de géolocalisation :</strong><br>
+                                    • GPS haute précision (recommandé)<br>
+                                    • Géolocalisation rapide<br>
+                                    • Recherche d'adresse<br>
+                                    • Clic sur la carte<br>
+                                    • Saisie manuelle des coordonnées
+                                </div>
+
+                                <div id="geolocation-messages" class="mb-3"></div>
+
+                                <!-- Méthodes de géolocalisation -->
+                                <div class="geolocation-methods">
+                                    <button type="button" class="method-btn" id="high-accuracy-btn">
+                                        <i class="bi bi-crosshair text-success me-2"></i>
+                                        <strong>GPS Haute Précision</strong><br>
+                                        <small class="text-muted">±3-5m, plus lent</small>
+                                    </button>
+
+                                    <button type="button" class="method-btn" id="quick-location-btn">
+                                        <i class="bi bi-geo-alt text-primary me-2"></i>
+                                        <strong>Localisation Rapide</strong><br>
+                                        <small class="text-muted">±10-50m, plus rapide</small>
+                                    </button>
+
+                                    <button type="button" class="method-btn" id="address-search-btn">
+                                        <i class="bi bi-search text-info me-2"></i>
+                                        <strong>Recherche d'Adresse</strong><br>
+                                        <small class="text-muted">Saisir une adresse</small>
+                                    </button>
+
+                                    <button type="button" class="method-btn" id="map-click-btn">
+                                        <i class="bi bi-cursor text-warning me-2"></i>
+                                        <strong>Clic sur Carte</strong><br>
+                                        <small class="text-muted">Pointer manuellement</small>
+                                    </button>
+                                </div>
+
+                                <!-- Recherche d'adresse (cachée par défaut) -->
+                                <div id="address-search-container" class="mb-3" style="display: none;">
+                                    <div class="input-group">
+                                        <input type="text" id="address-input" class="form-control" placeholder="Rechercher une adresse (ex: Avenue Jean-Paul II, Cotonou)">
+                                        <button type="button" class="btn btn-outline-primary" id="search-address-btn">
+                                            <i class="bi bi-search me-1"></i> Rechercher
+                                        </button>
+                                    </div>
+                                    <div id="address-results" class="mt-2"></div>
+                                </div>
+
+                                <div class="map-container mb-3">
+                                    <div id="map">
+                                        <!-- Indicateur de précision -->
+                                        <div class="accuracy-indicator" id="accuracy-indicator" style="display: none;">
+                                            <i class="bi bi-bullseye me-1"></i>
+                                            <span id="accuracy-text">Précision: --</span>
+                                        </div>
+
+                                        <!-- Statut de localisation -->
+                                        <div class="location-status" id="location-status">
+                                            <i class="bi bi-geo me-1"></i>
+                                            <span id="status-text">Position par défaut</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="coordinates-container">
+                                    <h6 class="mb-3">
+                                        <i class="bi bi-pin-map me-2"></i>Coordonnées et informations
+                                    </h6>
+
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="input-group mb-3">
+                                                <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                                <input type="text" id="manual-latitude" class="form-control" placeholder="Latitude (ex: 6.3676953)">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="input-group mb-3">
+                                                <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                                <input type="text" id="manual-longitude" class="form-control" placeholder="Longitude (ex: 2.3912362)">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="input-group mb-3">
+                                                <span class="input-group-text"><i class="bi bi-bullseye"></i></span>
+                                                <input type="text" id="accuracy-display" class="form-control" placeholder="Précision" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                        <button type="button" class="btn btn-secondary" id="apply-coords-btn">
+                                            <i class="bi bi-check-circle me-2"></i>Appliquer ces coordonnées
+                                        </button>
+                                        <button type="button" class="btn btn-info" id="get-address-btn">
+                                            <i class="bi bi-house me-2"></i>Obtenir l'adresse
+                                        </button>
+                                    </div>
+
+                                    <!-- Affichage de l'adresse trouvée -->
+                                    <div id="found-address" class="alert alert-success mt-3" style="display: none;">
+                                        <i class="bi bi-house-check me-2"></i>
+                                        <strong>Adresse trouvée :</strong>
+                                        <div id="address-text"></div>
+                                    </div>
+                                </div>
+
+                                {# Champs cachés pour les coordonnées #}
+                                {{ form_widget(form.latitude, {'attr': {'required': 'required'}}) }}
+                                {{ form_widget(form.longitude, {'attr': {'required': 'required'}}) }}
+                                <div class="form-text text-danger" id="coordinates-error"></div>
+                            </div>
+                        </div>
+
+                        <!-- Bouton de soumission -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submit-button">
+                                <i class="bi bi-send me-2"></i> Envoyer le signalement
+                            </button>
+                        </div>
+
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Variables globales
+        let map;
+        let marker;
+        let accuracyCircle;
+        let currentAccuracy = null;
+
+        // Coordonnées par défaut centrées sur le Bénin
+        const defaultLat = 9.3077;
+        const defaultLng = 2.3158;
+        const defaultZoom = 7;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            setupGeolocationMethods();
+            setupFormHandlers();
+            setupManualCoordinates();
+            validateFormBeforeSubmit();
+        });
+
+        function initMap() {
+            if (document.getElementById('map')) {
+                map = L.map('map').setView([defaultLat, defaultLng], defaultZoom);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+
+                marker = L.marker([defaultLat, defaultLng], {
+                    draggable: true
+                }).addTo(map);
+
+                marker.on('dragend', function() {
+                    const position = marker.getLatLng();
+                    updateCoordinates(position.lat, position.lng);
+                    updateManualInputs(position.lat, position.lng);
+                    updateLocationStatus('Position ajustée manuellement');
+                });
+
+                map.on('click', function(e) {
+                    if (document.getElementById('map-click-btn').classList.contains('active')) {
+                        marker.setLatLng(e.latlng);
+                        updateCoordinates(e.latlng.lat, e.latlng.lng);
+                        updateManualInputs(e.latlng.lat, e.latlng.lng);
+                        updateLocationStatus('Position sélectionnée sur carte');
+                    }
+                });
+
+                updateCoordinates(defaultLat, defaultLng);
+                updateManualInputs(defaultLat, defaultLng);
+            }
+        }
+
+        function setupGeolocationMethods() {
+            // Géolocalisation haute précision
+            document.getElementById('high-accuracy-btn').addEventListener('click', function() {
+                activateMethod(this);
+                getLocationWithHighAccuracy();
+            });
+
+            // Géolocalisation rapide
+            document.getElementById('quick-location-btn').addEventListener('click', function() {
+                activateMethod(this);
+                getLocationQuick();
+            });
+
+            // Recherche d'adresse
+            document.getElementById('address-search-btn').addEventListener('click', function() {
+                activateMethod(this);
+                toggleAddressSearch(true);
+            });
+
+            // Clic sur carte
+            document.getElementById('map-click-btn').addEventListener('click', function() {
+                activateMethod(this);
+                toggleAddressSearch(false);
+                showToast('Cliquez sur la carte pour positionner le marqueur', 'info');
+            });
+
+            // Recherche d'adresse
+            document.getElementById('search-address-btn').addEventListener('click', searchAddress);
+            document.getElementById('address-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchAddress();
+                }
+            });
+
+            // Obtenir l'adresse depuis les coordonnées
+            document.getElementById('get-address-btn').addEventListener('click', reverseGeocode);
+        }
+
+        function activateMethod(activeBtn) {
+            // Désactiver tous les boutons
+            document.querySelectorAll('.method-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            // Activer le bouton sélectionné
+            activeBtn.classList.add('active');
+
+            // Masquer la recherche d'adresse sauf si c'est celle-ci qui est sélectionnée
+            if (activeBtn.id !== 'address-search-btn') {
+                toggleAddressSearch(false);
+            }
+        }
+
+        function toggleAddressSearch(show) {
+            const container = document.getElementById('address-search-container');
+            container.style.display = show ? 'block' : 'none';
+        }
+
+        // 🎯 GÉOLOCALISATION HAUTE PRÉCISION
+        function getLocationWithHighAccuracy() {
+            const btn = document.getElementById('high-accuracy-btn');
+            setLoadingState(btn, true);
+            updateLocationStatus('🔍 Recherche GPS haute précision...');
+
+            if (!navigator.geolocation) {
+                showToast('Géolocalisation non supportée', 'danger');
+                setLoadingState(btn, false);
+                return;
+            }
+
+            const options = {
+                enableHighAccuracy: true,  // ✅ HAUTE PRÉCISION
+                timeout: 30000,           // ✅ TIMEOUT LONG
+                maximumAge: 0             // ✅ PAS DE CACHE
+            };
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    handleLocationSuccess(position, 'GPS Haute Précision');
+                    setLoadingState(btn, false);
+                },
+                (error) => {
+                    handleLocationError(error);
+                    setLoadingState(btn, false);
+                },
+                options
+            );
+        }
+
+        // ⚡ GÉOLOCALISATION RAPIDE
+        function getLocationQuick() {
+            const btn = document.getElementById('quick-location-btn');
+            setLoadingState(btn, true);
+            updateLocationStatus('📍 Localisation rapide...');
+
+            const options = {
+                enableHighAccuracy: false, // ✅ PRÉCISION NORMALE
+                timeout: 10000,           // ✅ TIMEOUT COURT
+                maximumAge: 300000        // ✅ CACHE 5 MINUTES
+            };
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    handleLocationSuccess(position, 'Localisation Rapide');
+                    setLoadingState(btn, false);
+                },
+                (error) => {
+                    handleLocationError(error);
+                    setLoadingState(btn, false);
+                },
+                options
+            );
+        }
+
+        // 🔍 RECHERCHE D'ADRESSE (NOMINATIM)
+        async function searchAddress() {
+            const input = document.getElementById('address-input');
+            const btn = document.getElementById('search-address-btn');
+            const resultsDiv = document.getElementById('address-results');
+
+            const query = input.value.trim();
+            if (!query) {
+                showToast('Veuillez saisir une adresse', 'warning');
+                return;
+            }
+
+            setLoadingState(btn, true);
+            updateLocationStatus('🔍 Recherche d\'adresse...');
+
+            try {
+                // API Nominatim (OpenStreetMap)
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&q=${encodeURIComponent(query + ', Bénin')}`
+                );
+                const results = await response.json();
+
+                if (results.length > 0) {
+                    displayAddressResults(results);
+                    updateLocationStatus('Adresses trouvées');
+                } else {
+                    showToast('Aucune adresse trouvée', 'warning');
+                    updateLocationStatus('Aucun résultat');
+                }
+            } catch (error) {
+                console.error('Erreur recherche:', error);
+                showToast('Erreur lors de la recherche', 'danger');
+                updateLocationStatus('Erreur de recherche');
+            }
+
+            setLoadingState(btn, false);
+        }
+
+        function displayAddressResults(results) {
+            const resultsDiv = document.getElementById('address-results');
+            resultsDiv.innerHTML = results.map(result => `
+                <div class="result-item p-2 border rounded mb-2 cursor-pointer" onclick="selectAddress(${result.lat}, ${result.lon}, '${result.display_name}')">
+                    <strong>${result.name || result.display_name.split(',')[0]}</strong><br>
+                    <small class="text-muted">${result.display_name}</small>
+                </div>
+            `).join('');
+            resultsDiv.style.display = 'block';
+        }
+
+        function selectAddress(lat, lon, address) {
+            map.setView([lat, lon], 16);
+            marker.setLatLng([lat, lon]);
+            updateCoordinates(lat, lon);
+            updateManualInputs(lat, lon);
+            updateLocationStatus('Adresse sélectionnée');
+            currentAccuracy = null; // Pas de précision GPS
+            updateAccuracyDisplay();
+
+            // Afficher l'adresse
+            document.getElementById('address-text').textContent = address;
+            document.getElementById('found-address').style.display = 'block';
+
+            // Masquer les résultats
+            document.getElementById('address-results').style.display = 'none';
+
+            showToast('Adresse sélectionnée avec succès', 'success');
+        }
+
+        // 🔄 GÉOCODAGE INVERSE
+        async function reverseGeocode() {
+            const lat = document.getElementById('manual-latitude').value;
+            const lon = document.getElementById('manual-longitude').value;
+
+            if (!lat || !lon) {
+                showToast('Veuillez d\'abord définir une position', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('get-address-btn');
+            setLoadingState(btn, true);
+
+            try {
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`
+                );
+                const result = await response.json();
+
+                if (result.display_name) {
+                    document.getElementById('address-text').textContent = result.display_name;
+                    document.getElementById('found-address').style.display = 'block';
+                    showToast('Adresse trouvée', 'success');
+                } else {
+                    showToast('Aucune adresse trouvée pour cette position', 'warning');
+                }
+            } catch (error) {
+                console.error('Erreur géocodage inverse:', error);
+                showToast('Erreur lors de la recherche d\'adresse', 'danger');
+            }
+
+            setLoadingState(btn, false);
+        }
+
+        function handleLocationSuccess(position, method) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            currentAccuracy = position.coords.accuracy;
+
+            // Mettre à jour la carte
+            map.setView([lat, lon], 16);
+            marker.setLatLng([lat, lon]);
+
+            // Afficher le cercle de précision
+            if (accuracyCircle) {
+                map.removeLayer(accuracyCircle);
+            }
+            accuracyCircle = L.circle([lat, lon], {
+                radius: currentAccuracy,
+                color: '#3388ff',
+                fillColor: '#3388ff',
+                fillOpacity: 0.1,
+                weight: 2
+            }).addTo(map);
+
+            // Mettre à jour les coordonnées
+            updateCoordinates(lat, lon);
+            updateManualInputs(lat, lon);
+            updateAccuracyDisplay();
+            updateLocationStatus(`✅ ${method} réussie`);
+
+            showToast(`Position obtenue avec ${method} (±${Math.round(currentAccuracy)}m)`, 'success');
+        }
+
+        function handleLocationError(error) {
+            let message = 'Erreur de géolocalisation';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    message = 'Permission refusée pour la géolocalisation';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    message = 'Position non disponible';
+                    break;
+                case error.TIMEOUT:
+                    message = 'Timeout de géolocalisation';
+                    break;
+            }
+            showToast(message, 'danger');
+            updateLocationStatus('❌ Erreur GPS');
+        }
+
+        function updateAccuracyDisplay() {
+            const accuracyIndicator = document.getElementById('accuracy-indicator');
+            const accuracyText = document.getElementById('accuracy-text');
+            const accuracyInput = document.getElementById('accuracy-display');
+
+            if (currentAccuracy !== null) {
+                const accuracyRounded = Math.round(currentAccuracy);
+                accuracyText.textContent = `Précision: ±${accuracyRounded}m`;
+                accuracyInput.value = `±${accuracyRounded}m`;
+                accuracyIndicator.style.display = 'block';
+
+                // Couleur selon la précision
+                if (accuracyRounded <= 10) {
+                    accuracyIndicator.style.backgroundColor = 'rgba(40, 167, 69, 0.9)'; // Vert
+                } else if (accuracyRounded <= 50) {
+                    accuracyIndicator.style.backgroundColor = 'rgba(255, 193, 7, 0.9)'; // Jaune
+                } else {
+                    accuracyIndicator.style.backgroundColor = 'rgba(220, 53, 69, 0.9)'; // Rouge
+                }
+            } else {
+                accuracyIndicator.style.display = 'none';
+                accuracyInput.value = 'Non disponible';
+            }
+        }
+
+        function updateLocationStatus(status) {
+            document.getElementById('status-text').textContent = status;
+        }
+
+        function setLoadingState(button, loading) {
+            if (loading) {
+                button.innerHTML = button.innerHTML.replace(/(<i[^>]*><\/i>)/, '<i class="bi bi-arrow-clockwise spin"></i>');
+                button.disabled = true;
+            } else {
+                // Restaurer l'icône originale (vous devrez adapter selon les boutons)
+                button.disabled = false;
+                // Recharger la page pour restaurer les icônes originales si nécessaire
+            }
+        }
+
+        // Autres fonctions existantes (updateCoordinates, setupFormHandlers, etc.)
+        function updateCoordinates(lat, lng) {
+            lat = Math.round(lat * 1000000) / 1000000;
+            lng = Math.round(lng * 1000000) / 1000000;
+
+            document.getElementById('signalement_type_form_latitude').value = lat;
+            document.getElementById('signalement_type_form_longitude').value = lng;
+            document.getElementById('coordinates-error').textContent = '';
+        }
+
+        function updateManualInputs(lat, lng) {
+            const latInput = document.getElementById('manual-latitude');
+            const lngInput = document.getElementById('manual-longitude');
+
+            if (latInput && lngInput) {
+                latInput.value = lat.toFixed(6);
+                lngInput.value = lng.toFixed(6);
+            }
+        }
+
+        function setupManualCoordinates() {
+            const applyBtn = document.getElementById('apply-coords-btn');
+
+            if (applyBtn) {
+                applyBtn.addEventListener('click', function() {
+                    const latInput = document.getElementById('manual-latitude');
+                    const lngInput = document.getElementById('manual-longitude');
+
+                    const lat = parseFloat(latInput.value);
+                    const lng = parseFloat(lngInput.value);
+
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        map.setView([lat, lng], 16);
+                        marker.setLatLng([lat, lng]);
+                        updateCoordinates(lat, lng);
+                        currentAccuracy = null;
+                        updateAccuracyDisplay();
+                        updateLocationStatus('Position manuelle appliquée');
+                        document.getElementById('found-address').style.display = 'none';
+                    } else {
+                        showToast("Veuillez entrer des coordonnées valides", "danger");
+                    }
+                });
+            }
+        }
+
+        function validateFormBeforeSubmit() {
+            const form = document.getElementById('signalements-form');
+            const latitudeField = document.getElementById('signalement_type_form_latitude');
+            const longitudeField = document.getElementById('signalement_type_form_longitude');
+            const errorElement = document.getElementById('coordinates-error');
+
+            if (form) {
+                form.addEventListener('submit', function(event) {
+                    if (!latitudeField.value || !longitudeField.value) {
+                        event.preventDefault();
+                        errorElement.textContent = 'Veuillez définir une position sur la carte';
+                        showToast('Veuillez corriger les erreurs du formulaire', 'danger');
+                        return false;
+                    } else {
+                        errorElement.textContent = '';
+                    }
+                    return true;
+                });
+            }
+        }
+
+        function setupFormHandlers() {
+            // Code existant pour ville/arrondissement...
+            const villeSelect = document.getElementById('ville-select');
+            if (villeSelect) {
+                villeSelect.addEventListener('change', function() {
+                    updateArrondissements();
+                });
+                if (villeSelect.value) {
+                    updateArrondissements();
+                }
+            }
+        }
+
+        function updateArrondissements() {
+            // Code existant...
+            const villeSelect = document.getElementById('ville-select');
+            const arrondissementSelect = document.getElementById('arrondissement-select');
+
+            if (!villeSelect || !arrondissementSelect) return;
+
+            const villeId = villeSelect.value;
+            arrondissementSelect.disabled = true;
+
+            if (villeId) {
+                arrondissementSelect.innerHTML = '<option value="">Chargement en cours...</option>';
+                const url = `/api/arrondissements-by-ville/${villeId}`;
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        arrondissementSelect.innerHTML = '<option value="">Sélectionnez un arrondissement (optionnel)</option>';
+                        data.forEach(arrondissement => {
+                            const option = document.createElement('option');
+                            option.value = arrondissement.id;
+                            option.textContent = arrondissement.nom;
+                            arrondissementSelect.appendChild(option);
+                        });
+                        arrondissementSelect.disabled = false;
+                    })
+                    .catch(error => {
+                        showToast(`Erreur lors du chargement des arrondissements: ${error.message}`, 'danger');
+                        arrondissementSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+                        arrondissementSelect.disabled = false;
+                    });
+            } else {
+                arrondissementSelect.innerHTML = '<option value="">Sélectionnez d\'abord une ville</option>';
+                arrondissementSelect.disabled = true;
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('geolocation-messages');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type} alert-dismissible fade show`;
+            toast.innerHTML = `
+                <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : type === 'warning' ? 'exclamation-circle' : 'info-circle'}-fill me-2"></i>${message}
+                <button type="button" class="btn-close" aria-label="Fermer"></button>
+            `;
+
+            const closeButton = toast.querySelector('.btn-close');
+            if (closeButton) {
+                closeButton.addEventListener('click', function() {
+                    toast.remove();
+                });
+            }
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, type === 'danger' ? 5000 : 3000);
+        }
+
+        // CSS pour l'animation de rotation
+        const style = document.createElement('style');
+        style.textContent = `
+            .spin { animation: spin 1s linear infinite; }
+            @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+            .cursor-pointer { cursor: pointer; }
+            .result-item:hover { background-color: #f8f9fa; }
+        `;
+        document.head.appendChild(style);
+    </script>
+{% endblock %}

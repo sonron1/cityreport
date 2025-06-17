@@ -1,0 +1,40 @@
+framework:
+    cache:
+        app: cache.adapter.filesystem
+        system: cache.adapter.system
+
+        pools:
+            # Cache principal pour les signalements
+            cache.signalements:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 3600
+
+            # Cache pour les statistiques (durée plus longue)
+            cache.statistics:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 7200  # 2 heures
+
+            # Cache haute fréquence (courte durée)
+            cache.frequent:
+                adapter: cache.adapter.array
+                default_lifetime: 300
+
+            # Cache pour les données utilisateur
+            cache.user_data:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 1800  # 30 minutes
+
+            # Cache pour les données de géolocalisation
+            cache.geolocation:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 86400  # 24 heures
+
+            # Cache pour les assets et contenu statique
+            cache.static_content:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 604800  # 1 semaine
+
+            # Cache pour les résultats d'API
+            cache.api_results:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 900  # 15 minutes

@@ -1,0 +1,515 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Rapport Mensuel {{ periode.nom }} - Administration{% endblock %}
+
+{% block admin_breadcrumb %}
+    <li class="breadcrumb-item active">Rapports Mensuels</li>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .rapport-container {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        }
+
+        .periode-selector {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .rapport-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .rapport-card .card-header {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            padding: 1.25rem;
+        }
+
+        .metric-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            height: 100%;
+            transition: transform 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .metric-trend {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .trend-up { color: #28a745; }
+        .trend-down { color: #dc3545; }
+        .trend-stable { color: #6c757d; }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 1rem 0;
+        }
+
+        .resume-executif {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .point-cle {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+        }
+
+        .point-cle i {
+            margin-right: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .recommandation {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            color: #856404;
+        }
+
+        .export-toolbar {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .data-table {
+            font-size: 0.9rem;
+        }
+
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            border-top: none;
+        }
+
+        .progress-custom {
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        .niveau-activite {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+    </style>
+{% endblock %}
+
+{% block admin_content %}
+    <div class="rapport-container">
+        <!-- Sélecteur de période -->
+        <div class="periode-selector">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-1">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Rapport Mensuel
+                    </h1>
+                    <p class="mb-0 opacity-75">{{ periode.nom }} - Analyse détaillée des activités</p>
+                </div>
+                <div class="col-md-4">
+                    <form method="GET" class="d-flex gap-2">
+                        <select name="mois" class="form-select form-select-sm">
+                            {% for i in 1..12 %}
+                                <option value="{{ i }}" {{ i == mois ? 'selected' : '' }}>
+                                    {{ ['', 'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'][i] }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <select name="annee" class="form-select form-select-sm">
+                            {% for year in (date().format('Y') - 2)..(date().format('Y') + 1) %}
+                                <option value="{{ year }}" {{ year == annee ? 'selected' : '' }}>{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-light btn-sm">
+                            <i class="fas fa-sync"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barre d'export -->
+        <div class="export-toolbar">
+            <h6 class="mb-3">
+                <i class="fas fa-download me-2"></i>Exporter le rapport
+            </h6>
+            <div class="btn-group" role="group">
+                <a href="{{ path('app_admin_rapports_export', {format: 'pdf', mois: mois, annee: annee}) }}"
+                   class="btn btn-outline-danger">
+                    <i class="fas fa-file-pdf me-1"></i>PDF
+                </a>
+                <a href="{{ path('app_admin_rapports_export', {format: 'excel', mois: mois, annee: annee}) }}"
+                   class="btn btn-outline-success">
+                    <i class="fas fa-file-excel me-1"></i>Excel
+                </a>
+                <a href="{{ path('app_admin_rapports_export', {format: 'csv', mois: mois, annee: annee}) }}"
+                   class="btn btn-outline-primary">
+                    <i class="fas fa-file-csv me-1"></i>CSV
+                </a>
+            </div>
+        </div>
+
+        <!-- Résumé exécutif -->
+        <div class="resume-executif">
+            <div class="row">
+                <div class="col-md-8">
+                    <h3 class="mb-3">
+                        <i class="fas fa-clipboard-list me-2"></i>
+                        Résumé Exécutif
+                    </h3>
+                    {% for point in rapport.resume_executif.points_cles %}
+                        <div class="point-cle">
+                            <i class="fas fa-check-circle"></i>
+                            {{ point }}
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-4 text-center">
+                    <h5 class="mb-2">Niveau d'activité</h5>
+                    <div class="niveau-activite bg-{{ rapport.resume_executif.niveau_activite.couleur }}">
+                        <i class="fas fa-{{ rapport.resume_executif.niveau_activite.icone }} me-2"></i>
+                        {{ rapport.resume_executif.niveau_activite.niveau }}
+                    </div>
+                </div>
+            </div>
+
+            {% if rapport.resume_executif.recommandations %}
+                <div class="mt-4">
+                    <h5 class="mb-3">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Recommandations
+                    </h5>
+                    {% for recommandation in rapport.resume_executif.recommandations %}
+                        <div class="recommandation">
+                            <i class="fas fa-arrow-right me-2"></i>{{ recommandation }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Métriques principales -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="metric-card">
+                    <div class="metric-value text-primary">{{ rapport.signalements.total }}</div>
+                    <div class="metric-label">Signalements Total</div>
+                    <div class="metric-trend trend-{{ rapport.tendances.croissance_signalements.direction }}">
+                        <i class="fas fa-arrow-{{ rapport.tendances.croissance_signalements.direction == 'up' ? 'up' : (rapport.tendances.croissance_signalements.direction == 'down' ? 'down' : 'right') }}"></i>
+                        {{ rapport.tendances.croissance_signalements.value }}% vs mois précédent
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="metric-card">
+                    <div class="metric-value text-success">{{ rapport.performance.taux_resolution }}%</div>
+                    <div class="metric-label">Taux de Résolution</div>
+                    <div class="progress progress-custom mt-2">
+                        <div class="progress-bar bg-success" style="width: {{ rapport.performance.taux_resolution }}%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="metric-card">
+                    <div class="metric-value text-info">{{ rapport.utilisateurs.nouveaux }}</div>
+                    <div class="metric-label">Nouveaux Utilisateurs</div>
+                    <div class="metric-trend trend-{{ rapport.tendances.croissance_utilisateurs.direction }}">
+                        <i class="fas fa-arrow-{{ rapport.tendances.croissance_utilisateurs.direction == 'up' ? 'up' : (rapport.tendances.croissance_utilisateurs.direction == 'down' ? 'down' : 'right') }}"></i>
+                        {{ rapport.tendances.croissance_utilisateurs.value }}% vs mois précédent
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="metric-card">
+                    <div class="metric-value text-warning">{{ rapport.performance.taux_validation }}%</div>
+                    <div class="metric-label">Taux de Validation</div>
+                    <div class="progress progress-custom mt-2">
+                        <div class="progress-bar bg-warning" style="width: {{ rapport.performance.taux_validation }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Évolution quotidienne -->
+            <div class="col-lg-8 mb-4">
+                <div class="rapport-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-area me-2 text-primary"></i>
+                            Évolution Quotidienne des Signalements
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="evolutionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Répartition par statut -->
+            <div class="col-lg-4 mb-4">
+                <div class="rapport-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-pie me-2 text-success"></i>
+                            Répartition par Statut
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="statutChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Top des villes -->
+            <div class="col-lg-6 mb-4">
+                <div class="rapport-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-city me-2 text-info"></i>
+                            Top des Villes (Signalements)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if rapport.villes.top_signalements %}
+                            <table class="table data-table">
+                                <thead>
+                                <tr>
+                                    <th>Ville</th>
+                                    <th class="text-center">Signalements</th>
+                                    <th class="text-center">Part</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for ville in rapport.villes.top_signalements %}
+                                    <tr>
+                                        <td>{{ ville.nom }}</td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary">{{ ville.count }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            {{ ((ville.count / rapport.signalements.total) * 100)|number_format(1) }}%
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-3x mb-3"></i>
+                                <p>Aucune donnée disponible</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top des catégories -->
+            <div class="col-lg-6 mb-4">
+                <div class="rapport-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tags me-2 text-warning"></i>
+                            Top des Catégories
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if rapport.categories.top_populaires %}
+                            <table class="table data-table">
+                                <thead>
+                                <tr>
+                                    <th>Catégorie</th>
+                                    <th class="text-center">Signalements</th>
+                                    <th class="text-center">Part</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for categorie in rapport.categories.top_populaires %}
+                                    <tr>
+                                        <td>{{ categorie.nom }}</td>
+                                        <td class="text-center">
+                                            <span class="badge bg-warning">{{ categorie.count }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            {{ ((categorie.count / rapport.signalements.total) * 100)|number_format(1) }}%
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-3x mb-3"></i>
+                                <p>Aucune donnée disponible</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Indicateurs de performance -->
+        <div class="rapport-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-tachometer-alt me-2 text-danger"></i>
+                    Indicateurs de Performance
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Temps de résolution moyen</span>
+                            <strong>
+                                {% if rapport.signalements.temps_resolution %}
+                                    {{ rapport.signalements.temps_resolution }} heures
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </strong>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Utilisateurs actifs</span>
+                            <strong>{{ rapport.utilisateurs.actifs }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Villes actives</span>
+                            <strong>{{ rapport.villes.actives }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        // Graphique d'évolution quotidienne
+        const evolutionCtx = document.getElementById('evolutionChart').getContext('2d');
+        new Chart(evolutionCtx, {
+            type: 'line',
+            data: {
+                labels: [{% for jour in rapport.signalements.evolution_quotidienne %}'{{ jour.jour }}'{{ not loop.last ? ',' : '' }}{% endfor %}],
+                datasets: [{
+                    label: 'Signalements',
+                    data: [{% for jour in rapport.signalements.evolution_quotidienne %}{{ jour.count }}{{ not loop.last ? ',' : '' }}{% endfor %}],
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Graphique de répartition par statut
+        const statutCtx = document.getElementById('statutChart').getContext('2d');
+        const statutData = {
+            {% for statut, data in rapport.signalements.par_statut %}
+            '{{ data.label }}': {{ data.count }}{{ not loop.last ? ',' : '' }}
+            {% endfor %}
+        };
+
+        new Chart(statutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(statutData),
+                datasets: [{
+                    data: Object.values(statutData),
+                    backgroundColor: [
+                        '#28a745',
+                        '#17a2b8',
+                        '#ffc107',
+                        '#dc3545'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    </script>
+{% endblock %}

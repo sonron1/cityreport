@@ -1,0 +1,579 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Dashboard - Administration{% endblock %}
+
+{% block admin_breadcrumb %}
+    <li class="breadcrumb-item active">Dashboard</li>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        /* Style épuré identique aux statistiques */
+        .dashboard-container {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            font-weight: 300;
+            line-height: 1.5;
+        }
+
+        .dashboard-container h1, .dashboard-container h2, .dashboard-container h3,
+        .dashboard-container h4, .dashboard-container h5, .dashboard-container h6 {
+            font-weight: 400;
+            color: #2c3e50;
+        }
+
+        /* Cards épurées */
+        .metric-card {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+
+        .metric-card:hover {
+            border-color: #dee2e6;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        .metric-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 6px;
+            background: #f8f9fa;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .metric-number {
+            font-size: 2rem;
+            font-weight: 300;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: #6c757d;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        /* Module cards épurées */
+        .module-card {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+
+        .module-card:hover {
+            border-color: #dee2e6;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        .module-header {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            padding: 1rem 1.5rem;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .module-title {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #495057;
+            margin: 0;
+        }
+
+        /* Indicateurs système épurés */
+        .system-indicator {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .system-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 0 auto 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .system-status {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-weight: 400;
+        }
+
+        /* États couleurs épurées */
+        .text-success-muted { color: #28a745; }
+        .text-warning-muted { color: #ffc107; }
+        .text-danger-muted { color: #dc3545; }
+        .text-info-muted { color: #17a2b8; }
+
+        .bg-success-light { background: #d4edda; }
+        .bg-warning-light { background: #fff3cd; }
+        .bg-danger-light { background: #f8d7da; }
+        .bg-info-light { background: #d1ecf1; }
+
+        /* Badge épuré */
+        .badge-clean {
+            background: #e9ecef;
+            color: #495057;
+            padding: 0.35rem 0.65rem;
+            border-radius: 12px;
+            font-weight: 400;
+            font-size: 0.75rem;
+        }
+
+        /* Boutons épurés */
+        .btn-clean {
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            font-weight: 400;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+        }
+
+        .btn-clean:hover {
+            background: #f8f9fa;
+            border-color: #adb5bd;
+            color: #495057;
+        }
+
+        .btn-clean.btn-primary {
+            background: #007bff;
+            border-color: #007bff;
+            color: #ffffff;
+        }
+
+        .btn-clean.btn-primary:hover {
+            background: #0056b3;
+            border-color: #0056b3;
+        }
+
+        .update-info {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+
+        /* Table épurée */
+        .table-clean {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table-clean th {
+            background: #f8f9fa;
+            border: none;
+            padding: 1rem;
+            font-weight: 400;
+            color: #495057;
+            font-size: 0.875rem;
+        }
+
+        .table-clean td {
+            border: none;
+            padding: 1rem;
+            vertical-align: middle;
+            font-size: 0.875rem;
+        }
+
+        .table-clean tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        .table-clean tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+{% endblock %}
+
+{% block admin_content %}
+    <div class="dashboard-container">
+        <!-- En-tête épuré -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-1">Dashboard Administrateur</h1>
+                <p class="text-muted mb-0">Vue d'ensemble de la plateforme CityFlow</p>
+            </div>
+            <div class="update-info">
+                Mis à jour le {{ "now"|date("d/m/Y à H:i") }}
+            </div>
+        </div>
+
+        <!-- Métriques principales -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="metric-icon me-3">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="metric-number">{{ stats.total_signalements }}</div>
+                                <div class="metric-label">Total Signalements</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="metric-icon me-3">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="metric-number">{{ stats.total_utilisateurs }}</div>
+                                <div class="metric-label">Total Utilisateurs</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="metric-icon me-3">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="metric-number text-warning-muted">{{ stats.signalements_en_attente }}</div>
+                                <div class="metric-label">En Attente</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="metric-icon me-3">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="metric-number text-success-muted">{{ stats.signalements_valides }}</div>
+                                <div class="metric-label">Validés</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Métriques secondaires -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="metric-icon me-3">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="metric-number text-danger-muted">{{ stats.signalements_rejetes }}</div>
+                                <div class="metric-label">Rejetés</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="metric-icon me-3">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="metric-number">{{ stats.utilisateurs_actifs }}</div>
+                                <div class="metric-label">Utilisateurs Actifs</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="metric-icon me-3">
+                                <i class="fas fa-user-clock"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="metric-number text-warning-muted">{{ stats.utilisateursNonValides|default(0) }}</div>
+                                <div class="metric-label">Comptes Non Validés</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="metric-icon me-3">
+                                <i class="fas fa-trash-alt"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="metric-number text-info-muted">{{ stats.demandesSuppressions|default(0) }}</div>
+                                <div class="metric-label">Demandes Suppression</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- État du système -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card module-card">
+                    <div class="module-header">
+                        <h5 class="module-title">
+                            <i class="fas fa-server me-2"></i>
+                            État du système
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <div class="system-indicator">
+                                    <div class="system-icon bg-success-light text-success-muted">
+                                        <i class="fas fa-server"></i>
+                                    </div>
+                                    <h6 class="mb-1">Serveur Web</h6>
+                                    <span class="system-status bg-success-light text-success-muted">Opérationnel</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="system-indicator">
+                                    <div class="system-icon bg-success-light text-success-muted">
+                                        <i class="fas fa-database"></i>
+                                    </div>
+                                    <h6 class="mb-1">Base de données</h6>
+                                    <span class="system-status bg-success-light text-success-muted">PostgreSQL OK</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="system-indicator">
+                                    <div class="system-icon bg-warning-light text-warning-muted">
+                                        <i class="fas fa-envelope"></i>
+                                    </div>
+                                    <h6 class="mb-1">Service email</h6>
+                                    <span class="system-status bg-warning-light text-warning-muted">Vérification requise</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="system-indicator">
+                                    <div class="system-icon bg-success-light text-success-muted">
+                                        <i class="fas fa-shield-alt"></i>
+                                    </div>
+                                    <h6 class="mb-1">Sécurité</h6>
+                                    <span class="system-status bg-success-light text-success-muted">Sécurisée</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Signalements récents -->
+            <div class="col-lg-7 mb-4">
+                <div class="card module-card">
+                    <div class="module-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="module-title">
+                                <i class="fas fa-history me-2"></i>
+                                Signalements récents
+                            </h5>
+                            <a href="{{ path('app_admin_signalements') }}" class="btn btn-clean btn-sm">
+                                <i class="fas fa-eye me-1"></i>Voir tout
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if signalements_recents|length > 0 %}
+                            <div class="table-responsive">
+                                <table class="table table-clean mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th>Titre</th>
+                                        <th>Utilisateur</th>
+                                        <th>État</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for signalement in signalements_recents %}
+                                        <tr>
+                                            <td>
+                                                <div class="text-truncate" style="max-width: 200px;">
+                                                    {{ signalement.titre }}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if signalement.utilisateur %}
+                                                    {{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}
+                                                {% else %}
+                                                    <span class="text-muted">Utilisateur supprimé</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if signalement.etatValidation == 'en_attente' %}
+                                                    <span class="badge-clean bg-warning-light text-warning-muted">En attente</span>
+                                                {% elseif signalement.etatValidation == 'valide' %}
+                                                    <span class="badge-clean bg-success-light text-success-muted">Validé</span>
+                                                {% elseif signalement.etatValidation == 'rejete' %}
+                                                    <span class="badge-clean bg-danger-light text-danger-muted">Rejeté</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">{{ signalement.dateSignalement|date('d/m/Y') }}</small>
+                                            </td>
+                                            <td>
+                                                <a href="{{ path('app_admin_signalements_show', {'id': signalement.id}) }}"
+                                                   class="btn btn-clean btn-sm">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-inbox fa-2x text-muted mb-3"></i>
+                                <p class="text-muted">Aucun signalement récent</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Utilisateurs récents et Actions rapides -->
+            <div class="col-lg-5 mb-4">
+                <!-- Nouveaux utilisateurs -->
+                <div class="card module-card mb-4">
+                    <div class="module-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="module-title">
+                                <i class="fas fa-user-plus me-2"></i>
+                                Nouveaux utilisateurs
+                            </h5>
+                            <a href="{{ path('app_admin_users') }}" class="btn btn-clean btn-sm">
+                                <i class="fas fa-users me-1"></i>Voir tout
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if utilisateurs_recents|length > 0 %}
+                            {% for utilisateur in utilisateurs_recents %}
+                                <div class="d-flex align-items-center mb-3 {% if not loop.last %}border-bottom pb-3{% endif %}">
+                                    <div class="flex-shrink-0">
+                                        <div class="metric-icon me-0" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-0" style="font-size: 0.875rem;">{{ utilisateur.prenom }} {{ utilisateur.nom }}</h6>
+                                        <small class="text-muted">{{ utilisateur.email }}</small>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        {% if utilisateur.estValide %}
+                                            <span class="badge-clean bg-success-light text-success-muted">Validé</span>
+                                        {% else %}
+                                            <span class="badge-clean bg-warning-light text-warning-muted">En attente</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-3">
+                                <i class="fas fa-user-slash fa-2x text-muted mb-2"></i>
+                                <p class="text-muted mb-0">Aucun utilisateur récent</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Actions rapides -->
+                <div class="card module-card">
+                    <div class="module-header">
+                        <h5 class="module-title">
+                            <i class="fas fa-bolt me-2"></i>
+                            Actions rapides
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="{{ path('app_admin_signalements', {'etat': 'en_attente'}) }}" class="btn btn-clean">
+                                <i class="fas fa-clock me-2"></i>
+                                Signalements en attente
+                                {% if stats.signalements_en_attente > 0 %}
+                                    <span class="badge-clean ms-2">{{ stats.signalements_en_attente }}</span>
+                                {% endif %}
+                            </a>
+                            <a href="{{ path('app_admin_users', {'statut': 'en_attente'}) }}" class="btn btn-clean">
+                                <i class="fas fa-user-clock me-2"></i>
+                                Utilisateurs à valider
+                                {% if stats.utilisateursNonValides > 0 %}
+                                    <span class="badge-clean ms-2">{{ stats.utilisateursNonValides }}</span>
+                                {% endif %}
+                            </a>
+                            <a href="{{ path('app_admin_demandes_suppression') }}" class="btn btn-clean">
+                                <i class="fas fa-trash-alt me-2"></i>
+                                Demandes suppression
+                                {% if stats.demandesSuppressions > 0 %}
+                                    <span class="badge-clean ms-2">{{ stats.demandesSuppressions }}</span>
+                                {% endif %}
+                            </a>
+                            <a href="{{ path('app_admin_statistiques') }}" class="btn btn-clean btn-primary">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                Statistiques complètes
+                            </a>
+                            {% if app.environment == 'dev' %}
+                                <a href="{{ path('app_admin_test_notifications') }}" class="btn btn-clean">
+                                    <i class="fas fa-bug me-2"></i>
+                                    Tester les notifications
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

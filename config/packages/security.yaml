@@ -1,0 +1,64 @@
+security:
+    # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+    # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
+    providers:
+        # used to reload user from session & other features (e.g. switch_user)
+        app_user_provider:
+            entity:
+                class: App\Entity\Utilisateur
+                property: email
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        main:
+            lazy: true
+            provider: app_user_provider
+            custom_authenticator: App\Security\LoginFormAuthenticator
+            logout:
+                path: app_logout
+                # where to redirect after logout
+                target: app_home
+
+            # activate different ways to authenticate
+            # https://symfony.com/doc/current/security.html#the-firewall
+
+            # https://symfony.com/doc/current/security/impersonating_user.html
+            # switch_user: true
+    
+    access_control:
+        # Permettre l'accès aux signalements validés pour tous les utilisateurs connectés
+        - { path: ^/signalements/\d+, roles: ROLE_USER}
+        # ... le reste de vos règles reste inchangé
+        # Permettre l'accès aux routes de vérification sans être connecté
+        - { path: ^/verify, roles: PUBLIC_ACCESS}
+        
+        # Routes accessibles uniquement aux utilisateurs vérifiés (à ajouter selon vos besoins)
+        # - { path: ^/signalements, roles: ROLE_USER }
+        - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/agent, roles: ROLE_AGENT }
+        - { path: ^/supervisor, roles: ROLE_SUPERVISOR }
+        - { path: ^/signalements/nouveau, roles: ROLE_USER }
+        - { path: ^/mes-signalements, roles: ROLE_USER }
+        - { path: ^/carte, roles: ROLE_USER }
+        - { path: ^/signalements, roles: ROLE_USER }
+        
+    role_hierarchy:
+        #ROLE_AGENT: ROLE_USER
+        ROLE_ADMIN: ROLE_MODERATOR
+        ROLE_MODERATOR: ROLE_USER
+
+when@test:
+    security:
+        password_hashers:
+            # By default, password hashers are resource intensive and take time. This is
+            # important to generate secure password hashes. In tests however, secure hashes
+            # are not important, waste resources and increase test times. The following
+            # reduces the work factor to the lowest possible values.
+            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+                algorithm: auto
+                cost: 4 # Lowest possible value for bcrypt
+                time_cost: 3 # Lowest possible value for argon
+                memory_cost: 10 # Lowest possible value for argon

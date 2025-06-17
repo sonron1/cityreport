@@ -1,0 +1,13 @@
+twig:
+    default_path: '%kernel.project_dir%/templates'
+    cache: false
+    auto_reload: true
+    strict_variables: true
+
+    file_name_pattern: '*.twig'
+
+when@test:
+    twig:
+        debug: true
+        strict_variables: false
+        exception_controller: null

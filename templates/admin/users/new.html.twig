@@ -1,0 +1,410 @@
+
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Nouvel utilisateur - Administration{% endblock %}
+
+{% block admin_breadcrumb %}
+    <li class="breadcrumb-item">
+        <a href="{{ path('app_admin_utilisateurs') }}">Utilisateurs</a>
+    </li>
+    <li class="breadcrumb-item active">Nouveau</li>
+{% endblock %}
+
+{% block admin_content %}
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-10">
+            <!-- En-tête avec icône et bouton retour -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="mb-1">
+                        <i class="fas fa-user-plus text-primary me-2"></i>
+                        Créer un nouvel utilisateur
+                    </h1>
+                    <p class="text-muted mb-0">Ajoutez un nouvel utilisateur au système</p>
+                </div>
+                <a href="{{ path('app_admin_utilisateurs') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Retour à la liste
+                </a>
+            </div>
+
+            <!-- Formulaire principal -->
+            <div class="card admin-card shadow-sm">
+                <div class="card-header admin-card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Informations de l'utilisateur
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {{ form_start(form, {'attr': {'novalidate': 'novalidate', 'class': 'needs-validation'}}) }}
+
+                    <!-- Informations personnelles -->
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">
+                            <i class="fas fa-user me-2"></i>
+                            Informations personnelles
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    {{ form_widget(form.prenom, {
+                                        'attr': {
+                                            'class': 'form-control' ~ (form.prenom.vars.errors|length > 0 ? ' is-invalid' : ''),
+                                            'placeholder': 'Prénom'
+                                        }
+                                    }) }}
+                                    {{ form_label(form.prenom) }}
+                                    {{ form_errors(form.prenom) }}
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    {{ form_widget(form.nom, {
+                                        'attr': {
+                                            'class': 'form-control' ~ (form.nom.vars.errors|length > 0 ? ' is-invalid' : ''),
+                                            'placeholder': 'Nom'
+                                        }
+                                    }) }}
+                                    {{ form_label(form.nom) }}
+                                    {{ form_errors(form.nom) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact et localisation -->
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">
+                            <i class="fas fa-envelope me-2"></i>
+                            Contact et localisation
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    {{ form_widget(form.email, {
+                                        'attr': {
+                                            'class': 'form-control' ~ (form.email.vars.errors|length > 0 ? ' is-invalid' : ''),
+                                            'placeholder': 'Email'
+                                        }
+                                    }) }}
+                                    {{ form_label(form.email) }}
+                                    {{ form_errors(form.email) }}
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.villeResidence.vars.id }}" class="form-label">
+                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                    {{ form.villeResidence.vars.label }}
+                                </label>
+                                {{ form_widget(form.villeResidence, {
+                                    'attr': {
+                                        'class': 'form-select' ~ (form.villeResidence.vars.errors|length > 0 ? ' is-invalid' : '')
+                                    }
+                                }) }}
+                                {{ form_errors(form.villeResidence) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sécurité -->
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            Sécurité
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-floating">
+                                    {{ form_widget(form.plainPassword, {
+                                        'attr': {
+                                            'class': 'form-control' ~ (form.plainPassword.vars.errors|length > 0 ? ' is-invalid' : ''),
+                                            'placeholder': 'Mot de passe'
+                                        }
+                                    }) }}
+                                    {{ form_label(form.plainPassword) }}
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Minimum 6 caractères requis
+                                    </div>
+                                    {{ form_errors(form.plainPassword) }}
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch">
+                                    {{ form_widget(form.estValide, {
+                                        'attr': {
+                                            'class': 'form-check-input',
+                                            'role': 'switch'
+                                        }
+                                    }) }}
+                                    {{ form_label(form.estValide, null, {
+                                        'label_attr': {'class': 'form-check-label'}
+                                    }) }}
+                                </div>
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Active immédiatement le compte utilisateur
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rôles et permissions -->
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">
+                            <i class="fas fa-users-cog me-2"></i>
+                            Rôles et permissions
+                        </h6>
+                        <div class="row">
+                            {% for role in form.roles %}
+                                <div class="col-md-4 mb-3">
+                                    <div class="card h-100 border-0 bg-light">
+                                        <div class="card-body text-center py-3">
+                                            <div class="form-check">
+                                                {{ form_widget(role, {
+                                                    'attr': {'class': 'form-check-input'}
+                                                }) }}
+                                                {{ form_label(role, null, {
+                                                    'label_attr': {'class': 'form-check-label fw-bold'}
+                                                }) }}
+                                            </div>
+                                            <small class="text-muted mt-2 d-block">
+                                                {% set roleValue = role.vars.value %}
+                                                {% if roleValue == 'ROLE_USER' %}
+                                                    <i class="fas fa-user me-1"></i>
+                                                    Accès utilisateur standard
+                                                {% elseif roleValue == 'ROLE_MODERATOR' %}
+                                                    <i class="fas fa-gavel me-1"></i>
+                                                    Modération des signalements
+                                                {% elseif roleValue == 'ROLE_ADMIN' %}
+                                                    <i class="fas fa-crown me-1"></i>
+                                                    Administration complète
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {{ form_errors(form.roles) }}
+
+                        <!-- Aide pour les rôles -->
+                        <div class="alert alert-info border-0 mt-3">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            <strong>Information :</strong> Vous pouvez sélectionner plusieurs rôles.
+                            Le rôle ADMIN inclut automatiquement les permissions des autres rôles.
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <div class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <small>Les champs marqués d'un * sont obligatoires</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{{ path('app_admin_utilisateurs') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                Créer l'utilisateur
+                            </button>
+                        </div>
+                    </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </div>
+
+            <!-- Conseils et informations -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card admin-card border-success">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                Bonnes pratiques
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0">
+                                <li class="mb-2">Utilisez des mots de passe forts</li>
+                                <li class="mb-2">Assignez les rôles minimum nécessaires</li>
+                                <li class="mb-2">Vérifiez l'adresse email avant validation</li>
+                                <li class="mb-0">Documentez les comptes administrateurs</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card admin-card border-info">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                Sécurité
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0">
+                                <li class="mb-2">Les mots de passe sont chiffrés automatiquement</li>
+                                <li class="mb-2">Les rôles définissent les permissions d'accès</li>
+                                <li class="mb-2">La validation active le compte immédiatement</li>
+                                <li class="mb-0">L'historique des actions est conservé</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Validation côté client améliorée
+            const form = document.querySelector('form');
+            const inputs = form.querySelectorAll('input[required], select[required]');
+
+            // Validation en temps réel
+            inputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    validateField(this);
+                });
+
+                input.addEventListener('input', function() {
+                    if (this.classList.contains('is-invalid')) {
+                        validateField(this);
+                    }
+                });
+            });
+
+            // Validation des champs
+            function validateField(field) {
+                const isValid = field.checkValidity();
+                field.classList.toggle('is-valid', isValid && field.value.trim() !== '');
+                field.classList.toggle('is-invalid', !isValid);
+            }
+
+            // Prévention de la soumission si invalide
+            form.addEventListener('submit', function(e) {
+                if (!form.checkValidity()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            });
+
+            // Auto-focus sur le premier champ
+            const firstInput = form.querySelector('input[type="text"]:first-of-type');
+            if (firstInput) {
+                firstInput.focus();
+            }
+
+            // Indicateur de force du mot de passe
+            const passwordInput = document.querySelector('input[type="password"]');
+            if (passwordInput) {
+                passwordInput.addEventListener('input', function() {
+                    const strength = getPasswordStrength(this.value);
+                    updatePasswordIndicator(this, strength);
+                });
+            }
+
+            function getPasswordStrength(password) {
+                let score = 0;
+                if (password.length >= 6) score++;
+                if (password.length >= 8) score++;
+                if (/[a-z]/.test(password)) score++;
+                if (/[A-Z]/.test(password)) score++;
+                if (/[0-9]/.test(password)) score++;
+                if (/[^A-Za-z0-9]/.test(password)) score++;
+                return score;
+            }
+
+            function updatePasswordIndicator(input, strength) {
+                const parent = input.closest('.form-floating');
+                let indicator = parent.querySelector('.password-strength');
+
+                if (!indicator) {
+                    indicator = document.createElement('div');
+                    indicator.className = 'password-strength mt-1';
+                    parent.appendChild(indicator);
+                }
+
+                const colors = ['danger', 'danger', 'warning', 'warning', 'success', 'success'];
+                const texts = ['Très faible', 'Faible', 'Moyen', 'Bon', 'Fort', 'Très fort'];
+
+                if (input.value.length > 0) {
+                    indicator.innerHTML = `
+                        <small class="text-${colors[strength] || 'danger'}">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            Force: ${texts[strength] || 'Très faible'}
+                        </small>
+                    `;
+                } else {
+                    indicator.innerHTML = '';
+                }
+            }
+        });
+    </script>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .admin-card {
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        .admin-card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+
+        .form-floating > label {
+            color: #6c757d;
+        }
+
+        .form-floating > .form-control:focus ~ label,
+        .form-floating > .form-control:not(:placeholder-shown) ~ label {
+            color: #0d6efd;
+        }
+
+        .form-check-input:checked {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        .card.h-100:hover {
+            transform: translateY(-2px);
+            transition: transform 0.2s ease-in-out;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        .btn {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .password-strength {
+            min-height: 20px;
+        }
+
+        .is-valid {
+            border-color: #198754;
+        }
+
+        .is-invalid {
+            border-color: #dc3545;
+        }
+    </style>
+{% endblock %}

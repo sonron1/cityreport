@@ -1,0 +1,149 @@
+{# templates/admin/categories/new.html.twig #}
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Nouvelle catégorie{% endblock %}
+
+{% block admin_content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Ajouter une nouvelle catégorie</h1>
+        <a href="{{ path('app_admin_categories') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-plus me-2"></i>Nouvelle catégorie</h5>
+                </div>
+                <div class="card-body">
+                    {{ form_start(form) }}
+                    {{ form_errors(form) }}
+
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            {{ form_row(form.nom, {
+                                'label_attr': {'class': 'fw-bold'},
+                                'attr': {'class': 'form-control', 'placeholder': 'Ex: Déchets, Nid-de-poule, Éclairage public...'}
+                            }) }}
+                        </div>
+                        <div class="col-md-5">
+                            {{ form_row(form.couleur, {
+                                'label_attr': {'class': 'fw-bold'},
+                                'attr': {'class': 'form-control form-control-color w-100', 'value': '#007bff'}
+                            }) }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3 mt-3">
+                        {{ form_row(form.description, {
+                            'label_attr': {'class': 'fw-bold'},
+                            'attr': {
+                                'class': 'form-control',
+                                'rows': '4',
+                                'placeholder': 'Décrivez le type de signalements qui appartiennent à cette catégorie...'
+                            }
+                        }) }}
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    {{ form_widget(form.submit, {
+                        'attr': {'class': 'btn btn-primary'},
+                        'label': 'Créer la catégorie'
+                    }) }}
+                    <a href="{{ path('app_admin_categories') }}" class="btn btn-outline-secondary ms-2">Annuler</a>
+                </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Conseils</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Bonnes pratiques</h6>
+                    <ul class="ps-3">
+                        <li><strong>Nom :</strong> Choisissez un nom court et descriptif</li>
+                        <li><strong>Description :</strong> Expliquez clairement le type de signalements concernés</li>
+                        <li><strong>Couleur :</strong> Utilisez une couleur distinctive pour faciliter l'identification</li>
+                    </ul>
+
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        La couleur sera utilisée sur la carte et dans les listes pour identifier rapidement cette catégorie.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-eye me-2"></i>Aperçu en temps réel</h5>
+                </div>
+                <div class="card-body">
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0" id="previewTitle">Titre de la catégorie</h5>
+                            <div class="category-icon" id="previewIcon" style="background-color: #007bff; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
+                                <i class="fas fa-tag"></i>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text" id="previewDescription">La description de la catégorie apparaîtra ici...</p>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">0 signalement(s)</span>
+                                <div id="previewColor" style="background-color: #007bff; width: 30px; height: 30px; border-radius: 4px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <small class="text-muted">
+                        <i class="fas fa-magic me-1"></i>
+                        Cet aperçu se met à jour automatiquement pendant que vous tapez.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% block javascripts %}
+        {{ parent() }}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Éléments du formulaire
+                const nomInput = document.querySelector('[name$="[nom]"]');
+                const descriptionInput = document.querySelector('[name$="[description]"]');
+                const couleurInput = document.querySelector('[name$="[couleur]"]');
+
+                // Éléments de prévisualisation
+                const previewTitle = document.getElementById('previewTitle');
+                const previewDescription = document.getElementById('previewDescription');
+                const previewIcon = document.getElementById('previewIcon');
+                const previewColor = document.getElementById('previewColor');
+
+                // Mise à jour en temps réel
+                if (nomInput && previewTitle) {
+                    nomInput.addEventListener('input', function() {
+                        previewTitle.textContent = this.value || 'Titre de la catégorie';
+                    });
+                }
+
+                if (descriptionInput && previewDescription) {
+                    descriptionInput.addEventListener('input', function() {
+                        previewDescription.textContent = this.value || 'La description de la catégorie apparaîtra ici...';
+                    });
+                }
+
+                if (couleurInput && previewIcon && previewColor) {
+                    couleurInput.addEventListener('input', function() {
+                        previewIcon.style.backgroundColor = this.value;
+                        previewColor.style.backgroundColor = this.value;
+                    });
+                }
+            });
+        </script>
+    {% endblock %}
+{% endblock %}

@@ -1,0 +1,335 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Profil de {{ utilisateur.prenom }} {{ utilisateur.nom }} - Administration{% endblock %}
+
+{% block admin_breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('app_admin_users') }}">Utilisateurs</a></li>
+    <li class="breadcrumb-item active">{{ utilisateur.prenom }} {{ utilisateur.nom }}</li>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .profile-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            border: 4px solid rgba(255,255,255,0.3);
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-card .card-header {
+            background: #f8f9fa;
+            border-radius: 15px 15px 0 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .stat-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .activity-item {
+            border-left: 3px solid #667eea;
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .badge-role {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+        }
+    </style>
+{% endblock %}
+
+{% block admin_content %}
+    <!-- En-tête du profil -->
+    <div class="profile-header p-4">
+        <div class="row align-items-center">
+            <div class="col-md-2 text-center">
+                <div class="profile-avatar mx-auto">
+                    {{ utilisateur.prenom|first|upper }}{{ utilisateur.nom|first|upper }}
+                </div>
+            </div>
+            <div class="col-md-7">
+                <h1 class="mb-2">{{ utilisateur.prenom }} {{ utilisateur.nom }}</h1>
+                <p class="mb-3 opacity-75">{{ utilisateur.email }}</p>
+                <div class="d-flex gap-2 flex-wrap">
+                    {% for role in utilisateur.roles %}
+                        {% if role == 'ROLE_ADMIN' %}
+                            <span class="badge badge-role bg-danger">👑 Administrateur</span>
+                        {% elseif role == 'ROLE_MODERATOR' %}
+                            <span class="badge badge-role bg-warning">🛡️ Modérateur</span>
+                        {% elseif role == 'ROLE_USER' %}
+                            <span class="badge badge-role bg-info">👤 Utilisateur</span>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if utilisateur.estValide %}
+                        <span class="badge badge-role bg-success">✓ Compte validé</span>
+                    {% else %}
+                        <span class="badge badge-role bg-warning">⏳ En attente de validation</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-3 text-end">
+                <div class="d-grid gap-2">
+                    <a href="{{ path('app_admin_user_edit', {'id': utilisateur.id}) }}" class="btn btn-light">
+                        <i class="fas fa-edit me-1"></i>Modifier
+                    </a>
+                    {% if not utilisateur.estValide %}
+                        <form method="POST" action="{{ path('app_admin_user_validate', {'id': utilisateur.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('validate_user' ~ utilisateur.id) }}">
+                            <button type="submit" class="btn btn-success w-100" onclick="return confirm('Valider ce compte ?')">
+                                <i class="fas fa-check me-1"></i>Valider
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informations personnelles -->
+        <div class="col-lg-4">
+            <div class="card info-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>Informations personnelles
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td><strong>Nom complet :</strong></td>
+                            <td>{{ utilisateur.prenom }} {{ utilisateur.nom }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Email :</strong></td>
+                            <td>
+                                <a href="mailto:{{ utilisateur.email }}">{{ utilisateur.email }}</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ville :</strong></td>
+                            <td>
+                                {% if utilisateur.villeResidence %}
+                                    <i class="fas fa-map-marker-alt me-1"></i>{{ utilisateur.villeResidence.nom }}
+                                {% else %}
+                                    <span class="text-muted">Non renseignée</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Inscription :</strong></td>
+                            <td>{{ utilisateur.dateInscription|date('d/m/Y à H:i') }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ID utilisateur :</strong></td>
+                            <td><code>{{ utilisateur.id }}</code></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Statistiques d'activité -->
+            <div class="card info-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Statistiques d'activité
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="stat-box">
+                                <div class="stat-number">{{ utilisateur.signalements|length }}</div>
+                                <div>Signalements</div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="stat-box">
+                                <div class="stat-number">{{ utilisateur.commentaires|length }}</div>
+                                <div>Commentaires</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-box">
+                                <div class="stat-number">{{ utilisateur.messagesEnvoyes|length }}</div>
+                                <div>Messages</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-box">
+                                <div class="stat-number">
+                                    {{ utilisateur.signalements|filter(s => s.etatValidation == 'valide')|length }}
+                                </div>
+                                <div>Validés</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activités récentes -->
+        <div class="col-lg-8">
+            <!-- Signalements récents -->
+            <div class="card info-card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Signalements récents
+                        </h5>
+                        <a href="{{ path('app_admin_signalements') }}?search={{ utilisateur.nom }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-eye me-1"></i>Voir tout
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if utilisateur.signalements|length > 0 %}
+                        {% for signalement in utilisateur.signalements|slice(0, 5) %}
+                            <div class="activity-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">{{ signalement.titre }}</h6>
+                                        <p class="mb-1 text-muted">{{ signalement.description|slice(0, 100) }}...</p>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>{{ signalement.dateSignalement|date('d/m/Y à H:i') }}
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        {% if signalement.etatValidation == 'valide' %}
+                                            <span class="badge bg-success">Validé</span>
+                                        {% elseif signalement.etatValidation == 'en_attente' %}
+                                            <span class="badge bg-warning">En attente</span>
+                                        {% elseif signalement.etatValidation == 'rejete' %}
+                                            <span class="badge bg-danger">Rejeté</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Aucun signalement créé</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions d'administration -->
+            <div class="card info-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>Actions d'administration
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Gestion du compte</h6>
+                            <div class="d-grid gap-2">
+                                <a href="{{ path('app_admin_user_edit', {'id': utilisateur.id}) }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-edit me-1"></i>Modifier les informations
+                                </a>
+                                <a href="{{ path('app_admin_user_reset_password', {'id': utilisateur.id}) }}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-key me-1"></i>Réinitialiser mot de passe
+                                </a>
+                                <a href="{{ path('app_admin_user_login_as', {'id': utilisateur.id}) }}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-sign-in-alt me-1"></i>Se connecter en tant que
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Consultation</h6>
+                            <div class="d-grid gap-2">
+                                <a href="{{ path('app_admin_signalements') }}?search={{ utilisateur.nom }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-list me-1"></i>Ses signalements
+                                </a>
+                                <a href="#" class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-comments me-1"></i>Ses commentaires
+                                </a>
+                                <a href="#" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-envelope me-1"></i>Ses messages
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if not utilisateur.estValide %}
+                        <hr>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Compte en attente de validation</strong><br>
+                            Ce compte n'a pas encore été validé par un administrateur.
+                            <form method="POST" action="{{ path('app_admin_user_validate', {'id': utilisateur.id}) }}" class="mt-2">
+                                <input type="hidden" name="_token" value="{{ csrf_token('validate_user' ~ utilisateur.id) }}">
+                                <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Valider ce compte ?')">
+                                    <i class="fas fa-check me-1"></i>Valider maintenant
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boutons de navigation -->
+    <div class="d-flex justify-content-between mt-4">
+        <a href="{{ path('app_admin_users') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Retour à la liste
+        </a>
+
+        <div class="d-flex gap-2">
+            <a href="{{ path('app_admin_user_edit', {'id': utilisateur.id}) }}" class="btn btn-primary">
+                <i class="fas fa-edit me-1"></i>Modifier
+            </a>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-ellipsis-v me-1"></i>Plus d'actions
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ path('app_admin_user_login_as', {'id': utilisateur.id}) }}">Se connecter en tant que</a></li>
+                    <li><a class="dropdown-item" href="{{ path('app_admin_user_reset_password', {'id': utilisateur.id}) }}">Réinitialiser mot de passe</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="{{ path('app_admin_user_suspend', {'id': utilisateur.id}) }}">Suspendre</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}

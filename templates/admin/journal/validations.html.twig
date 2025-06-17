@@ -1,0 +1,314 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Journal des validations - Administration{% endblock %}
+
+{% block admin_breadcrumb %}
+    <li class="breadcrumb-item">
+        <a href="{{ path('app_admin_signalements') }}">Signalements</a>
+    </li>
+    <li class="breadcrumb-item active">Journal des validations</li>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .journal-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .activity-card { background: white; border-radius: 15px; padding: 1.5rem; box-shadow: 0 5px 20px rgba(0,0,0,0.08); transition: all 0.3s ease; border: none; position: relative; overflow: hidden; margin-bottom: 1rem; }
+        .activity-card::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 4px; background: var(--accent-color); }
+        .activity-card.validé::before { background: linear-gradient(180deg, #059669, #047857); }
+        .activity-card.rejeté::before { background: linear-gradient(180deg, #dc2626, #b91c1c); }
+        .activity-card:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(0,0,0,0.15); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .stats-card { background: white; border-radius: 15px; padding: 2rem; box-shadow: 0 5px 20px rgba(0,0,0,0.08); text-align: center; position: relative; overflow: hidden; transition: all 0.3s ease; }
+        .stats-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+        .stats-card.total::before { background: linear-gradient(45deg, #4f46e5, #7c3aed); }
+        .stats-card.validated::before { background: linear-gradient(45deg, #059669, #047857); }
+        .stats-card.rejected::before { background: linear-gradient(45deg, #dc2626, #b91c1c); }
+        .stats-card.pending::before { background: linear-gradient(45deg, #f59e0b, #d97706); }
+        .stats-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.15); }
+        .stats-icon { width: 60px; height: 60px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 1rem; color: white; }
+        .icon-total { background: linear-gradient(45deg, #4f46e5, #7c3aed); }
+        .icon-validated { background: linear-gradient(45deg, #059669, #047857); }
+        .icon-rejected { background: linear-gradient(45deg, #dc2626, #b91c1c); }
+        .icon-pending { background: linear-gradient(45deg, #f59e0b, #d97706); }
+        .filter-card { background: white; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); border: none; overflow: hidden; margin-bottom: 2rem; }
+        .timeline { position: relative; padding-left: 2rem; }
+        .timeline::before { content: ''; position: absolute; left: 1rem; top: 0; bottom: 0; width: 2px; background: linear-gradient(180deg, #e2e8f0, #cbd5e1); }
+        .timeline-item { position: relative; margin-bottom: 2rem; }
+        .timeline-item::before { content: ''; position: absolute; left: -1.75rem; top: 0.5rem; width: 12px; height: 12px; border-radius: 50%; background: var(--item-color); border: 3px solid white; box-shadow: 0 0 0 3px var(--item-color); }
+        .timeline-item.validé::before { --item-color: #059669; }
+        .timeline-item.rejeté::before { --item-color: #dc2626; }
+        .moderator-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(45deg, #4f46e5, #7c3aed); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem; border: 3px solid white; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
+        .action-badge { padding: 0.5rem 1rem; border-radius: 50px; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .action-validé { background: linear-gradient(45deg, #dcfce7, #bbf7d0); color: #166534; border: 1px solid #22c55e; }
+        .action-rejeté { background: linear-gradient(45deg, #fef2f2, #fecaca); color: #991b1b; border: 1px solid #ef4444; }
+        .form-control, .form-select { border: 2px solid #e2e8f0; border-radius: 10px; padding: 0.75rem 1rem; transition: all 0.3s ease; }
+        .form-control:focus, .form-select:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .btn { border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 600; transition: all 0.3s ease; border: none; }
+        .btn-primary { background: linear-gradient(45deg, #4f46e5, #7c3aed); box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4); }
+        .btn-outline-secondary { border: 2px solid #6c757d; color: #6c757d; transition: all 0.3s ease; }
+        .btn-outline-secondary:hover { background: #6c757d; color: white; transform: translateY(-2px); }
+        .comment-box { background: #f8fafc; border-left: 4px solid #e2e8f0; padding: 1rem; border-radius: 8px; margin-top: 0.5rem; }
+        .date-badge { background: #f1f5f9; color: #475569; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 500; }
+        .signalement-link { color: #4f46e5; text-decoration: none; font-weight: 600; transition: color 0.2s ease; }
+        .signalement-link:hover { color: #7c3aed; text-decoration: underline; }
+        .card-header { background: linear-gradient(45deg, #f8fafc, #f1f5f9); border-bottom: 1px solid #e2e8f0; padding: 1.25rem 1.5rem; }
+        .activity-meta { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .activity-content { padding-left: 0.5rem; }
+        .pagination { justify-content: center; margin-top: 2rem; }
+        .pagination .page-link { border: none; color: #4f46e5; padding: 0.75rem 1rem; margin: 0 0.25rem; border-radius: 8px; transition: all 0.2s ease; }
+        .pagination .page-link:hover { background: #f1f5f9; color: #7c3aed; }
+        .pagination .page-item.active .page-link { background: linear-gradient(45deg, #4f46e5, #7c3aed); border: none; }
+        .empty-state { text-align: center; padding: 4rem 2rem; color: #64748b; }
+    </style>
+{% endblock %}
+
+{% block admin_content %}
+    <!-- En-tête -->
+    <div class="journal-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h2 mb-2">
+                    <i class="fas fa-history me-3"></i>
+                    Journal des validations
+                </h1>
+                <p class="mb-0 opacity-90">
+                    Historique complet des actions de modération et validation des signalements
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="dropdown">
+                    <button class="btn btn-light btn-lg dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-download me-2"></i>Exporter
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ path('app_admin_journal_export', {format: 'csv'}) }}">
+                                <i class="fas fa-file-csv me-2"></i>CSV</a></li>
+                        <li><a class="dropdown-item" href="{{ path('app_admin_journal_export', {format: 'pdf'}) }}">
+                                <i class="fas fa-file-pdf me-2"></i>PDF</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="stats-grid">
+        <div class="stats-card total">
+            <div class="stats-icon icon-total"><i class="fas fa-clipboard-list"></i></div>
+            <h3 class="fw-bold text-primary mb-1">{{ stats.total ?? 0 }}</h3>
+            <p class="text-muted mb-0">Total des actions</p>
+        </div>
+        <div class="stats-card validated">
+            <div class="stats-icon icon-validated"><i class="fas fa-check-circle"></i></div>
+            <h3 class="fw-bold text-success mb-1">{{ stats.validated ?? 0 }}</h3>
+            <p class="text-muted mb-0">Validations</p>
+        </div>
+        <div class="stats-card rejected">
+            <div class="stats-icon icon-rejected"><i class="fas fa-times-circle"></i></div>
+            <h3 class="fw-bold text-danger mb-1">{{ stats.rejected ?? 0 }}</h3>
+            <p class="text-muted mb-0">Rejets</p>
+        </div>
+        <div class="stats-card pending">
+            <div class="stats-icon icon-pending"><i class="fas fa-clock"></i></div>
+            <h3 class="fw-bold text-warning mb-1">{{ stats.pending ?? 0 }}</h3>
+            <p class="text-muted mb-0">En attente</p>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="filter-card">
+        <div class="card-header">
+            <h5 class="mb-0" style="color: #333;">
+                <i class="fas fa-filter me-2 text-primary"></i>
+                Filtres et recherche
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="search" name="search"
+                               value="{{ current_filters.search ?? '' }}" placeholder="Rechercher...">
+                        <label for="search"><i class="fas fa-search me-2"></i>Rechercher</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <select class="form-select" id="action_filter" name="action_filter">
+                            <option value="">Toutes les actions</option>
+                            <option value="validated" {{ (current_filters.action_filter ?? '') == 'validated' ? 'selected' : '' }}>Validé</option>
+                            <option value="rejected" {{ (current_filters.action_filter ?? '') == 'rejected' ? 'selected' : '' }}>Rejeté</option>
+                            <option value="pending" {{ (current_filters.action_filter ?? '') == 'pending' ? 'selected' : '' }}>En attente</option>
+                            <option value="modified" {{ (current_filters.action_filter ?? '') == 'modified' ? 'selected' : '' }}>Modifié</option>
+                        </select>
+                        <label for="action_filter">Filtrer par action</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <select class="form-select" id="moderator_filter" name="moderator_filter">
+                            <option value="">Tous les modérateurs</option>
+                            {% for moderator in moderators ?? [] %}
+                                <option value="{{ moderator.id }}" {{ (current_filters.moderator_filter ?? '') == moderator.id ? 'selected' : '' }}>
+                                    {{ moderator.prenom }} {{ moderator.nom }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <label for="moderator_filter">Modérateur</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <input type="date" class="form-control" id="date_from" name="date_from" value="{{ current_filters.date_from ?? '' }}">
+                        <label for="date_from">Date début</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <input type="date" class="form-control" id="date_to" name="date_to" value="{{ current_filters.date_to ?? '' }}">
+                        <label for="date_to">Date fin</label>
+                    </div>
+                </div>
+                <div class="col-md-1 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+                    <a href="{{ path('app_admin_journal_validations') }}" class="btn btn-outline-secondary" title="Réinitialiser les filtres">
+                        <i class="fas fa-undo"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Journal des activités -->
+    <div class="filter-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0" style="color: #333;">
+                <i class="fas fa-list me-2 text-primary"></i>
+                Historique des validations
+                <span class="badge bg-primary ms-2">{{ journal_entries|default([])|length }}</span>
+            </h5>
+            <small class="text-muted">
+                <i class="fas fa-info-circle me-1"></i>
+                Dernière mise à jour : {{ "now"|date('d/m/Y H:i') }}
+            </small>
+        </div>
+
+        <div class="card-body">
+            {% if journal_entries|default([])|length > 0 %}
+                <div class="timeline">
+                    {% for entry in journal_entries %}
+                        <div class="timeline-item {{ entry.action|lower }}">
+                            <div class="activity-card {{ entry.action|lower }}">
+                                <div class="activity-meta">
+                                    <div class="moderator-avatar">
+                                        {{ entry.moderateur.prenom|first|upper }}{{ entry.moderateur.nom|first|upper }}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 fw-bold">
+                                            {{ entry.moderateur.prenom }} {{ entry.moderateur.nom }}
+                                            <span class="action-badge action-{{ entry.action|lower }} ms-2">
+                                                <i class="fas fa-{{ entry.action == 'validé' ? 'check' : 'times' }} me-1"></i>{{ entry.action|title }}
+                                            </span>
+                                        </h6>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <span class="date-badge">
+                                                <i class="fas fa-calendar me-1"></i>
+                                                {{ entry.dateValidation|date('d/m/Y H:i') }}
+                                            </span>
+                                            <a href="{{ path('app_admin_signalements_show', {id: entry.signalement.id}) }}" class="signalement-link">
+                                                <i class="fas fa-external-link-alt me-1"></i>
+                                                Signalement #{{ entry.signalement.id }}
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="activity-content">
+                                    <h6 class="text-dark mb-2">
+                                        <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                                        {{ entry.signalement.titre }}
+                                    </h6>
+                                    {% if entry.signalement.ville %}
+                                        <small class="text-muted d-block mb-2">
+                                            <i class="fas fa-city me-1"></i>
+                                            {{ entry.signalement.ville.nom }}
+                                            {% if entry.signalement.arrondissement %} - {{ entry.signalement.arrondissement.nom }}{% endif %}
+                                        </small>
+                                    {% endif %}
+                                    {% if entry.commentaire %}
+                                        <div class="comment-box">
+                                            <small class="text-muted d-block mb-1"><i class="fas fa-comment me-1"></i>Commentaire :</small>
+                                            <p class="mb-0">{{ entry.commentaire }}</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if pagination.pageCount|default(0) > 1 %}
+                    <nav aria-label="Navigation du journal">
+                        <ul class="pagination">
+                            {% if pagination.previous|default(false) %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ path('app_admin_journal_validations', current_filters|merge({page: pagination.previous})) }}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            {% for page in pagination.pagesInRange|default([]) %}
+                                <li class="page-item {{ page == pagination.current ? 'active' : '' }}">
+                                    <a class="page-link" href="{{ path('app_admin_journal_validations', current_filters|merge({page: page})) }}">{{ page }}</a>
+                                </li>
+                            {% endfor %}
+                            {% if pagination.next|default(false) %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ path('app_admin_journal_validations', current_filters|merge({page: pagination.next})) }}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-clipboard fa-4x mb-3"></i>
+                    <h4>Aucune entrée dans le journal</h4>
+                    <p class="text-muted">
+                        {% if current_filters|default({})|length > 0 %}
+                            Aucune activité trouvée avec les filtres appliqués.
+                            <br>
+                            <a href="{{ path('app_admin_journal_validations') }}" class="btn btn-outline-primary mt-3">
+                                <i class="fas fa-refresh me-2"></i>Réinitialiser les filtres
+                            </a>
+                        {% else %}
+                            Le journal sera alimenté au fur et à mesure des actions de modération.
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animation et effets
+            document.querySelectorAll('.stats-card').forEach(card => {
+                card.addEventListener('mouseenter', () => card.style.transform = 'translateY(-8px) scale(1.02)');
+                card.addEventListener('mouseleave', () => card.style.transform = 'translateY(0) scale(1)');
+            });
+
+            // Tooltips Bootstrap
+            const tooltips = document.querySelectorAll('[title]');
+            tooltips.forEach(el => new bootstrap.Tooltip(el));
+        });
+    </script>
+{% endblock %}

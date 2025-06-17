@@ -1,0 +1,65 @@
+###> symfony/framework-bundle ###
+/.env
+/zfile/.env.BACKUPlocal
+/.env.local
+/zfile/.env.example
+/.env.local.php
+/.env.*.local
+/config/secrets/prod/prod.decrypt.private.php
+/public/bundles/
+/var/
+/vendor/
+###< symfony/framework-bundle ###
+
+###> phpunit/phpunit ###
+/phpunit.xml
+.phpunit.result.cache
+###< phpunit/phpunit ###
+
+###> symfony/phpunit-bridge ###
+.phpunit.result.cache
+/phpunit.xml
+###< symfony/phpunit-bridge ###
+
+###> symfony/asset-mapper ###
+/public/assets/
+/assets/vendor/
+public/uploads
+###< symfony/asset-mapper ###
+
+# Fichiers IDE et éditeurs
+/.idea/
+/.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Fichiers de configuration locaux
+/config/local/
+
+# Dossiers de build et de cache
+/var/cache/
+/var/log/
+/var/sessions/
+
+# Fichiers de logs
+*.log
+
+# Fichiers d'environnement
+.env.*
+!zfile/.env.example
+
+# Dossiers node
+/node_modules/
+/public/build/
+npm-debug.log
+yarn-error.log
+###> symfony/webpack-encore-bundle ###
+/node_modules/
+/public/build/
+npm-debug.log
+yarn-error.log
+###< symfony/webpack-encore-bundle ###

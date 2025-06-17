@@ -1,0 +1,634 @@
+
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Statistiques globales - Administration{% endblock %}
+
+{% block admin_breadcrumb %}
+    <li class="breadcrumb-item active">Statistiques</li>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Police épurée */
+        .stats-container {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            font-weight: 300;
+            line-height: 1.5;
+        }
+
+        .stats-container h1, .stats-container h2, .stats-container h3,
+        .stats-container h4, .stats-container h5, .stats-container h6 {
+            font-weight: 400;
+            color: #2c3e50;
+        }
+
+        /* Cards épurées */
+        .metric-card {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+
+        .metric-card:hover {
+            border-color: #dee2e6;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        .metric-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 6px;
+            background: #f8f9fa;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .metric-number {
+            font-size: 2rem;
+            font-weight: 300;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: #6c757d;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        /* Graphiques épurés */
+        .chart-card {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .chart-header {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            padding: 1rem 1.5rem;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .chart-title {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #495057;
+            margin: 0;
+        }
+
+        /* Détails épurés */
+        .detail-item {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .detail-item:hover {
+            border-color: #dee2e6;
+        }
+
+        .detail-number {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-label {
+            font-size: 0.75rem;
+            color: #6c757d;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        /* Progress bar épurée */
+        .progress-clean {
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar-clean {
+            background: #28a745;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        /* Boutons épurés */
+        .btn-clean {
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            font-weight: 400;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-clean:hover {
+            background: #f8f9fa;
+            border-color: #adb5bd;
+            color: #495057;
+        }
+
+        .btn-clean.btn-primary {
+            background: #007bff;
+            border-color: #007bff;
+            color: #ffffff;
+        }
+
+        .btn-clean.btn-primary:hover {
+            background: #0056b3;
+            border-color: #0056b3;
+        }
+
+        /* Indicateurs système épurés */
+        .system-indicator {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .system-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 0 auto 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .system-status {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-weight: 400;
+        }
+
+        /* États couleurs épurées */
+        .text-success-muted { color: #28a745; }
+        .text-warning-muted { color: #ffc107; }
+        .text-danger-muted { color: #dc3545; }
+        .text-info-muted { color: #17a2b8; }
+
+        .bg-success-light { background: #d4edda; }
+        .bg-warning-light { background: #fff3cd; }
+        .bg-danger-light { background: #f8d7da; }
+        .bg-info-light { background: #d1ecf1; }
+
+        /* Badge épuré */
+        .badge-clean {
+            background: #e9ecef;
+            color: #495057;
+            padding: 0.35rem 0.65rem;
+            border-radius: 12px;
+            font-weight: 400;
+            font-size: 0.75rem;
+        }
+
+        .update-info {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+    </style>
+{% endblock %}
+
+{% block admin_content %}
+    <div class="stats-container">
+        <!-- En-tête épuré -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-1">Statistiques globales</h1>
+                <p class="text-muted mb-0">Vue d'ensemble de la plateforme CityFlow</p>
+            </div>
+            <div class="update-info">
+                Mis à jour le {{ "now"|date("d/m/Y à H:i") }}
+            </div>
+        </div>
+
+        <!-- Métriques principales -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="metric-icon me-3">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="metric-number">{{ stats.total_signalements }}</div>
+                                <div class="metric-label">Total Signalements</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="metric-icon me-3">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="metric-number">{{ stats.total_utilisateurs }}</div>
+                                <div class="metric-label">Total Utilisateurs</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="metric-icon me-3">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="metric-number text-warning-muted">{{ stats.signalements_en_attente }}</div>
+                                <div class="metric-label">En Attente</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="metric-icon me-3">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="metric-number text-success-muted">{{ stats.signalements_valides }}</div>
+                                <div class="metric-label">Validés</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graphiques -->
+        <div class="row mb-4">
+            <!-- Évolution -->
+            <div class="col-lg-8 mb-4">
+                <div class="card chart-card">
+                    <div class="chart-header">
+                        <h5 class="chart-title">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Évolution des signalements (6 derniers mois)
+                        </h5>
+                    </div>
+                    <div class="card-body" style="height: 300px;">
+                        <canvas id="evolutionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Répartition -->
+            <div class="col-lg-4 mb-4">
+                <div class="card chart-card">
+                    <div class="chart-header">
+                        <h5 class="chart-title">
+                            <i class="fas fa-pie-chart me-2"></i>
+                            Répartition par état
+                        </h5>
+                    </div>
+                    <div class="card-body" style="height: 300px;">
+                        <canvas id="repartitionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <!-- Statistiques détaillées -->
+            <div class="col-lg-6 mb-4">
+                <div class="card chart-card">
+                    <div class="chart-header">
+                        <h5 class="chart-title">
+                            <i class="fas fa-list-alt me-2"></i>
+                            Statistiques détaillées
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <div class="detail-item">
+                                    <div class="detail-number text-success-muted">{{ stats.signalements_valides }}</div>
+                                    <div class="detail-label">Signalements validés</div>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="detail-item">
+                                    <div class="detail-number text-danger-muted">{{ stats.signalements_rejetes }}</div>
+                                    <div class="detail-label">Signalements rejetés</div>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="detail-item">
+                                    <div class="detail-number text-info-muted">{{ stats.utilisateurs_valides }}</div>
+                                    <div class="detail-label">Utilisateurs validés</div>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="detail-item">
+                                    <div class="detail-number text-warning-muted">{{ stats.utilisateurs_en_attente }}</div>
+                                    <div class="detail-label">Utilisateurs en attente</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Taux de validation -->
+                        <hr class="my-4">
+                        <div class="text-center">
+                            <h6 class="mb-3">Taux de validation global</h6>
+                            {% set taux_validation = stats.total_signalements > 0 ? (stats.signalements_valides / stats.total_signalements * 100)|round(1) : 0 %}
+
+                            <div class="progress progress-clean mb-2">
+                                <div class="progress-bar progress-bar-clean"
+                                     style="width: {{ taux_validation }}%"></div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">{{ taux_validation }}%</small>
+                                <small class="text-muted">
+                                    {{ stats.signalements_valides }} / {{ stats.total_signalements }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions rapides -->
+            <div class="col-lg-6 mb-4">
+                <div class="card chart-card">
+                    <div class="chart-header">
+                        <h5 class="chart-title">
+                            <i class="fas fa-bolt me-2"></i>
+                            Actions rapides
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-3">
+                            <a href="{{ path('app_admin_signalements', {'etat': 'en_attente'}) }}"
+                               class="btn btn-clean">
+                                <i class="fas fa-clock me-2"></i>
+                                Gérer les signalements en attente
+                                <span class="badge-clean ms-2">{{ stats.signalements_en_attente }}</span>
+                            </a>
+
+                            <a href="{{ path('app_admin_users', {'statut': 'en_attente'}) }}"
+                               class="btn btn-clean">
+                                <i class="fas fa-user-clock me-2"></i>
+                                Valider les nouveaux utilisateurs
+                                <span class="badge-clean ms-2">{{ stats.utilisateurs_en_attente }}</span>
+                            </a>
+
+                            <a href="{{ path('app_moderateur_dashboard') }}"
+                               class="btn btn-clean btn-primary">
+                                <i class="fas fa-gavel me-2"></i>
+                                Accéder au mode modération
+                            </a>
+
+                            <a href="{{ path('app_admin_signalements') }}"
+                               class="btn btn-clean">
+                                <i class="fas fa-database me-2"></i>
+                                Consulter tous les signalements
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activités récentes -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card chart-card">
+                    <div class="chart-header">
+                        <h5 class="chart-title">
+                            <i class="fas fa-history me-2"></i>
+                            Activités récentes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if activites_recentes is empty %}
+                            <p class="text-muted text-center">Aucune activité récente</p>
+                        {% else %}
+                            <div class="list-group list-group-flush">
+                                {% for activite in activites_recentes %}
+                                    <div class="list-group-item border-0 px-0">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0 me-3">
+                                                <i class="fas fa-{{ activite.icon }} text-{{ activite.color }}"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">{{ activite.title }}</h6>
+                                                <p class="mb-1">{{ activite.message }}</p>
+                                                <small class="text-muted">
+                                                    Par {{ activite.user }} - {{ activite.date|date('d/m/Y à H:i') }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- État du système -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card chart-card">
+                    <div class="chart-header">
+                        <h5 class="chart-title">
+                            <i class="fas fa-server me-2"></i>
+                            État du système
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <div class="system-indicator">
+                                    <div class="system-icon bg-success-light text-success-muted">
+                                        <i class="fas fa-database"></i>
+                                    </div>
+                                    <h6 class="mb-2">Base de données</h6>
+                                    <span class="system-status bg-success-light text-success-muted">Opérationnelle</span>
+                                    <div class="mt-2">
+                                        <small class="text-muted">99.9% uptime</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="system-indicator">
+                                    <div class="system-icon bg-success-light text-success-muted">
+                                        <i class="fas fa-server"></i>
+                                    </div>
+                                    <h6 class="mb-2">Serveur Web</h6>
+                                    <span class="system-status bg-success-light text-success-muted">En ligne</span>
+                                    <div class="mt-2">
+                                        <small class="text-muted">120ms</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="system-indicator">
+                                    <div class="system-icon bg-warning-light text-warning-muted">
+                                        <i class="fas fa-envelope"></i>
+                                    </div>
+                                    <h6 class="mb-2">Service mail</h6>
+                                    <span class="system-status bg-warning-light text-warning-muted">À vérifier</span>
+                                    <div class="mt-2">
+                                        <small class="text-muted">23 en queue</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="system-indicator">
+                                    <div class="system-icon bg-info-light text-info-muted">
+                                        <i class="fas fa-shield-alt"></i>
+                                    </div>
+                                    <h6 class="mb-2">Sécurité</h6>
+                                    <span class="system-status bg-info-light text-info-muted">Monitoring actif</span>
+                                    <div class="mt-2">
+                                        <small class="text-muted">SSL valide</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <!-- JavaScript pour les graphiques -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configuration commune
+            Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+            Chart.defaults.font.size = 11;
+            Chart.defaults.color = '#6c757d';
+
+            // Graphique d'évolution des signalements
+            const evolutionCtx = document.getElementById('evolutionChart');
+            if (evolutionCtx) {
+                const evolutionData = {{ stats.signalements_par_mois|json_encode|raw }};
+
+                const labels = [];
+                const data = [];
+
+                Object.keys(evolutionData).forEach(key => {
+                    const item = evolutionData[key];
+                    labels.push(item.mois + ' ' + item.annee);
+                    data.push(item.total);
+                });
+
+                new Chart(evolutionCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels.reverse(),
+                        datasets: [{
+                            label: 'Signalements',
+                            data: data.reverse(),
+                            borderColor: '#007bff',
+                            backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: '#e9ecef'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Graphique de répartition par statut
+            const repartitionCtx = document.getElementById('repartitionChart');
+            if (repartitionCtx) {
+                const repartitionData = {{ stats.signalements_par_statut|json_encode|raw }};
+
+                const labels = repartitionData.map(item => item.statut);
+                const data = repartitionData.map(item => item.total);
+                const colors = ['#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6c757d'];
+
+                new Chart(repartitionCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: colors.slice(0, data.length),
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}

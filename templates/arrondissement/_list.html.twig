@@ -1,0 +1,7 @@
+<ul class="list-group">
+    {% for arrondissement in arrondissements %}
+        <li class="list-group-item">{{ arrondissement.nom }}</li>
+    {% else %}
+        <li class="list-group-item">Aucun arrondissement trouvé</li>
+    {% endfor %}
+</ul>

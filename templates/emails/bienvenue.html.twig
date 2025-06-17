@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Bienvenue sur CityReport</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .header { background: #28a745; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { padding: 20px; }
+        .btn { display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; margin: 10px 0; font-weight: bold; }
+        .feature-list { list-style: none; padding: 0; }
+        .feature-list li { padding: 8px 0; border-bottom: 1px solid #eee; }
+        .feature-list li:before { content: "✓"; color: #28a745; font-weight: bold; margin-right: 10px; }
+        .footer { background: #f8f9fa; padding: 15px; text-align: center; color: #6c757d; border-radius: 0 0 8px 8px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🎉 Bienvenue sur CityReport !</h1>
+    </div>
+
+    <div class="content">
+        <p>Bonjour {{ utilisateur.prenom }} {{ utilisateur.nom }},</p>
+
+        <p>Merci de vous être inscrit sur CityReport ! Nous sommes ravis de vous compter parmi nos utilisateurs.</p>
+
+        <p><strong>Avec CityReport, vous pouvez :</strong></p>
+        <ul class="feature-list">
+            <li>Signaler des problèmes dans votre ville</li>
+            <li>Suivre l'état de vos signalements</li>
+            <li>Contribuer à l'amélioration de votre environnement</li>
+            <li>Recevoir des notifications sur les mises à jour</li>
+        </ul>
+
+        <p>Votre compte est maintenant actif et vous pouvez commencer à utiliser toutes nos fonctionnalités.</p>
+
+        <a href="#" class="btn">Découvrir la plateforme</a>
+    </div>
+
+    <div class="footer">
+        <p>Merci de faire partie de la communauté CityReport !<br>
+            L'équipe CityReport</p>
+    </div>
+</div>
+</body>
+</html>

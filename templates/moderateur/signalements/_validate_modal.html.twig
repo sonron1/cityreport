@@ -1,0 +1,60 @@
+{# templates/moderateur/signalements/_validate_modal.html.twig #}
+<div class="modal fade" id="validateModal{{ signalement.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-clean">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-check me-2"></i>Valider le signalement
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ path('app_moderateur_valider', {'id': signalement.id}) }}" method="post">
+                <div class="modal-body">
+                    <div class="alert alert-success d-flex align-items-center">
+                        <i class="fas fa-info-circle me-3"></i>
+                        <div>
+                            <strong>Confirmer la validation de ce signalement ?</strong>
+                            <div class="small mt-1">Cette action rendra le signalement visible publiquement.</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="mb-2"><i class="fas fa-file-alt me-2"></i>Signalement #{{ signalement.id }}</h6>
+                        <div class="p-3 bg-light rounded">
+                            <p class="mb-1 fw-semibold">{{ signalement.titre }}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-map-marker-alt me-1"></i>
+                                {% if signalement.ville %}{{ signalement.ville.nom }}{% else %}Localisation non définie{% endif %}
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="commentaire_validate_{{ signalement.id }}" class="form-label">
+                            <i class="fas fa-comment me-2"></i>Commentaire
+                            <span class="text-muted">(optionnel)</span>
+                        </label>
+                        <textarea class="form-control stable-textarea"
+                                  id="commentaire_validate_{{ signalement.id }}"
+                                  name="commentaire"
+                                  rows="3"
+                                  placeholder="Ajoutez un commentaire sur cette validation..."></textarea>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Ce commentaire sera visible dans l'historique.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary stable-btn" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Annuler
+                    </button>
+                    <button type="submit" class="btn btn-success stable-btn">
+                        <i class="fas fa-check me-2"></i>Valider le signalement
+                    </button>
+                </div>
+                <input type="hidden" name="_token" value="{{ csrf_token('validate' ~ signalement.id) }}">
+            </form>
+        </div>
+    </div>
+</div>

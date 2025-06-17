@@ -1,0 +1,4 @@
+<option value="">Choisissez un arrondissement (optionnel)</option>
+{% for arrondissement in arrondissements %}
+    <option value="{{ arrondissement.id }}">{{ arrondissement.nom }}</option>
+{% endfor %}

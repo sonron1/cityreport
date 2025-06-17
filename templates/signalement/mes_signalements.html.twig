@@ -1,0 +1,449 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes signalements - CityFlow{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .signalement-card {
+            transition: all 0.3s ease;
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .signalement-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1) !important;
+        }
+
+        .status-badge {
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .validation-badge {
+            border-radius: 20px;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .card-img-overlay-custom {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 2;
+        }
+
+        .action-buttons .btn {
+            border-radius: 25px;
+            font-weight: 500;
+        }
+
+        .stats-card {
+            border: none;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #343a40 0%, #212529 100%);
+            color: white;
+            transition: transform 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: scale(1.05);
+        }
+
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .empty-state {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 20px;
+            padding: 4rem 2rem;
+            text-align: center;
+            border: 2px dashed #dee2e6;
+        }
+
+        .rejection-alert {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c2c7 100%);
+            border: none;
+            border-radius: 12px;
+        }
+
+        .category-badge {
+            border-radius: 20px;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* Thème noir sobre */
+        .btn-dark-theme {
+            background-color: #212529;
+            border-color: #212529;
+            color: white;
+        }
+
+        .btn-dark-theme:hover {
+            background-color: #343a40;
+            border-color: #343a40;
+            color: white;
+        }
+
+        .text-dark-theme {
+            color: #212529 !important;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container py-5">
+        <!-- En-tête moderne -->
+        <div class="row align-items-center mb-5">
+            <div class="col-md-8">
+                <h1 class="display-5 fw-bold mb-2">
+                    <i class="fas fa-user-edit me-3 text-dark-theme"></i>
+                    Mes signalements
+                </h1>
+                <p class="lead text-muted mb-0">
+                    Gérez et suivez l'évolution de vos signalements
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="{{ path('app_signalement_nouveau') }}" class="btn btn-dark-theme btn-lg rounded-pill">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    Nouveau signalement
+                </a>
+            </div>
+        </div>
+
+        <!-- Statistiques modernes -->
+        {% if signalements|length > 0 %}
+            <div class="row g-4 mb-5">
+                {% set stats = {
+                    'total': signalements|length,
+                    'en_attente': signalements|filter(s => s.etatValidation.value == 'en_attente')|length,
+                    'valides': signalements|filter(s => s.etatValidation.value == 'validé')|length,
+                    'rejetes': signalements|filter(s => s.etatValidation.value == 'rejeté')|length
+                } %}
+
+                <div class="col-md-3">
+                    <div class="card stats-card text-white">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="stats-icon me-3">
+                                <i class="fas fa-list fa-2x"></i>
+                            </div>
+                            <div>
+                                <h2 class="mb-0 fw-bold">{{ stats.total }}</h2>
+                                <p class="mb-0 opacity-75">Total</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card stats-card text-white" style="background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%);">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="stats-icon me-3">
+                                <i class="fas fa-clock fa-2x"></i>
+                            </div>
+                            <div>
+                                <h2 class="mb-0 fw-bold">{{ stats.en_attente }}</h2>
+                                <p class="mb-0 opacity-75">En attente</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card stats-card text-white" style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="stats-icon me-3">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                            <div>
+                                <h2 class="mb-0 fw-bold">{{ stats.valides }}</h2>
+                                <p class="mb-0 opacity-75">Validés</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card stats-card text-white" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="stats-icon me-3">
+                                <i class="fas fa-times-circle fa-2x"></i>
+                            </div>
+                            <div>
+                                <h2 class="mb-0 fw-bold">{{ stats.rejetes }}</h2>
+                                <p class="mb-0 opacity-75">Rejetés</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Liste des signalements -->
+        <div class="row g-4">
+            {% for signalement in signalements %}
+                <div class="col-lg-4 col-md-6">
+                    <div class="card signalement-card h-100 shadow-sm">
+                        <!-- Header avec validation -->
+                        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle bg-light p-2 me-2">
+                                    <i class="fas fa-calendar-alt text-muted"></i>
+                                </div>
+                                <small class="text-muted fw-medium">
+                                    {{ signalement.dateSignalement|date('d/m/Y à H:i') }}
+                                </small>
+                            </div>
+
+                            <!-- Badge de validation -->
+                            {% if signalement.etatValidation.value == 'en_attente' %}
+                                <span class="validation-badge bg-warning text-dark">
+                                    <i class="fas fa-hourglass-half me-1"></i>En attente
+                                </span>
+                            {% elseif signalement.etatValidation.value == 'validé' %}
+                                <span class="validation-badge bg-success text-white">
+                                    <i class="fas fa-check me-1"></i>Validé
+                                </span>
+                            {% elseif signalement.etatValidation.value == 'rejeté' %}
+                                <span class="validation-badge bg-danger text-white">
+                                    <i class="fas fa-times me-1"></i>Rejeté
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Image du signalement -->
+                        <div class="position-relative">
+                            {% if signalement.photoUrl %}
+                                <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}"
+                                     class="card-img-top"
+                                     alt="{{ signalement.titre }}"
+                                     style="height: 220px; object-fit: cover;">
+                            {% else %}
+                                <div class="card-img-top bg-gradient d-flex align-items-center justify-content-center"
+                                     style="height: 220px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                                    <i class="fas fa-image text-muted fa-4x opacity-50"></i>
+                                </div>
+                            {% endif %}
+
+                            <!-- Badge de statut en overlay -->
+                            <div class="card-img-overlay-custom">
+                                {% if signalement.statut.value == 'nouveau' %}
+                                    <span class="status-badge bg-info text-white">
+                                        <i class="fas fa-sparkles me-1"></i>Nouveau
+                                    </span>
+                                {% elseif signalement.statut.value == 'en_cours' %}
+                                    <span class="status-badge bg-warning text-dark">
+                                        <i class="fas fa-cogs me-1"></i>En cours
+                                    </span>
+                                {% elseif signalement.statut.value == 'resolu' %}
+                                    <span class="status-badge bg-success text-white">
+                                        <i class="fas fa-check-circle me-1"></i>Résolu
+                                    </span>
+                                {% elseif signalement.statut.value == 'annule' %}
+                                    <span class="status-badge bg-secondary text-white">
+                                        <i class="fas fa-ban me-1"></i>Annulé
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold mb-3">{{ signalement.titre }}</h5>
+
+                            <!-- Informations de localisation et catégorie -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-12">
+                                    <div class="d-flex align-items-center text-muted">
+                                        <i class="fas fa-map-marker-alt me-2 text-dark-theme"></i>
+                                        <small class="fw-medium">
+                                            {% if signalement.ville %}
+                                                {{ signalement.ville.nom }}
+                                                {% if signalement.arrondissement %}
+                                                    - {{ signalement.arrondissement.nom }}
+                                                {% endif %}
+                                            {% else %}
+                                                Localisation non définie
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+
+                                {% if signalement.categorie %}
+                                    <div class="col-12">
+                                        <span class="category-badge" style="background-color: {{ signalement.categorie.couleur ?? '#6c757d' }}; color: white;">
+                                            <i class="fas fa-tag me-1"></i>{{ signalement.categorie.nom }}
+                                        </span>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <p class="card-text text-muted flex-grow-1">
+                                {{ signalement.description|length > 120 ? signalement.description|slice(0, 120) ~ '...' : signalement.description }}
+                            </p>
+
+                            <!-- Motif de rejet si applicable -->
+                            {% if signalement.etatValidation.value == 'rejeté' %}
+                                {% set dernierRejet = null %}
+                                {% for journal in signalement.journalValidations|reverse %}
+                                    {% if journal.action == 'Rejet' and journal.commentaire and dernierRejet is null %}
+                                        {% set dernierRejet = journal %}
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if dernierRejet %}
+                                    <div class="rejection-alert alert py-2 mb-3">
+                                        <div class="d-flex align-items-start">
+                                            <i class="fas fa-exclamation-triangle text-danger me-2 mt-1"></i>
+                                            <div>
+                                                <small class="fw-bold text-danger">Motif du rejet :</small>
+                                                <small class="d-block text-dark">
+                                                    {{ dernierRejet.commentaire|length > 100 ? dernierRejet.commentaire|slice(0, 100) ~ '...' : dernierRejet.commentaire }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+
+                        <!-- Footer avec actions -->
+                        <div class="card-footer bg-white border-0 pt-0">
+                            <div class="action-buttons d-flex flex-wrap gap-2">
+                                <!-- Bouton Voir (toujours présent) - NOIR -->
+                                <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}"
+                                   class="btn btn-dark-theme btn-sm flex-fill">
+                                    <i class="fas fa-eye me-1"></i>Consulter
+                                </a>
+
+                                <!-- Actions conditionnelles -->
+                                {% if signalement.etatValidation.value == 'rejeté' %}
+                                    <a href="{{ path('app_signalement_modifier', {'id': signalement.id}) }}"
+                                       class="btn btn-warning btn-sm">
+                                        <i class="fas fa-edit me-1"></i>Corriger
+                                    </a>
+                                {% endif %}
+
+                                {% if signalement.etatValidation.value == 'validé' and not signalement.demandeSuppressionStatut %}
+                                    <form method="post" action="{{ path('app_signalement_demande_suppression', {'id': signalement.id}) }}"
+                                          style="display: inline-block;" class="flex-shrink-0">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_request' ~ signalement.id) }}">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm"
+                                                onclick="return confirm('Êtes-vous sûr de vouloir demander la suppression de ce signalement ?')"
+                                                title="Demander la suppression">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+
+                                <!-- Statuts de demande de suppression -->
+                                {% if signalement.demandeSuppressionStatut == 'demandee' %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="fas fa-clock me-1"></i>Suppression demandée
+                                    </span>
+                                {% elseif signalement.demandeSuppressionStatut == 'rejetee' %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times me-1"></i>Suppression refusée
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <!-- État vide moderne -->
+                <div class="col-12">
+                    <div class="empty-state">
+                        <div class="mb-4">
+                            <i class="fas fa-clipboard-list fa-5x text-muted opacity-50"></i>
+                        </div>
+                        <h3 class="mb-3">Aucun signalement créé</h3>
+                        <p class="text-muted mb-4 lead">
+                            Vous n'avez pas encore créé de signalement.<br>
+                            Commencez dès maintenant à contribuer à l'amélioration de votre ville !
+                        </p>
+                        <a href="{{ path('app_signalement_nouveau') }}" class="btn btn-dark-theme btn-lg rounded-pill px-5">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            Créer mon premier signalement
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Call-to-action final -->
+        {% if signalements|length > 0 %}
+            <div class="text-center mt-5 pt-4">
+                <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                    <div class="card-body py-4">
+                        <h5 class="mb-3">
+                            <i class="fas fa-lightbulb text-warning me-2"></i>
+                            Avez-vous remarqué un autre problème ?
+                        </h5>
+                        <p class="text-muted mb-3">
+                            Continuez à contribuer à l'amélioration de votre ville en signalant les problèmes que vous rencontrez.
+                        </p>
+                        <a href="{{ path('app_signalement_nouveau') }}" class="btn btn-success btn-lg rounded-pill px-4">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            Nouveau signalement
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        // Animation des cards au chargement
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.signalement-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+
+        // Confirmation élégante pour la suppression
+        document.querySelectorAll('form[action*="demande_suppression"] button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const form = this.closest('form');
+
+                // Créer une confirmation personnalisée
+                const confirmation = confirm(
+                    '🗑️ Demande de suppression\n\n' +
+                    'Êtes-vous sûr de vouloir demander la suppression de ce signalement ?\n\n' +
+                    'Cette action nécessitera une validation par un modérateur.'
+                );
+
+                if (confirmation) {
+                    form.submit();
+                }
+            });
+        });
+    </script>
+{% endblock %}

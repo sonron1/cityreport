@@ -1,0 +1,366 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Vérification de votre email - CityFlow Bénin{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .waiting-container {
+            min-height: 80vh;
+            padding: 2rem 0;
+        }
+        .waiting-card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 100%;
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .email-icon {
+            font-size: 5rem;
+            color: #28a745;
+            margin-bottom: 1.5rem;
+        }
+        .steps {
+            list-style: none;
+            padding: 0;
+        }
+        .steps li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #28a745;
+            transition: all 0.3s ease;
+        }
+        .steps li:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        .steps li i {
+            color: #28a745;
+            margin-right: 1rem;
+            width: 30px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+            border: none;
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
+        }
+        .feature-card {
+            border: none;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .progress-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin: 2rem 0;
+            position: relative;
+        }
+        .progress-indicator::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e9ecef;
+            z-index: 1;
+        }
+        .progress-step {
+            background: #28a745;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            position: relative;
+            z-index: 2;
+        }
+        .progress-step.inactive {
+            background: #e9ecef;
+            color: #6c757d;
+        }
+        @media (max-width: 768px) {
+            .waiting-container {
+                padding: 1rem 0;
+            }
+            .email-icon {
+                font-size: 3rem;
+            }
+            .steps li {
+                padding: 0.75rem;
+                margin-bottom: 0.75rem;
+            }
+            .progress-indicator {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .progress-indicator::before {
+                display: none;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container waiting-container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-10 col-lg-8 col-xl-6">
+                <div class="card waiting-card">
+                    <div class="card-header text-white text-center py-5">
+                        <h2 class="mb-0">
+                            <i class="fas fa-check-circle me-3"></i>
+                            Inscription réussie !
+                        </h2>
+                        <p class="mb-0 mt-2 opacity-90">Votre compte a été créé avec succès</p>
+                    </div>
+
+                    <div class="card-body text-center py-5">
+                        <div class="pulse email-icon">
+                            📧
+                        </div>
+
+                        <h3 class="text-success mb-4">Email de confirmation envoyé</h3>
+
+                        <p class="lead mb-4">
+                            Un email de confirmation vient d'être envoyé à :
+                        </p>
+
+                        <div class="alert alert-info border-0 shadow-sm">
+                            <i class="fas fa-envelope me-2"></i>
+                            <strong class="fs-5">{{ email }}</strong>
+                        </div>
+
+                        <!-- Indicateur de progression -->
+                        <div class="progress-indicator d-none d-md-flex">
+                            <div class="progress-step">1</div>
+                            <div class="progress-step inactive">2</div>
+                            <div class="progress-step inactive">3</div>
+                            <div class="progress-step inactive">4</div>
+                        </div>
+
+                        <div class="row mt-5">
+                            <div class="col-lg-6 mb-4">
+                                <div class="feature-card card h-100 border-0 shadow-sm">
+                                    <div class="card-body">
+                                        <h5 class="text-primary mb-4">
+                                            <i class="fas fa-list-check me-2"></i>
+                                            Prochaines étapes
+                                        </h5>
+                                        <ul class="steps text-start">
+                                            <li>
+                                                <i class="fas fa-inbox"></i>
+                                                <span>Vérifiez votre boîte de réception</span>
+                                            </li>
+                                            <li>
+                                                <i class="fas fa-mouse-pointer"></i>
+                                                <span>Cliquez sur le lien de confirmation</span>
+                                            </li>
+                                            <li>
+                                                <i class="fas fa-sign-in-alt"></i>
+                                                <span>Connectez-vous à votre compte</span>
+                                            </li>
+                                            <li>
+                                                <i class="fas fa-flag"></i>
+                                                <span>Commencez à signaler !</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 mb-4">
+                                <div class="feature-card card h-100 border-0 shadow-sm">
+                                    <div class="card-body">
+                                        <h5 class="text-warning mb-4">
+                                            <i class="fas fa-question-circle me-2"></i>
+                                            Email introuvable ?
+                                        </h5>
+                                        <ul class="list-unstyled text-start">
+                                            <li class="mb-3 d-flex align-items-center">
+                                                <i class="fas fa-search me-3 text-muted"></i>
+                                                <span>Vérifiez vos courriers indésirables</span>
+                                            </li>
+                                            <li class="mb-3 d-flex align-items-center">
+                                                <i class="fas fa-clock me-3 text-muted"></i>
+                                                <span>Attendez quelques minutes</span>
+                                            </li>
+                                            <li class="mb-3 d-flex align-items-center">
+                                                <i class="fas fa-shield-alt me-3 text-muted"></i>
+                                                <span>Vérifiez les filtres anti-spam</span>
+                                            </li>
+                                            <li class="mb-0 d-flex align-items-center">
+                                                <i class="fas fa-folder me-3 text-muted"></i>
+                                                <span>Consultez tous vos dossiers</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-light text-center py-4">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <a href="{{ path('app_request_verify_email') }}" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-redo me-2"></i>
+                                    Renvoyer l'email
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                                <a href="{{ path('app_login') }}" class="btn btn-gradient btn-primary w-100 text-white">
+                                    <i class="fas fa-sign-in-alt me-2"></i>
+                                    Aller à la connexion
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                                <a href="{{ path('app_home') }}" class="btn btn-outline-secondary w-100">
+                                    <i class="fas fa-home me-2"></i>
+                                    Retour à l'accueil
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <div class="alert alert-warning border-0 d-inline-block">
+                                <i class="fas fa-clock me-2"></i>
+                                <strong>Important :</strong> Le lien de confirmation expire dans 24 heures
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Carte d'aide élargie -->
+                <div class="row mt-5">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-headset fa-2x text-primary mb-3"></i>
+                                <h6 class="text-primary mb-3">Besoin d'aide ?</h6>
+                                <p class="small text-muted mb-3">
+                                    Notre équipe support est là pour vous aider
+                                </p>
+                                <a href="mailto:support@cityflow-benin.com" class="btn btn-outline-primary">
+                                    <i class="fas fa-envelope me-2"></i>
+                                    Contacter le support
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-info-circle fa-2x text-info mb-3"></i>
+                                <h6 class="text-info mb-3">Pourquoi confirmer ?</h6>
+                                <p class="small text-muted mb-3">
+                                    La confirmation sécurise votre compte et active toutes les fonctionnalités
+                                </p>
+                                <a href="{{ path('app_home') }}#features" class="btn btn-outline-info">
+                                    <i class="fas fa-star me-2"></i>
+                                    Découvrir les fonctionnalités
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-refresh de la page après 5 minutes pour encourager à vérifier l'email
+            setTimeout(function() {
+                if (confirm('Avez-vous reçu votre email de confirmation ?\n\nCliquez sur "Annuler" pour rester sur cette page\nou "OK" pour aller à la page de connexion.')) {
+                    window.location.href = '{{ path("app_login") }}';
+                }
+            }, 300000); // 5 minutes
+
+            // Message d'encouragement après 2 minutes
+            setTimeout(function() {
+                const alertContainer = document.createElement('div');
+                alertContainer.className = 'container-fluid mt-3';
+                alertContainer.innerHTML = `
+                    <div class="row justify-content-center">
+                        <div class="col-12 col-md-10 col-lg-8 col-xl-6">
+                            <div class="alert alert-info alert-dismissible fade show border-0 shadow-sm">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <strong>Astuce :</strong> L'email peut parfois prendre quelques minutes à arriver.
+                                Vérifiez aussi vos courriers indésirables !
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.querySelector('.waiting-container').appendChild(alertContainer);
+            }, 120000); // 2 minutes
+
+            // Animation des étapes
+            const steps = document.querySelectorAll('.steps li');
+            steps.forEach((step, index) => {
+                setTimeout(() => {
+                    step.style.opacity = '0';
+                    step.style.transform = 'translateX(-20px)';
+                    step.style.transition = 'all 0.5s ease';
+                    setTimeout(() => {
+                        step.style.opacity = '1';
+                        step.style.transform = 'translateX(0)';
+                    }, 100);
+                }, index * 200);
+            });
+
+            // Effet de compteur sur l'indicateur de progression
+            let currentStep = 1;
+            const progressSteps = document.querySelectorAll('.progress-step');
+
+            setInterval(() => {
+                if (progressSteps.length > 0) {
+                    progressSteps.forEach((step, index) => {
+                        if (index < currentStep) {
+                            step.classList.remove('inactive');
+                        } else {
+                            step.classList.add('inactive');
+                        }
+                    });
+
+                    currentStep = currentStep >= progressSteps.length ? 1 : currentStep + 1;
+                }
+            }, 3000);
+        });
+    </script>
+{% endblock %}

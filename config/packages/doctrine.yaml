@@ -1,0 +1,39 @@
+doctrine:
+    dbal:
+        # ✅ Optimisations de connexion
+        charset: utf8mb4
+        default_table_options:
+            charset: utf8mb4
+            collate: utf8mb4_unicode_ci
+        # ✅ Pool de connexions
+        server_version: '8.0'
+        options:
+            1002: "SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))"
+        # ✅ Configuration de performance
+        logging: false
+        profiling: false
+    orm:
+        auto_generate_proxy_classes: false
+        enable_lazy_ghost_objects: true
+        query_cache_driver:
+            type: pool
+            pool: doctrine.query_cache_pool
+        result_cache_driver:
+            type: pool
+            pool: doctrine.result_cache_pool
+        metadata_cache_driver:
+            type: pool
+            pool: doctrine.metadata_cache_pool
+
+framework:
+    cache:
+        pools:
+            doctrine.query_cache_pool:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 3600
+            doctrine.result_cache_pool:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 1800
+            doctrine.metadata_cache_pool:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 86400

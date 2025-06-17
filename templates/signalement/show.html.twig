@@ -1,0 +1,858 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Détails du signalement{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        #detail-map {
+            height: 450px;
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .signalement-image {
+            max-height: 300px;
+            width: auto;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+        .signalement-image:hover {
+            transform: scale(1.02);
+        }
+        .status-badge {
+            font-size: 0.9rem;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        .category-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: white;
+            margin-bottom: 10px;
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        .category-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .content-section {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.3s ease;
+        }
+        .content-section:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .comment-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .btn {
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        h1, h4, h5 {
+            font-weight: 700;
+            color: #2b2d42;
+        }
+        .spinner-border {
+            color: #4361ee;
+        }
+        .fullscreen-modal .modal-dialog {
+            max-width: 90%;
+            margin: 30px auto;
+        }
+        .fullscreen-modal .modal-content {
+            background-color: rgba(0, 0, 0, 0.85);
+            border: none;
+        }
+        .fullscreen-modal .modal-body {
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .fullscreen-modal img {
+            max-width: 100%;
+            max-height: 85vh;
+            object-fit: contain;
+        }
+        .fullscreen-modal .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: white;
+            font-size: 24px;
+            z-index: 1050;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .fullscreen-modal .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .detail-header {
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        .tab-content {
+            padding-top: 20px;
+        }
+        .nav-tabs .nav-link {
+            border-radius: 8px 8px 0 0;
+            padding: 12px 20px;
+            font-weight: 600;
+        }
+        .nav-tabs .nav-link.active {
+            background-color: #f8f9fa;
+            border-bottom-color: #f8f9fa;
+        }
+        .info-tile {
+            border-radius: 8px;
+            padding: 15px;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            height: 100%;
+        }
+        .admin-actions {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #007bff;
+        }
+
+        /* ✅ STYLES POUR LES COMMENTAIRES AMÉLIORÉS */
+        .comment-item {
+            transition: all 0.3s ease;
+            border-left: 3px solid #007bff;
+            background: white;
+        }
+
+        .comment-item:hover {
+            background-color: #f1f3f4 !important;
+            transform: translateX(5px);
+        }
+
+        .avatar-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .add-comment-form {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid #dee2e6;
+        }
+
+        /* Animation pour les formulaires d'édition */
+        .comment-edit-form {
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .comment-actions {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .comment-item:hover .comment-actions {
+            opacity: 1;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container mt-4 px-4">
+
+        <!-- Fil d'Ariane -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
+                <li class="breadcrumb-item"><a href="{{ path('app_signalements') }}">Signalements</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ signalement.titre }}</li>
+            </ol>
+        </nav>
+
+        <!-- Messages de notification -->
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-dismissible fade show">
+                <i class="fas fa-check-circle me-2"></i> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="fas fa-exclamation-triangle me-2"></i> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+
+        <!-- En-tête du signalements -->
+        <div class="detail-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-5 fw-bold mb-2">{{ signalement.titre }}</h1>
+                    <div class="mb-2">
+                        <span class="category-badge" style="background-color:black">
+                            <i class="{{ signalement.categorie.icone }}"></i> {{ signalement.categorie.nom }}
+                        </span>
+                    </div>
+                    <p class="text-muted fs-6 mb-0">
+                        <i class="bi bi-calendar3"></i> Signalé le {{ signalement.dateSignalement|date('d/m/Y à H:i') }}
+                        <i class="bi bi-person ms-2"></i> par {{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom|first }}.
+                        <i class="bi bi-geo-alt ms-2"></i> à {{ signalement.ville.nom }}
+                        {% if signalement.arrondissement %}
+                            , {{ signalement.arrondissement.nom }}
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <div>
+                        <span class="status-badge
+                            {% if signalement.statut.value == 'nouveau' %}bg-primary
+                            {% elseif signalement.statut.value == 'en_cours' %}bg-warning
+                            {% elseif signalement.statut.value == 'resolu' %}bg-success
+                            {% elseif signalement.statut.value == 'rejete' %}bg-danger
+                            {% endif %} text-white">
+                            <i class="bi bi-info-circle me-1"></i> {{ signalement.statut.value|replace({'_': ' '})|capitalize }}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="status-badge
+                            {% if signalement.etatValidation.value == 'en_attente' %}bg-warning
+                            {% elseif signalement.etatValidation.value == 'validé' %}bg-success
+                            {% elseif signalement.etatValidation.value == 'rejeté' %}bg-danger
+                            {% endif %} text-white">
+                            <i class="bi bi-check-circle me-1"></i> {{ signalement.etatValidation.value|replace({'_': ' '})|capitalize }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenu principal -->
+        <div class="row">
+            <div class="col-12 mb-4">
+                <!-- Carte pleine largeur -->
+                <div class="content-section">
+                    <h4 class="mb-3"><i class="bi bi-geo-alt me-2"></i>Localisation</h4>
+                    <div id="detail-map"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informations du signalements -->
+        <div class="row">
+            <div class="col-md-8">
+                <!-- Onglets pour organiser le contenu -->
+                <ul class="nav nav-tabs" id="signalementTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description" type="button" role="tab" aria-controls="description" aria-selected="true">
+                            <i class="bi bi-file-text me-2"></i>Description
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="commentaires-tab" data-bs-toggle="tab" data-bs-target="#commentaires" type="button" role="tab" aria-controls="commentaires" aria-selected="false">
+                            <i class="bi bi-chat-dots me-2"></i>Commentaires
+                            <span class="badge bg-secondary rounded-pill ms-1">{{ signalement.commentaires|length }}</span>
+                        </button>
+                    </li>
+                    {% if signalement.reparation %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="reparation-tab" data-bs-toggle="tab" data-bs-target="#reparation" type="button" role="tab" aria-controls="reparation" aria-selected="false">
+                                <i class="bi bi-tools me-2"></i>Réparation
+                            </button>
+                        </li>
+                    {% endif %}
+                </ul>
+
+                <div class="tab-content" id="signalementTabsContent">
+                    <!-- Onglet Description -->
+                    <div class="tab-pane fade show active" id="description" role="tabpanel" aria-labelledby="description-tab">
+                        <div class="content-section">
+                            <p class="lead">{{ signalement.description }}</p>
+
+                            {% if signalement is defined and signalement is not null and signalement.id is defined and is_granted('IS_AUTHENTICATED_REMEMBERED') and is_granted('edit', signalement) %}
+                                <div class="mt-4">
+                                    <a href="#" class="btn btn-warning">
+                                        <i class="bi bi-pencil me-2"></i>Modifier
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- ✅ ONGLET COMMENTAIRES AMÉLIORÉ -->
+                    <div class="tab-pane fade" id="commentaires" role="tabpanel" aria-labelledby="commentaires-tab">
+                        <div class="content-section">
+                            <!-- Liste des commentaires -->
+                            {% if signalement.commentaires|length > 0 %}
+                                <div class="comment-list mb-4">
+                                    {% for commentaire in signalement.commentaires %}
+                                        {% if commentaire.etatValidation == 'valide' %}
+                                            <div class="comment-item mb-3 p-3 rounded">
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="avatar-circle me-2">
+                                                            {{ commentaire.utilisateur.prenom|first|upper }}{{ commentaire.utilisateur.nom|first|upper }}
+                                                        </div>
+                                                        <div>
+                                                            <strong>{{ commentaire.utilisateur.prenom }} {{ commentaire.utilisateur.nom }}</strong>
+                                                            <small class="text-muted d-block">
+                                                                <i class="fas fa-clock me-1"></i>
+                                                                {{ commentaire.dateCommentaire|date('d/m/Y à H:i') }}
+                                                            </small>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- ✅ BOUTONS D'ACTION -->
+                                                    <div class="comment-actions d-flex gap-2">
+                                                        {% if app.user and commentaire.utilisateur == app.user %}
+                                                            <button type="button"
+                                                                    class="btn btn-outline-primary btn-sm"
+                                                                    onclick="toggleEditMode({{ commentaire.id }})">
+                                                                <i class="fas fa-edit me-1"></i>Modifier
+                                                            </button>
+                                                        {% endif %}
+
+                                                        {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR') %}
+                                                            <a href="{{ path('app_commentaire_delete', {'id': commentaire.id}) }}"
+                                                               class="btn btn-outline-danger btn-sm"
+                                                               onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce commentaire ?')">
+                                                                <i class="bi bi-trash"></i>
+                                                            </a>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+
+                                                <!-- Contenu normal du commentaire -->
+                                                <div id="comment-display-{{ commentaire.id }}">
+                                                    <p class="mb-0">{{ commentaire.contenu|nl2br }}</p>
+                                                </div>
+
+                                                <!-- ✅ FORMULAIRE DE MODIFICATION (caché par défaut) -->
+                                                {% if app.user and commentaire.utilisateur == app.user %}
+                                                    <div id="comment-edit-{{ commentaire.id }}" class="comment-edit-form" style="display: none;">
+                                                        <form action="{{ path('app_commentaire_modifier', {'id': commentaire.id}) }}" method="POST">
+                                                            <input type="hidden" name="_token" value="{{ csrf_token('modify_comment_' ~ commentaire.id) }}">
+                                                            <div class="mb-3">
+                                                                <textarea class="form-control"
+                                                                          name="contenu"
+                                                                          rows="3"
+                                                                          required
+                                                                          placeholder="Votre commentaire...">{{ commentaire.contenu }}</textarea>
+                                                            </div>
+                                                            <div class="d-flex gap-2">
+                                                                <button type="submit" class="btn btn-success btn-sm">
+                                                                    <i class="fas fa-save me-1"></i>Sauvegarder
+                                                                </button>
+                                                                <button type="button"
+                                                                        class="btn btn-secondary btn-sm"
+                                                                        onclick="toggleEditMode({{ commentaire.id }})">
+                                                                    <i class="fas fa-times me-1"></i>Annuler
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-light text-center py-4 mb-4">
+                                    <i class="bi bi-chat-dots fs-3 mb-2"></i>
+                                    <p class="mb-0">Aucun commentaire pour le moment.</p>
+                                </div>
+                            {% endif %}
+
+                            <!-- ✅ GESTION DES COMMENTAIRES AVEC CONTRÔLE DE LIMITE -->
+                            {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                                {% set commentaireExistant = null %}
+                                {% for commentaire in signalement.commentaires %}
+                                    {% if commentaire.utilisateur == app.user %}
+                                        {% set commentaireExistant = commentaire %}
+                                    {% endif %}
+                                {% endfor %}
+
+                                <hr class="my-4">
+
+                                {% if commentaireExistant %}
+                                    <!-- ✅ MESSAGE D'ALERTE si déjà commenté -->
+                                    <div class="alert alert-info d-flex align-items-center" role="alert">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <div>
+                                            <strong>Information :</strong> Vous avez déjà posté un commentaire sur ce signalement.
+                                            Vous pouvez le modifier en utilisant le bouton "Modifier" ci-dessus.
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <!-- ✅ FORMULAIRE d'ajout normal -->
+                                    <div class="add-comment-form">
+                                        <h6 class="mb-3">
+                                            <i class="fas fa-plus-circle me-2"></i>
+                                            Ajouter un commentaire
+                                        </h6>
+                                        <form action="{{ path('app_signalement_add_commentaire', {'id': signalement.id}) }}" method="POST">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('add_comment_' ~ signalement.id) }}">
+                                            <div class="mb-3">
+                                                <textarea class="form-control"
+                                                          name="contenu"
+                                                          rows="3"
+                                                          required
+                                                          placeholder="Partager votre avis, une information utile..."></textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-paper-plane me-1"></i>
+                                                Publier le commentaire
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="alert alert-info text-center">
+                                    <i class="fas fa-sign-in-alt me-2"></i>
+                                    <a href="{{ path('app_login') }}" class="alert-link">Connectez-vous</a> pour ajouter un commentaire
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Onglet Réparation -->
+                    {% if signalement.reparation %}
+                        <div class="tab-pane fade" id="reparation" role="tabpanel" aria-labelledby="reparation-tab">
+                            <div class="content-section">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-tile">
+                                            <h5 class="mb-3">Statut</h5>
+                                            <span class="badge fs-6
+                                            {% if signalement.reparation.statut.value == 'planifiee' %}bg-info
+                                            {% elseif signalement.reparation.statut.value == 'en_cours' %}bg-warning
+                                            {% elseif signalement.reparation.statut.value == 'terminee' %}bg-success
+                                            {% endif %} me-2">
+                                            {{ signalement.reparation.statut.value|replace({'_': ' '})|capitalize }}
+                                        </span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-tile">
+                                            <h5 class="mb-3">Date planifiée</h5>
+                                            {% if signalement.reparation.dateDebut %}
+                                                {{ signalement.reparation.dateDebut|date('d/m/Y') }}
+                                            {% else %}
+                                                <span class="text-muted">Non planifiée</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <div class="info-tile">
+                                            <h5 class="mb-3">Observations</h5>
+                                            <p class="mb-0">{{ signalement.reparation.observations|default('Aucune observation') }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR') %}
+                                    <div class="d-grid gap-2 mt-4">
+                                        <a href="{{ path('app_reparation_edit', {'id': signalement.reparation.id}) }}"
+                                           class="btn btn-warning">
+                                            <i class="bi bi-pencil-square me-2"></i>Modifier la réparation
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Colonne droite : Photo et actions -->
+            <div class="col-md-4">
+                <div class="content-section">
+                    <h4><i class="bi bi-camera me-2"></i>Photo</h4>
+                    <div class="text-center">
+                        <div id="img-loading" class="spinner-border" role="status">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                        <img src="/uploads/{{ signalement.photoUrl }}"
+                             alt="Photo du signalement"
+                             class="signalement-image img-fluid"
+                             style="display:none;"
+                             onclick="openImageModal(this.src)"
+                             onload="this.style.display='block'; document.getElementById('img-loading').style.display='none';"
+                             onerror="this.src='/uploads/default.jpeg'; this.style.display='block'; document.getElementById('img-loading').style.display='none';">
+                        <div class="mt-2 text-muted small">
+                            <i class="bi bi-zoom-in"></i> Cliquez sur l'image pour l'agrandir
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bouton pour planifier une réparation -->
+                {% if is_granted('ROLE_MODERATOR') and not signalement.reparation %}
+                    <div class="content-section">
+                        <h4><i class="bi bi-tools me-2"></i>Réparation</h4>
+                        <div class="d-grid gap-2">
+                            <a href="{{ path('app_reparation_new', {'signalement_id': signalement.id}) }}"
+                               class="btn btn-success">
+                                <i class="fas fa-tools me-1"></i>
+                                Planifier cette réparation
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Actions de modération/administration -->
+                {% if is_granted('ROLE_MODERATOR') %}
+                    <div class="admin-actions">
+                        <h5><i class="bi bi-shield-check me-2"></i>Actions modérateur</h5>
+
+                        {% if signalement.etatValidation == 'en_attente' %}
+                            <div class="d-grid gap-2 mb-3">
+                                <!-- ✅ ROUTES CORRIGÉES -->
+                                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#validateModal{{ signalement.id }}">
+                                    <i class="bi bi-check-circle me-2"></i>Valider
+                                </button>
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ signalement.id }}">
+                                    <i class="bi bi-x-circle me-2"></i>Rejeter
+                                </button>
+                            </div>
+                        {% endif %}
+
+                        <!-- Modification du statut -->
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#statusModal{{ signalement.id }}">
+                                <i class="bi bi-gear me-2"></i>Modifier le statut
+                            </button>
+                        </div>
+
+                        {% if is_granted('ROLE_ADMIN') %}
+                            <!-- Actions réservées aux admins -->
+                            <div class="border-top pt-3">
+                                <h6 class="text-muted">Actions administrateur</h6>
+                                <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#deleteModal{{ signalement.id }}">
+                                    <i class="bi bi-trash me-2"></i>Supprimer définitivement
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- ✅ MODALS AVEC LES BONNES ROUTES DE MODÉRATION -->
+
+                    <!-- Modal de validation -->
+                    <div class="modal fade" id="validateModal{{ signalement.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-success text-white">
+                                    <h5 class="modal-title">Valider le signalement</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form action="{{ path('app_moderateur_valider', {'id': signalement.id}) }}" method="post">
+                                    <div class="modal-body">
+                                        <p>Confirmer la validation de ce signalement ?</p>
+                                        <div class="mb-3">
+                                            <label for="validateComment" class="form-label">Commentaire (optionnel)</label>
+                                            <textarea name="commentaire" id="validateComment" class="form-control" rows="3" placeholder="Commentaire de validation..."></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="bi bi-check-circle me-2"></i>Valider
+                                        </button>
+                                    </div>
+                                    <input type="hidden" name="_token" value="{{ csrf_token('validate' ~ signalement.id) }}">
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal de rejet -->
+                    <div class="modal fade" id="rejectModal{{ signalement.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-danger text-white">
+                                    <h5 class="modal-title">Rejeter le signalement</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form action="{{ path('app_moderateur_rejeter', {'id': signalement.id}) }}" method="post">
+                                    <div class="modal-body">
+                                        <p>Confirmer le rejet de ce signalement ?</p>
+                                        <div class="mb-3">
+                                            <label for="rejectComment" class="form-label">Motif du rejet <span class="text-danger">*</span></label>
+                                            <textarea name="commentaire" id="rejectComment" class="form-control" rows="3" placeholder="Expliquez le motif du rejet..." required></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                        <button type="submit" class="btn btn-danger">
+                                            <i class="bi bi-x-circle me-2"></i>Rejeter
+                                        </button>
+                                    </div>
+                                    <input type="hidden" name="_token" value="{{ csrf_token('reject' ~ signalement.id) }}">
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal de modification du statut -->
+                    <div class="modal fade" id="statusModal{{ signalement.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-warning text-dark">
+                                    <h5 class="modal-title">Modifier le statut</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form action="{{ path('app_moderateur_modifier_statut', {'id': signalement.id}) }}" method="post">
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label for="newStatus" class="form-label">Nouveau statut</label>
+                                            <select name="statut" id="newStatus" class="form-select" required>
+                                                <option value="nouveau" {% if signalement.statut.value == 'nouveau' %}selected{% endif %}>Nouveau</option>
+                                                <option value="en_cours" {% if signalement.statut.value == 'en_cours' %}selected{% endif %}>En cours</option>
+                                                <option value="resolu" {% if signalement.statut.value == 'resolu' %}selected{% endif %}>Résolu</option>
+                                                <option value="annule" {% if signalement.statut.value == 'annule' %}selected{% endif %}>Annulé</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="statusComment" class="form-label">Commentaire</label>
+                                            <textarea name="commentaire" id="statusComment" class="form-control" rows="3" placeholder="Commentaire sur le changement de statut..."></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                        <button type="submit" class="btn btn-warning">
+                                            <i class="bi bi-gear me-2"></i>Modifier
+                                        </button>
+                                    </div>
+                                    <input type="hidden" name="_token" value="{{ csrf_token('status' ~ signalement.id) }}">
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if is_granted('ROLE_ADMIN') %}
+                        <!-- Modal de suppression (admins seulement) -->
+                        <div class="modal fade" id="deleteModal{{ signalement.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-danger text-white">
+                                        <h5 class="modal-title">Confirmer la suppression</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form action="{{ path('app_signalement_delete', {'id': signalement.id}) }}" method="post">
+                                        <div class="modal-body">
+                                            <div class="alert alert-danger">
+                                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                                <strong>Attention !</strong> Cette action est irréversible.
+                                            </div>
+                                            <p>Êtes-vous sûr de vouloir supprimer définitivement ce signalement ?</p>
+                                            <p><strong>{{ signalement.titre }}</strong></p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                            <button type="submit" class="btn btn-danger">
+                                                <i class="bi bi-trash me-2"></i>Supprimer définitivement
+                                            </button>
+                                        </div>
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ signalement.id) }}">
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour afficher l'image en plein écran -->
+    <div class="modal fade fullscreen-modal" id="imageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="close-btn" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i>
+                </div>
+                <div class="modal-body">
+                    <img id="fullscreen-image" src="" alt="Photo du signalement en plein écran">
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ✅ FONCTION pour basculer entre affichage et édition
+        function toggleEditMode(commentaireId) {
+            const displayDiv = document.getElementById(`comment-display-${commentaireId}`);
+            const editDiv = document.getElementById(`comment-edit-${commentaireId}`);
+
+            if (displayDiv.style.display === 'none') {
+                // Retour au mode affichage
+                displayDiv.style.display = 'block';
+                editDiv.style.display = 'none';
+            } else {
+                // Passage au mode édition
+                displayDiv.style.display = 'none';
+                editDiv.style.display = 'block';
+
+                // Focus sur le textarea
+                const textarea = editDiv.querySelector('textarea');
+                if (textarea) {
+                    textarea.focus();
+                    // Positionner le curseur à la fin
+                    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+                }
+            }
+        }
+
+        // ✅ GESTION des raccourcis clavier
+        document.addEventListener('keydown', function(event) {
+            // Échap pour annuler l'édition
+            if (event.key === 'Escape') {
+                const editForms = document.querySelectorAll('[id^="comment-edit-"]');
+                editForms.forEach(form => {
+                    if (form.style.display !== 'none') {
+                        const commentaireId = form.id.replace('comment-edit-', '');
+                        toggleEditMode(commentaireId);
+                    }
+                });
+            }
+        });
+
+        // Fonction pour ouvrir le modal et afficher l'image en plein écran
+        function openImageModal(imageUrl) {
+            document.getElementById('fullscreen-image').src = imageUrl;
+            var imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
+            imageModal.show();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Récupérer les coordonnées du signalements
+            const latitude = {{ signalement.latitude }};
+            const longitude = {{ signalement.longitude }};
+
+            // Initialiser la carte centrée sur le signalements avec un zoom approprié
+            const map = L.map('detail-map').setView([latitude, longitude], 15);
+
+            // Ajouter la couche de tuiles (OpenStreetMap)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Créer l'icône personnalisée pour le marqueur
+            const customIcon = L.icon({
+                iconUrl: '/images/markers/marker-black.png',
+                shadowUrl: '/images/markers/marker-shadow.png',
+                iconSize: [25, 41],
+                shadowSize: [41, 41],
+                iconAnchor: [12, 41],
+                shadowAnchor: [12, 41],
+                popupAnchor: [1, -34]
+            });
+
+            // Ajouter un marqueur à la position du signalements
+            const marker = L.marker([latitude, longitude], {
+                icon: customIcon,
+                title: "{{ signalement.titre }}"
+            }).addTo(map);
+
+            // Ajouter une popup avec les informations du signalements
+            marker.bindPopup(`
+                <div class="popup-content">
+                    <h5 class="mb-2 fw-bold">{{ signalement.titre }}</h5>
+                    <p class="mb-1"><i class="bi bi-tag me-1"></i> <strong>Catégorie:</strong> {{ signalement.categorie.nom }}</p>
+                    <p class="mb-1"><i class="bi bi-geo-alt me-1"></i> <strong>Lieu:</strong> {{ signalement.ville.nom }}</p>
+                    <p class="mb-1"><i class="bi bi-calendar me-1"></i> <strong>Date:</strong> {{ signalement.dateSignalement|date('d/m/Y') }}</p>
+                </div>
+            `).openPopup();
+
+            // Ajouter un cercle pour indiquer la zone approximative
+            L.circle([latitude, longitude], {
+                color: '{{ signalement.categorie.couleur }}',
+                fillColor: '{{ signalement.categorie.couleur }}',
+                fillOpacity: 0.2,
+                radius: 100 // Rayon en mètres
+            }).addTo(map);
+
+            // Rafraîchir la carte quand on change d'onglet
+            document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(tab => {
+                tab.addEventListener('shown.bs.tab', function() {
+                    map.invalidateSize();
+                });
+            });
+
+            // Initialiser les tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,285 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier mon profil - CityFlow{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --primary-color: #495057;
+            --secondary-color: #6c757d;
+            --accent-color: #0d6efd;
+            --dark-color: #212529;
+            --light-color: #f8f9fa;
+            --white-color: #ffffff;
+            --border-color: #dee2e6;
+            --muted-color: #6c757d;
+            --success-color: #198754;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #0dcaf0;
+            --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.08);
+            --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.12);
+            --border-radius-md: 8px;
+        }
+
+        .card {
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-light);
+            background-color: var(--white-color);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-medium);
+        }
+
+        .card-header.bg-primary {
+            background-color: var(--primary-color) !important;
+            color: var(--white-color);
+        }
+
+        .card-header.bg-warning {
+            background-color: var(--warning-color) !important;
+            color: var(--dark-color);
+        }
+
+        .card-header.bg-info {
+            background-color: var(--info-color) !important;
+            color: var(--dark-color);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--dark-color);
+            border-color: var(--dark-color);
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            border-color: var(--warning-color);
+            color: var(--dark-color);
+        }
+
+        .btn-outline-secondary {
+            color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+        }
+
+        .alert-info {
+            background-color: rgba(13, 202, 240, 0.1);
+            border-color: var(--info-color);
+            color: var(--dark-color);
+        }
+
+        .alert-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+            border-color: var(--warning-color);
+            color: var(--dark-color);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container my-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <!-- En-tête -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="h4 mb-0">
+                            <i class="fas fa-user-edit me-2"></i>
+                            Modifier mon profil
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Modifiez vos informations personnelles ci-dessous. Laissez le champ mot de passe vide si vous ne souhaitez pas le changer.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informations actuelles -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h3 class="h5 mb-0">
+                            <i class="fas fa-user me-2"></i>
+                            Informations actuelles
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">Nom complet</small>
+                                <strong>{{ app.user.prenom }} {{ app.user.nom }}</strong>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">Email</small>
+                                <strong>{{ app.user.email }}</strong>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">Ville de résidence</small>
+                                <strong>{{ app.user.villeResidence ? app.user.villeResidence.nom : 'Non définie' }}</strong>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">Membre depuis</small>
+                                <strong>{{ app.user.dateInscription|date('d/m/Y') }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulaire de modification -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-warning text-dark">
+                        <h3 class="h5 mb-0">
+                            <i class="fas fa-edit me-2"></i>
+                            Modifier les informations
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        {{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': true}}) }}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form_label(form.nom, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                                    {{ form_widget(form.nom, {'attr': {'class': 'form-control'}}) }}
+                                    {{ form_errors(form.nom) }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form_label(form.prenom, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                                    {{ form_widget(form.prenom, {'attr': {'class': 'form-control'}}) }}
+                                    {{ form_errors(form.prenom) }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form_label(form.email, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                                    {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
+                                    {{ form_errors(form.email) }}
+                                    <small class="form-text text-muted">
+                                        Cette adresse sera utilisée pour vous connecter
+                                    </small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form_label(form.villeResidence, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                                    {{ form_widget(form.villeResidence, {'attr': {'class': 'form-select'}}) }}
+                                    {{ form_errors(form.villeResidence) }}
+                                    <small class="form-text text-muted">
+                                        Ville où vous résidez actuellement
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section mot de passe -->
+                        <div class="card border-warning mb-3">
+                            <div class="card-header bg-warning bg-opacity-10">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-lock me-2"></i>
+                                    Changer le mot de passe
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Optionnel :</strong> Laissez ces champs vides si vous ne souhaitez pas modifier votre mot de passe.
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            {{ form_label(form.plainPassword.first, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                                            {{ form_widget(form.plainPassword.first, {'attr': {'class': 'form-control', 'autocomplete': 'new-password'}}) }}
+                                            {{ form_errors(form.plainPassword.first) }}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            {{ form_label(form.plainPassword.second, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                                            {{ form_widget(form.plainPassword.second, {'attr': {'class': 'form-control', 'autocomplete': 'new-password'}}) }}
+                                            {{ form_errors(form.plainPassword.second) }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Le mot de passe doit contenir au moins 6 caractères.
+                                </small>
+                            </div>
+                        </div>
+
+                        {{ form_rest(form) }}
+
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a href="{{ path('app_profil_show') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Retour au profil
+                            </a>
+
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="fas fa-save me-2"></i>
+                                Mettre à jour mon profil
+                            </button>
+                        </div>
+
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+
+                <!-- Informations de sécurité -->
+                <div class="card shadow-sm mt-4">
+                    <div class="card-header bg-info text-white">
+                        <h3 class="h5 mb-0">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            Sécurité du compte
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6>Protégez votre compte</h6>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check text-success me-2"></i> Utilisez un mot de passe fort et unique</li>
+                                    <li><i class="fas fa-check text-success me-2"></i> Ne partagez jamais vos identifiants</li>
+                                    <li><i class="fas fa-check text-success me-2"></i> Vérifiez régulièrement vos activités</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <i class="fas fa-shield-alt text-success" style="font-size: 3rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

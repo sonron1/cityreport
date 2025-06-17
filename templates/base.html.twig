@@ -1,0 +1,507 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}CityFlow Bénin{% endblock %}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text></svg>">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Leaflet CSS pour la carte -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+    {% block stylesheets %}
+        <style>
+            :root {
+                /* Thème noir sobre - Variables CSS */
+                --primary-color: #212529;
+                --primary-hover: #343a40;
+                --primary-light: #495057;
+                --accent-color: #6c757d;
+                --success-color: #28a745;
+                --warning-color: #ffc107;
+                --danger-color: #dc3545;
+                --info-color: #17a2b8;
+                --light-color: #f8f9fa;
+                --dark-color: #343a40;
+            }
+
+            /* Override Bootstrap primary avec noir */
+            .btn-primary {
+                background-color: var(--primary-color);
+                border-color: var(--primary-color);
+                color: white;
+            }
+
+            .btn-primary:hover,
+            .btn-primary:focus,
+            .btn-primary:active {
+                background-color: var(--primary-hover);
+                border-color: var(--primary-hover);
+                color: white;
+            }
+
+            .btn-outline-primary {
+                color: var(--primary-color);
+                border-color: var(--primary-color);
+            }
+
+            .btn-outline-primary:hover,
+            .btn-outline-primary:focus,
+            .btn-outline-primary:active {
+                background-color: var(--primary-color);
+                border-color: var(--primary-color);
+                color: white;
+            }
+
+            .text-primary {
+                color: var(--primary-color) !important;
+            }
+
+            .bg-primary {
+                background-color: var(--primary-color) !important;
+            }
+
+            .border-primary {
+                border-color: var(--primary-color) !important;
+            }
+
+            .navbar-dark {
+                background-color: #1d2227 !important;
+            }
+
+            .navbar-dark .navbar-brand,
+            .navbar-dark .navbar-nav .nav-link {
+                color: rgba(255, 255, 255, 0.9) !important;
+            }
+
+            .navbar-dark .navbar-nav .nav-link:hover,
+            .navbar-dark .navbar-nav .nav-link:focus {
+                color: white !important;
+            }
+
+            .navbar-dark .navbar-nav .nav-link.active {
+                color: white !important;
+                background-color: var(--primary-hover);
+                border-radius: 5px;
+            }
+
+            /* Badge et alertes primaires */
+            .badge.bg-primary {
+                background-color: var(--primary-color) !important;
+            }
+
+            .alert-primary {
+                color: var(--primary-color);
+                background-color: rgba(33, 37, 41, 0.1);
+                border-color: rgba(33, 37, 41, 0.2);
+            }
+
+            /* Links primaires */
+            a {
+                color: var(--primary-color);
+            }
+
+            a:hover {
+                color: var(--primary-hover);
+            }
+
+            /* Pagination */
+            .pagination .page-link {
+                color: var(--primary-color);
+                border-color: #dee2e6;
+            }
+
+            .pagination .page-link:hover {
+                color: var(--primary-hover);
+                background-color: #e9ecef;
+                border-color: #dee2e6;
+            }
+
+            .pagination .page-item.active .page-link {
+                background-color: var(--primary-color);
+                border-color: var(--primary-color);
+                color: white;
+            }
+
+            /* Forms */
+            .form-control:focus {
+                border-color: var(--primary-light);
+                box-shadow: 0 0 0 0.2rem rgba(33, 37, 41, 0.25);
+            }
+
+            .form-check-input:checked {
+                background-color: var(--primary-color);
+                border-color: var(--primary-color);
+            }
+
+            /* Cards et composants */
+            .card-header.bg-primary {
+                background-color: var(--primary-color) !important;
+                color: white;
+            }
+
+            .list-group-item.active {
+                background-color: var(--primary-color);
+                border-color: var(--primary-color);
+            }
+
+            /* Dropdown */
+            .dropdown-item.active,
+            .dropdown-item:active {
+                background-color: var(--primary-color);
+            }
+
+            /* Progress bars */
+            .progress-bar {
+                background-color: var(--primary-color);
+            }
+
+            /* Modal */
+            .modal-header.bg-primary {
+                background-color: var(--primary-color) !important;
+                color: white;
+            }
+
+            /* Tables */
+            .table-primary {
+                background-color: rgba(33, 37, 41, 0.1);
+            }
+
+            /* Breadcrumb */
+            .breadcrumb-item.active {
+                color: var(--primary-color);
+            }
+
+            /* Corps de la page */
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #f8f9fa;
+                line-height: 1.6;
+            }
+
+            /* Footer */
+            .footer {
+                background-color: #1d2227;
+                color: white;
+                padding: 2rem 0;
+                margin-top: auto;
+            }
+
+            .footer a {
+                color: rgba(255, 255, 255, 0.8);
+                text-decoration: none;
+            }
+
+            .footer a:hover {
+                color: white;
+                text-decoration: underline;
+            }
+
+            /* Notifications */
+            .notification-badge {
+                position: absolute;
+                top: -5px;
+                right: -5px;
+                background-color: var(--danger-color);
+                color: white;
+                border-radius: 50%;
+                padding: 2px 6px;
+                font-size: 0.7rem;
+                min-width: 18px;
+                height: 18px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .notifications-dropdown .dropdown-menu {
+                width: 300px;
+                max-height: 400px;
+                overflow-y: auto;
+            }
+
+            .notification-item {
+                border-bottom: 1px solid #eee;
+                padding: 10px 15px;
+                transition: background-color 0.2s;
+            }
+
+            .notification-item:hover {
+                background-color: #f8f9fa;
+            }
+
+            .notification-item.unread {
+                background-color: rgba(33, 37, 41, 0.05);
+                border-left: 3px solid var(--primary-color);
+            }
+
+            /* Responsive */
+            @media (max-width: 768px) {
+                .container {
+                    padding-left: 15px;
+                    padding-right: 15px;
+                }
+
+                .navbar-brand {
+                    font-size: 1.1rem;
+                }
+            }
+
+            /* Animations */
+            .fade-in {
+                animation: fadeIn 0.5s ease-in;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+
+            /* Scrollbar personnalisée */
+            ::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            ::-webkit-scrollbar-track {
+                background: #f1f1f1;
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background: var(--primary-color);
+                border-radius: 4px;
+            }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: var(--primary-hover);
+            }
+
+            /* Styles pour les cartes modernes */
+            .modern-card {
+                border: none;
+                border-radius: 15px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+                transition: all 0.3s ease;
+            }
+
+            .modern-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            }
+
+            /* Boutons arrondis */
+            .btn-rounded {
+                border-radius: 25px;
+                padding: 8px 20px;
+            }
+
+            /* Loading spinner */
+            .loading-spinner {
+                border: 3px solid #f3f3f3;
+                border-top: 3px solid var(--primary-color);
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                animation: spin 1s linear infinite;
+            }
+
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        </style>
+    {% endblock %}
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+<!-- Navigation -->
+{% include 'partials/navbar.html.twig' %}
+
+<!-- Messages Flash -->
+{% for category, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="alert alert-{{ category == 'error' ? 'danger' : category }} alert-dismissible fade show m-0" role="alert">
+            <div class="container">
+                <i class="fas fa-{% if category == 'success' %}check-circle{% elseif category == 'error' or category == 'danger' %}exclamation-triangle{% elseif category == 'warning' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    {% endfor %}
+{% endfor %}
+
+<!-- Contenu principal -->
+<main class="flex-grow-1">
+    {% block body %}{% endblock %}
+</main>
+
+<!-- Footer -->
+<footer class="footer mt-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <h5 class="mb-3">
+                    <i class="fas fa-city me-2"></i>
+                    CityFlow Bénin
+                </h5>
+                <p class="mb-2">
+                    Plateforme citoyenne pour l'amélioration de nos villes.
+                    Signalez, suivez et participez à la transformation urbaine.
+                </p>
+                <p class="small opacity-75">
+                    © {{ "now"|date("Y") }} CityFlow Bénin. Tous droits réservés.
+                </p>
+            </div>
+            <div class="col-md-3">
+                <h6 class="mb-3">Liens rapides</h6>
+                <ul class="list-unstyled">
+                    <li><a href="{{ path('app_home') }}" class="small">Accueil</a></li>
+                    {% if app.user %}
+                        <li><a href="{{ path('app_signalements') }}" class="small">Signalements</a></li>
+                        <li><a href="{{ path('app_carte') }}" class="small">Carte</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="col-md-3">
+                <h6 class="mb-3">Contact</h6>
+                <p class="small mb-1">
+                    <i class="fas fa-envelope me-2"></i>
+                    contact@cityflow.bj
+                </p>
+                <p class="small mb-1">
+                    <i class="fas fa-phone me-2"></i>
+                    +229 XX XX XX XX
+                </p>
+                <div class="mt-3">
+                    <a href="#" class="text-white me-3" title="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="text-white me-3" title="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="text-white" title="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+{% block javascripts %}
+    <script>
+        // Auto-dismiss des alertes après 5 secondes
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+
+            // Animation fade-in pour le contenu
+            document.body.classList.add('fade-in');
+
+            // Gestion des notifications en temps réel (seulement si les routes existent)
+            {% if app.user and app.user.estValide %}
+            // Vérifier si les routes notifications existent avant de les utiliser
+            if (typeof notificationRoutesExist !== 'undefined' && notificationRoutesExist) {
+                loadNotifications();
+                setInterval(loadNotifications, 30000); // Vérifier toutes les 30 secondes
+
+                // Marquer toutes les notifications comme lues
+                const markAllReadBtn = document.getElementById('markAllRead');
+                if (markAllReadBtn) {
+                    markAllReadBtn.addEventListener('click', function() {
+                        // Cette fonctionnalité sera activée quand les routes seront créées
+                        console.log('Fonctionnalité de notifications à implémenter');
+                    });
+                }
+            }
+            {% endif %}
+        });
+
+        // Fonctions de notifications (conditionnelles)
+        {% if app.user and app.user.estValide %}
+        function loadNotifications() {
+            // Cette fonction sera activée quand les routes notifications seront implémentées
+            console.log('Chargement des notifications - à implémenter');
+            // Pour l'instant, cacher le badge
+            const badge = document.getElementById('notificationBadge');
+            if (badge) {
+                badge.style.display = 'none';
+            }
+        }
+
+        function updateNotificationBadge(count) {
+            const badge = document.getElementById('notificationBadge');
+            if (badge) {
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+
+        function updateNotificationsList(notifications) {
+            const container = document.getElementById('notificationsList');
+            if (!container) return;
+
+            if (notifications.length === 0) {
+                container.innerHTML = '<div class="dropdown-item text-center text-muted">Aucune notification</div>';
+                return;
+            }
+
+            // Code pour afficher les notifications...
+        }
+
+        function markAsReadAndRedirect(notificationId, url) {
+            // Cette fonction sera activée quand les routes seront implémentées
+            console.log('Marquer comme lu - à implémenter');
+        }
+        {% endif %}
+
+        // Fonction utilitaire pour les confirmations
+        function confirmAction(message, callback) {
+            if (confirm(message)) {
+                callback();
+            }
+        }
+
+        // Gestion des formulaires avec loading
+        document.addEventListener('submit', function(e) {
+            const form = e.target;
+            const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+
+            if (submitBtn && !form.classList.contains('no-loading')) {
+                submitBtn.disabled = true;
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<span class="loading-spinner me-2"></span>Chargement...';
+
+                // Restaurer après 10 secondes max
+                setTimeout(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }, 10000);
+            }
+        });
+    </script>
+{% endblock %}
+</body>
+</html>

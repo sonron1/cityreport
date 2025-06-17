@@ -1,0 +1,189 @@
+
+{# templates/admin/categories/edit.html.twig #}
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Modifier la catégorie - {{ categorie.nom }}{% endblock %}
+
+{% block admin_content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Modifier la catégorie "{{ categorie.nom }}"</h1>
+        <a href="{{ path('app_admin_categories') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Modification de la catégorie</h5>
+                </div>
+                <div class="card-body">
+                    {{ form_start(form) }}
+                    {{ form_errors(form) }}
+
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            {{ form_row(form.nom, {
+                                'label_attr': {'class': 'fw-bold'},
+                                'attr': {'class': 'form-control', 'placeholder': 'Ex: Déchets, Nid-de-poule, Éclairage public...'}
+                            }) }}
+                        </div>
+                        <div class="col-md-5">
+                            {{ form_row(form.couleur, {
+                                'label_attr': {'class': 'fw-bold'},
+                                'attr': {'class': 'form-control form-control-color w-100'}
+                            }) }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3 mt-3">
+                        {{ form_row(form.description, {
+                            'label_attr': {'class': 'fw-bold'},
+                            'attr': {
+                                'class': 'form-control',
+                                'rows': '4',
+                                'placeholder': 'Décrivez le type de signalements qui appartiennent à cette catégorie...'
+                            }
+                        }) }}
+                    </div>
+                </div>
+                <div class="card-footer bg-light d-flex justify-content-between">
+                    <div>
+                        {{ form_widget(form.submit, {
+                            'attr': {'class': 'btn btn-warning'},
+                            'label': 'Mettre à jour la catégorie'
+                        }) }}
+                        <a href="{{ path('app_admin_categories') }}" class="btn btn-outline-secondary ms-2">Annuler</a>
+                    </div>
+
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash-alt me-2"></i>Supprimer
+                    </button>
+
+                    {# Modal de suppression #}
+                    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-danger text-white">
+                                    <h5 class="modal-title" id="deleteModalLabel">Confirmer la suppression</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Êtes-vous sûr de vouloir supprimer la catégorie "<strong>{{ categorie.nom }}</strong>" ?</p>
+                                    {% if categorie.signalements|length > 0 %}
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>Cette catégorie est utilisée par {{ categorie.signalements|length }} signalement(s). La suppression sera impossible.
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                    <form action="{{ path('app_admin_categories_delete', {'id': categorie.id}) }}" method="post" style="display: inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_categorie' ~ categorie.id) }}">
+                                        <button type="submit" class="btn btn-danger" {% if categorie.signalements|length > 0 %}disabled{% endif %}>
+                                            Confirmer la suppression
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informations</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Statistiques de la catégorie</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>ID :</strong> {{ categorie.id }}</li>
+                        <li><strong>Signalements associés :</strong> {{ categorie.signalements|length }}</li>
+                        <li><strong>Icône :</strong> {{ categorie.icone|default('Aucune') }}</li>
+                        <li><strong>Couleur :</strong>
+                            {% if categorie.couleur %}
+                                <span style="background-color: {{ categorie.couleur }}; width: 20px; height: 20px; display: inline-block; border-radius: 3px; margin-left: 5px;"></span>
+                                {{ categorie.couleur }}
+                            {% else %}
+                                Aucune
+                            {% endif %}
+                        </li>
+                    </ul>
+
+                    {% if categorie.signalements|length > 0 %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Attention :</strong> Cette catégorie est utilisée par des signalements. Sa suppression est impossible.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-eye me-2"></i>Aperçu</h5>
+                </div>
+                <div class="card-body">
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0" id="previewTitle">{{ categorie.nom }}</h5>
+                            <div class="category-icon" style="background-color: {{ categorie.couleur|default('#007bff') }}; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
+                                <i class="fas fa-{{ categorie.icone|default('tag') }}"></i>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text" id="previewDescription">{{ categorie.description|default('Aucune description fournie.') }}</p>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">{{ categorie.signalements|length }} signalement(s)</span>
+                                <div style="background-color: {{ categorie.couleur|default('#007bff') }}; width: 30px; height: 30px; border-radius: 4px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% block javascripts %}
+        {{ parent() }}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Mise à jour en temps réel de la prévisualisation
+                const nomInput = document.querySelector('[name$="[nom]"]');
+                const descriptionInput = document.querySelector('[name$="[description]"]');
+                const couleurInput = document.querySelector('[name$="[couleur]"]');
+
+                const previewTitle = document.getElementById('previewTitle');
+                const previewDescription = document.getElementById('previewDescription');
+
+                if (nomInput && previewTitle) {
+                    nomInput.addEventListener('input', function() {
+                        previewTitle.textContent = this.value || '{{ categorie.nom }}';
+                    });
+                }
+
+                if (descriptionInput && previewDescription) {
+                    descriptionInput.addEventListener('input', function() {
+                        previewDescription.textContent = this.value || 'Aucune description fournie.';
+                    });
+                }
+
+                if (couleurInput) {
+                    couleurInput.addEventListener('input', function() {
+                        document.querySelectorAll('.category-icon, [style*="background-color"]').forEach(el => {
+                            if (el.style.backgroundColor || el.classList.contains('category-icon')) {
+                                el.style.backgroundColor = this.value;
+                            }
+                        });
+                    });
+                }
+            });
+        </script>
+    {% endblock %}
+{% endblock %}

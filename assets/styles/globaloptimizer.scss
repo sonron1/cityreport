@@ -1,0 +1,273 @@
+// ✅ Optimisations CSS globales pour CityFlow
+
+// 🚀 Variables de performance
+:root {
+  --gpu-acceleration: translateZ(0);
+  --smooth-scroll: smooth;
+  --animation-duration: 0.3s;
+  --animation-timing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// 📱 Optimisations mobiles
+@media (max-width: 768px) {
+  :root {
+    --animation-duration: 0.2s;
+  }
+}
+
+// 🐌 Connexions lentes
+.slow-connection {
+  --animation-duration: 0s;
+
+  * {
+    animation-duration: 0s !important;
+    transition-duration: 0s !important;
+  }
+}
+
+// 🎯 Base optimisée
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: var(--smooth-scroll);
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+// 🖼️ Images optimisées
+img {
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+  border-style: none;
+
+  &[data-src] {
+    opacity: 0;
+    transition: opacity var(--animation-duration) var(--animation-timing);
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+
+    &.loaded {
+      opacity: 1;
+    }
+
+    &.error {
+      opacity: 0.5;
+      filter: grayscale(100%);
+    }
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+// ⚡ Accélération GPU pour les éléments critiques
+.gpu-accelerated {
+  transform: var(--gpu-acceleration);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+// 🎨 Transitions optimisées
+.smooth-transition {
+  transition: all var(--animation-duration) var(--animation-timing);
+  will-change: transform, opacity;
+}
+
+// 📊 Lazy loading containers
+[data-lazy] {
+  min-height: 200px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+
+  &::before {
+    content: '⏳ Chargement...';
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+
+  &.loaded {
+    background: none;
+
+    &::before {
+      display: none;
+    }
+  }
+
+  &.error {
+    background: rgba(231, 76, 60, 0.1);
+
+    &::before {
+      content: '❌ Erreur de chargement';
+      color: #e74c3c;
+    }
+  }
+}
+
+// 🗺️ Optimisations spécifiques cartes
+.map-container {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  overflow: hidden;
+
+  &[data-lazy="map"] {
+    &::before {
+      content: '🗺️ Chargement de la carte...';
+    }
+  }
+
+  .leaflet-container {
+    height: 100%;
+    width: 100%;
+  }
+}
+
+// 📈 Optimisations graphiques
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+
+  canvas {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+// 📊 Tableaux optimisés
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #dee2e6;
+    }
+  }
+}
+
+// 🎯 Focus visible amélioré
+:focus-visible {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+// 🌓 Mode sombre optimisé
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #1a1a1a;
+    --text-color: #e0e0e0;
+    --border-color: #333;
+  }
+
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+  }
+}
+
+// 🎭 Animations réduites pour l'accessibilité
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+// 📱 Optimisations touch
+@media (hover: none) and (pointer: coarse) {
+  .hover-effect:hover {
+    transform: none;
+  }
+
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+// 🖨️ Optimisations print
+@media print {
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  [data-lazy] {
+    display: none !important;
+  }
+}
+
+// 🎨 Classes utilitaires de performance
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.loading-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+.fade-in {
+  animation: fadeIn var(--animation-duration) var(--animation-timing);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-up {
+  animation: slideUp var(--animation-duration) var(--animation-timing);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}

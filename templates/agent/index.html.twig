@@ -1,0 +1,105 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de bord Agent - CityFlow{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Tableau de bord Agent</h1>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h5 mb-0">Signalements à traiter</h2>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Titre</th>
+                                    <th>Catégorie</th>
+                                    <th>Ville</th>
+                                    <th>Date</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for signalement in signalements %}
+                                    {% if signalement.statut == 'nouveau' %}
+                                        <tr>
+                                            <td>{{ signalement.id }}</td>
+                                            <td>{{ signalement.titre }}</td>
+                                            <td>{{ signalement.categorie.nom }}</td>
+                                            <td>{{ signalement.ville.nom }}</td>
+                                            <td>{{ signalement.dateSignalement|date('d/m/Y H:i') }}</td>
+                                            <td><span class="badge bg-danger">{{ signalement.statut|capitalize }}</span></td>
+                                            <td>
+                                                <a href="#" class="btn btn-sm btn-primary">Détails</a>
+                                                <a href="#" class="btn btn-sm btn-success">Prendre en charge</a>
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="7" class="text-center">Aucun signalement à traiter.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-white">
+                    <h2 class="h5 mb-0">Signalements en cours de traitement</h2>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Titre</th>
+                                    <th>Catégorie</th>
+                                    <th>Ville</th>
+                                    <th>Date</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for signalement in signalements %}
+                                    {% if signalement.statut == 'en_cours' %}
+                                        <tr>
+                                            <td>{{ signalement.id }}</td>
+                                            <td>{{ signalement.titre }}</td>
+                                            <td>{{ signalement.categorie.nom }}</td>
+                                            <td>{{ signalement.ville.nom }}</td>
+                                            <td>{{ signalement.dateSignalement|date('d/m/Y H:i') }}</td>
+                                            <td><span class="badge bg-warning">{{ signalement.statut|capitalize|replace({'_': ' '}) }}</span></td>
+                                            <td>
+                                                <a href="#" class="btn btn-sm btn-primary">Détails</a>
+                                                <a href="#" class="btn btn-sm btn-success">Marquer comme résolu</a>
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="7" class="text-center">Aucun signalement en cours de traitement.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

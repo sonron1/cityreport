@@ -1,0 +1,135 @@
+{# templates/moderateur/signalements/_status_modal.html.twig #}
+<div class="modal fade" id="statusModal{{ signalement.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>Modifier le statut
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ path('app_moderateur_modifier_statut', {'id': signalement.id}) }}" method="post" onsubmit="return validateStatusForm({{ signalement.id }})">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <h6>Signalement #{{ signalement.id }}</h6>
+                        <p class="text-muted">{{ signalement.titre }}</p>
+                        <p><strong>Statut actuel :</strong>
+                            <span class="badge bg-info">{{ signalement.statut.value|replace({'_': ' '})|title }}</span>
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="statut_{{ signalement.id }}" class="form-label">Nouveau statut <span class="text-danger">*</span></label>
+                        <select class="form-select" id="statut_{{ signalement.id }}" name="statut" required>
+                            <option value="">Choisir un statut</option>
+                            {% set current_statut = signalement.statut.value %}
+                            {% set statut_values = statut_signalement_values() %}
+                            {% for statut_value in statut_values %}
+                                {% if current_statut != statut_value %}
+                                    {# ✅ AJOUT : Restriction pour le statut "annule" #}
+                                    {% if statut_value == 'annule' and not is_granted('ROLE_ADMIN') %}
+                                        {# Ne pas afficher l'option "annule" pour les non-admins #}
+                                    {% else %}
+                                        <option value="{{ statut_value }}" 
+                                                {% if statut_value == 'annule' %}data-requires-comment="true"{% endif %}>
+                                            {{ statut_value|replace({'_': ' '})|title }}
+                                            {% if statut_value == 'annule' and not is_granted('ROLE_ADMIN') %}
+                                                (Admin uniquement)
+                                            {% endif %}
+                                        </option>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">
+                            Veuillez sélectionner un statut.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="commentaire_status_{{ signalement.id }}" class="form-label">
+                            Commentaire 
+                            <span class="text-muted" id="commentaire_note_{{ signalement.id }}">(optionnel)</span>
+                        </label>
+                        <textarea class="form-control"
+                                  id="commentaire_status_{{ signalement.id }}"
+                                  name="commentaire"
+                                  rows="3"
+                                  placeholder="Expliquez la raison du changement de statut..."></textarea>
+                        <div class="invalid-feedback" id="commentaire_error_{{ signalement.id }}">
+                            Un commentaire est obligatoire pour annuler un signalement.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Annuler
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-save me-2"></i>Modifier le statut
+                    </button>
+                </div>
+                <input type="hidden" name="_token" value="{{ csrf_token('modify_status_' ~ signalement.id) }}">
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function validateStatusForm(signalementId) {
+    const statutSelect = document.getElementById('statut_' + signalementId);
+    const commentaireTextarea = document.getElementById('commentaire_status_' + signalementId);
+    const commentaireNote = document.getElementById('commentaire_note_' + signalementId);
+    const commentaireError = document.getElementById('commentaire_error_' + signalementId);
+    
+    let isValid = true;
+    
+    // Vérifier si un statut est sélectionné
+    if (!statutSelect.value) {
+        statutSelect.classList.add('is-invalid');
+        isValid = false;
+    } else {
+        statutSelect.classList.remove('is-invalid');
+    }
+    
+    // ✅ AJOUT : Vérification spéciale pour le statut "annule"
+    if (statutSelect.value === 'annule' && !commentaireTextarea.value.trim()) {
+        commentaireTextarea.classList.add('is-invalid');
+        commentaireError.style.display = 'block';
+        isValid = false;
+    } else {
+        commentaireTextarea.classList.remove('is-invalid');
+        commentaireError.style.display = 'none';
+    }
+    
+    return isValid;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const statutSelect{{ signalement.id }} = document.getElementById('statut_{{ signalement.id }}');
+    const commentaireTextarea{{ signalement.id }} = document.getElementById('commentaire_status_{{ signalement.id }}');
+    const commentaireNote{{ signalement.id }} = document.getElementById('commentaire_note_{{ signalement.id }}');
+    
+    if (statutSelect{{ signalement.id }}) {
+        statutSelect{{ signalement.id }}.addEventListener('change', function() {
+            this.classList.remove('is-invalid');
+            
+            // ✅ AJOUT : Changer le texte du commentaire selon le statut
+            if (this.value === 'annule') {
+                commentaireNote{{ signalement.id }}.innerHTML = '<span class="text-danger">(obligatoire)</span>';
+                commentaireTextarea{{ signalement.id }}.setAttribute('placeholder', 'Expliquez obligatoirement la raison de l\'annulation...');
+            } else {
+                commentaireNote{{ signalement.id }}.innerHTML = '(optionnel)';
+                commentaireTextarea{{ signalement.id }}.setAttribute('placeholder', 'Expliquez la raison du changement de statut...');
+            }
+        });
+    }
+    
+    if (commentaireTextarea{{ signalement.id }}) {
+        commentaireTextarea{{ signalement.id }}.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+            document.getElementById('commentaire_error_{{ signalement.id }}').style.display = 'none';
+        });
+    }
+});
+</script>

@@ -1,0 +1,145 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Validation des signalements{% endblock %}
+
+{% block body %}
+    <div class="container my-4">
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-dismissible fade show">
+                <i class="fas fa-check-circle me-2"></i>{{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="fas fa-exclamation-circle me-2"></i>{{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-check-circle me-2"></i>Validation des signalements</h1>
+            <div class="d-flex gap-2">
+                <span class="badge bg-warning">{{ signalements_en_attente|length }} en attente</span>
+                <a href="{{ path('app_signalements') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-list me-1"></i>Tous les signalements
+                </a>
+            </div>
+        </div>
+
+        {% if signalements_en_attente|length > 0 %}
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Signalements en attente de validation</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% for signalement in signalements_en_attente %}
+                        <div class="border-bottom p-3 {% if loop.last %}border-0{% endif %}">
+                            <div class="row align-items-center">
+                                <div class="col-md-2">
+                                    {% if signalement.photoUrl %}
+                                        <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}"
+                                             class="img-fluid rounded"
+                                             alt="{{ signalement.titre }}"
+                                             style="height: 80px; width: 100%; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                             style="height: 80px;">
+                                            <i class="fas fa-image text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="mb-1">{{ signalement.titre }}</h6>
+                                    <p class="text-muted small mb-1">{{ signalement.description|slice(0, 100) }}...</p>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <small class="text-muted">
+                                            <i class="fas fa-user me-1"></i>{{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}
+                                        </small>
+                                        <small class="text-muted">
+                                            <i class="fas fa-map-marker-alt me-1"></i>{{ signalement.ville.nom }}
+                                        </small>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>{{ signalement.dateSignalement|date('d/m/Y H:i') }}
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}"
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i>Voir
+                                        </a>
+                                    <!--
+                                        <a href="{{ path('app_validation_valider', {'id': signalement.id}) }}"
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i>Valider
+                                        </a>
+                                           -->
+                                        <!-- Bouton Valider -->
+                                        <!--
+                                        <button type="button" class="btn btn-sm btn-success"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#validateModal{{ signalement.id }}">
+                                            <i class="fas fa-check me-1"></i>Valider
+                                        </button>
+                                             -->
+                                        <!-- Bouton Rejeter -->
+                                        <!--
+                                        <button type="button" class="btn btn-sm btn-danger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#rejectModal{{ signalement.id }}">
+                                            <i class="fas fa-times me-1"></i>Rejeter
+                                        </button>
+                                        -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# INCLUSION DES MODAUX SÉPARÉS #}
+                        <!--{% include 'validation/_validate_modal.html.twig' with {'signalements': signalement} %}
+                        {#  #}% include 'validation/_reject_modal.html.twig' with {'signalements': signalements} %} -->
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>
+                Aucun signalement en attente de validation !
+            </div>
+        {% endif %}
+
+        {% if signalements_traites|length > 0 %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Derniers signalements traités</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% for signalement in signalements_traites %}
+                        <div class="border-bottom p-3 {% if loop.last %}border-0{% endif %}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ signalement.titre }}</h6>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>{{ signalement.dateSignalement|date('d/m/Y') }}
+                                        </small>
+                                        <span class="badge {% if signalement.etatValidation == 'valide' %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ signalement.etatValidation|replace({'_': ' '})|capitalize }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye me-1"></i>Voir
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

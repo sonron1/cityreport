@@ -1,0 +1,55 @@
+{# templates/admin/signalements/_status_modal.html.twig #}
+<div class="modal fade" id="statusModal{{ signalement.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>Modifier le statut
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ path('app_admin_signalements_modifier_statut', {'id': signalement.id}) }}" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <h6>Signalement #{{ signalement.id }}</h6>
+                        <p class="text-muted">{{ signalement.titre }}</p>
+                        <p><strong>Statut actuel :</strong>
+                            <span class="badge bg-info">{{ signalement.statut.value }}</span>
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="statut_{{ signalement.id }}" class="form-label">Nouveau statut</label>
+                        <select class="form-select" id="statut_{{ signalement.id }}" name="statut" required>
+                            <option value="">Choisir un statut</option>
+                            <option value="NOUVEAU" {% if signalement.statut.value == 'NOUVEAU' %}selected{% endif %}>Nouveau</option>
+                            <option value="EN_COURS" {% if signalement.statut.value == 'EN_COURS' %}selected{% endif %}>En cours</option>
+                            <option value="RESOLU" {% if signalement.statut.value == 'RESOLU' %}selected{% endif %}>Résolu</option>
+                            <option value="FERME" {% if signalement.statut.value == 'FERME' %}selected{% endif %}>Fermé</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="commentaire_status_{{ signalement.id }}" class="form-label">
+                            Commentaire <span class="text-muted">(optionnel)</span>
+                        </label>
+                        <textarea class="form-control"
+                                  id="commentaire_status_{{ signalement.id }}"
+                                  name="commentaire"
+                                  rows="3"
+                                  placeholder="Expliquez la raison du changement de statut..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Annuler
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-save me-2"></i>Modifier le statut
+                    </button>
+                </div>
+                <input type="hidden" name="_token" value="{{ csrf_token('status' ~ signalement.id) }}">
+            </form>
+        </div>
+    </div>
+</div>

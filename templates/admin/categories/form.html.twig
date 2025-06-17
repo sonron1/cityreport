@@ -1,0 +1,217 @@
+{# templates/admin/categories/form.html.twig #}
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}{{ categorie.id ? 'Modifier' : 'Ajouter' }} une catégorie{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2">{{ categorie.id ? 'Modifier' : 'Ajouter' }} une catégorie</h1>
+    <a href="{{ path('app_admin_categories') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">{{ categorie.id ? 'Modifier la catégorie "' ~ categorie.nom ~ '"' : 'Nouvelle catégorie' }}</h5>
+            </div>
+            <div class="card-body">
+                {{ form_start(form) }}
+                {{ form_errors(form) }}
+                
+                <div class="row g-3">
+                    <div class="col-md-7">
+                        {{ form_row(form.nom, {
+                            'label_attr': {'class': 'fw-bold'},
+                            'attr': {'class': 'form-control', 'placeholder': 'Ex: Déchets, Nid-de-poule, Éclairage public...'}
+                        }) }}
+                    </div>
+                    <div class="col-md-5">
+                        {{ form_row(form.couleur, {
+                            'label_attr': {'class': 'fw-bold'},
+                            'attr': {'class': 'form-control form-control-color w-100'}
+                        }) }}
+                    </div>
+                </div>
+                
+                <div class="mb-3 mt-3">
+                    {{ form_label(form.icone, 'Icône', {'label_attr': {'class': 'fw-bold'}}) }}
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="fas fa-icons"></i></span>
+                        {{ form_widget(form.icone, {
+                            'attr': {
+                                'class': 'form-control', 
+                                'placeholder': 'Ex: trash-alt, road, lightbulb, water...'
+                            }
+                        }) }}
+                        <button type="button" id="previewIconBtn" class="btn btn-outline-secondary">
+                            <i class="fas fa-eye me-1"></i> Prévisualiser
+                        </button>
+                    </div>
+                    <div class="form-text">Entrez le nom de l'icône sans le préfixe "fa-". <a href="https://fontawesome.com/icons?d=gallery&m=free" target="_blank" class="text-decoration-none">Parcourir les icônes disponibles</a></div>
+                    
+                    <div id="iconPreview" class="d-none mt-2 p-3 text-center border rounded bg-light">
+                        <i id="previewIconElement" class="fas fa-2x"></i>
+                        <p class="small mb-0 mt-2">Aperçu de l'icône</p>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    {{ form_label(form.description, 'Description', {'label_attr': {'class': 'fw-bold'}}) }}
+                    {{ form_widget(form.description, {
+                        'attr': {
+                            'class': 'form-control', 
+                            'rows': '4',
+                            'placeholder': 'Décrivez le type de signalements qui appartiennent à cette catégorie...'
+                        }
+                    }) }}
+                    {{ form_help(form.description) }}
+                </div>
+            </div>
+            <div class="card-footer bg-light d-flex justify-content-between">
+                <div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>{{ categorie.id ? 'Mettre à jour' : 'Créer la catégorie' }}
+                    </button>
+                    <a href="{{ path('app_admin_categories') }}" class="btn btn-outline-secondary ms-2">Annuler</a>
+                </div>
+                {% if categorie.id %}
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash-alt me-2"></i>Supprimer
+                    </button>
+                    
+                    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-danger text-white">
+                                    <h5 class="modal-title" id="deleteModalLabel">Confirmer la suppression</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Êtes-vous sûr de vouloir supprimer la catégorie "<strong>{{ categorie.nom }}</strong>" ?</p>
+                                    {% if categorie.signalements|length > 0 %}
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>Cette catégorie est utilisée par {{ categorie.signalements|length }} signalement(s). La suppression sera impossible.
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                    <form action="{{ path('app_admin_categories_delete', {'id': categorie.id}) }}" method="post">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ categorie.id) }}">
+                                        <button type="submit" class="btn btn-danger" {% if categorie.signalements|length > 0 %}disabled{% endif %}>Confirmer</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Aperçu</h5>
+            </div>
+            <div class="card-body">
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0" id="previewTitle">{{ categorie.nom ?: 'Titre de la catégorie' }}</h5>
+                        <div class="category-icon" id="previewIconContainer" style="background-color: {{ categorie.couleur ?: '#0d6efd' }}">
+                            <i class="fas {{ categorie.icone ? 'fa-' ~ categorie.icone : 'fa-tag' }}" id="previewIconTag"></i>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text" id="previewDescription">{{ categorie.description ?: 'La description de la catégorie apparaîtra ici...' }}</p>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">{{ categorie.signalements|length }} signalement(s)</span>
+                            <div class="category-color" id="previewColor" style="background-color: {{ categorie.couleur ?: '#0d6efd' }}"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-lightbulb me-2"></i>Conseils</h6>
+                    <ul class="mb-0 ps-3">
+                        <li>Choisissez un nom court et descriptif pour la catégorie</li>
+                        <li>Utilisez une icône représentative du type de signalement</li>
+                        <li>La couleur peut aider à identifier rapidement la catégorie sur la carte</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Éléments du formulaire
+    const nomInput = document.querySelector('[name$="[nom]"]');
+    const iconeInput = document.querySelector('[name$="[icone]"]');
+    const descriptionInput = document.querySelector('[name$="[description]"]');
+    const couleurInput = document.querySelector('[name$="[couleur]"]');
+    
+    // Éléments de prévisualisation
+    const previewTitle = document.getElementById('previewTitle');
+    const previewIconTag = document.getElementById('previewIconTag');
+    const previewIconContainer = document.getElementById('previewIconContainer');
+    const previewDescription = document.getElementById('previewDescription');
+    const previewColor = document.getElementById('previewColor');
+    
+    // Mise à jour en temps réel de la prévisualisation
+    if (nomInput) {
+        nomInput.addEventListener('input', function() {
+            previewTitle.textContent = this.value || 'Titre de la catégorie';
+        });
+    }
+    
+    if (descriptionInput) {
+        descriptionInput.addEventListener('input', function() {
+            previewDescription.textContent = this.value || 'La description de la catégorie apparaîtra ici...';
+        });
+    }
+    
+    if (couleurInput) {
+        couleurInput.addEventListener('input', function() {
+            previewIconContainer.style.backgroundColor = this.value;
+            previewColor.style.backgroundColor = this.value;
+        });
+    }
+    
+    // Bouton de prévisualisation d'icône
+    const previewIconBtn = document.getElementById('previewIconBtn');
+    const iconPreview = document.getElementById('iconPreview');
+    const previewIconElement = document.getElementById('previewIconElement');
+    
+    if (previewIconBtn && iconeInput) {
+        previewIconBtn.addEventListener('click', function() {
+            const iconValue = iconeInput.value.trim();
+            
+            if (iconValue) {
+                previewIconTag.className = 'fas fa-' + iconValue;
+                previewIconElement.className = 'fas fa-' + iconValue + ' fa-2x';
+                iconPreview.classList.remove('d-none');
+            } else {
+                previewIconTag.className = 'fas fa-tag';
+                iconPreview.classList.add('d-none');
+            }
+        });
+        
+        // Mise à jour en temps réel de l'icône
+        iconeInput.addEventListener('input', function() {
+            const iconValue = this.value.trim();
+            previewIconTag.className = iconValue ? 'fas fa-' + iconValue : 'fas fa-tag';
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

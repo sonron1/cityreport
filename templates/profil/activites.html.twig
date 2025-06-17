@@ -1,0 +1,240 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes activités - CityFlow{% endblock %}
+
+{% block body %}
+    <div class="container my-4">
+        <div class="row">
+            <div class="col-12">
+                <!-- En-tête -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="h2">
+                        <i class="fas fa-history me-2 text-primary"></i>
+                        Mes activités
+                    </h1>
+                    <a href="{{ path('app_profil_show') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-user me-1"></i> Retour au profil
+                    </a>
+                </div>
+
+                <div class="row">
+                    <!-- Mes signalements récents -->
+                    <div class="col-md-6">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Mes signalements récents
+                                </h5>
+                                <span class="badge bg-light text-dark">{{ signalements|length }}</span>
+                            </div>
+                            <div class="card-body p-0">
+                                {% if signalements|length > 0 %}
+                                    <div class="list-group list-group-flush">
+                                        {% for signalement in signalements %}
+                                            <div class="list-group-item">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="mb-1">
+                                                            <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}"
+                                                               class="text-decoration-none">
+                                                                {{ signalement.titre|u.truncate(40, '...') }}
+                                                            </a>
+                                                        </h6>
+                                                        <p class="mb-1 small text-muted">
+                                                            {{ signalement.description|u.truncate(80, '...') }}
+                                                        </p>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                                            {{ signalement.ville.nom }}
+                                                            {% if signalement.arrondissement %}
+                                                                - {{ signalement.arrondissement.nom }}
+                                                            {% endif %}
+                                                        </small>
+                                                    </div>
+                                                    <div class="text-end">
+                                                <span class="badge bg-{% if signalement.statut.value == 'resolu' %}success{% elseif signalement.statut.value == 'en_cours' %}warning{% else %}secondary{% endif %} mb-1">
+                                                    {{ signalement.statut.value|replace({'_': ' '})|title }}
+                                                </span>
+                                                        <br>
+                                                        <small class="text-muted">
+                                                            {{ signalement.dateSignalement|date('d/m/Y') }}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% if user.signalements|length > 10 %}
+                                        <div class="card-footer text-center">
+                                            <a href="{{ path('app_mes_signalements') }}" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-plus me-1"></i> Voir tous mes signalements ({{ user.signalements|length }})
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-exclamation-triangle fa-2x text-muted mb-2"></i>
+                                        <p class="text-muted mb-0">Aucun signalement pour le moment</p>
+                                        <a href="{{ path('app_signalement_nouveau') }}" class="btn btn-primary btn-sm mt-2">
+                                            <i class="fas fa-plus me-1"></i> Créer un signalement
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mes commentaires récents -->
+                    <div class="col-md-6">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-comments me-2"></i>
+                                    Mes commentaires récents
+                                </h5>
+                                <span class="badge bg-light text-dark">{{ commentaires|length }}</span>
+                            </div>
+                            <div class="card-body p-0">
+                                {% if commentaires|length > 0 %}
+                                    <div class="list-group list-group-flush">
+                                        {% for commentaire in commentaires %}
+                                            <div class="list-group-item">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div class="flex-grow-1">
+                                                        <p class="mb-1">{{ commentaire.contenu|u.truncate(100, '...') }}</p>
+                                                        <small class="text-muted">
+                                                            Sur :
+                                                            <a href="{{ path('app_signalement_show', {'id': commentaire.signalement.id}) }}"
+                                                               class="text-decoration-none">
+                                                                {{ commentaire.signalement.titre|u.truncate(30, '...') }}
+                                                            </a>
+                                                        </small>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <small class="text-muted">
+                                                            {{ commentaire.dateCommentaire|date('d/m/Y H:i') }}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-comments fa-2x text-muted mb-2"></i>
+                                        <p class="text-muted mb-0">Aucun commentaire pour le moment</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistiques détaillées -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-pie me-2"></i>
+                            Résumé de mes activités
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="border rounded p-3 h-100">
+                                    <i class="fas fa-exclamation-triangle fa-2x text-primary mb-2"></i>
+                                    <h4 class="text-primary">{{ user.signalements|length }}</h4>
+                                    <p class="mb-0 small text-muted">Signalements créés</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3 h-100">
+                                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                    <h4 class="text-success">
+                                        {{ user.signalements|filter(s => s.statut.value == 'resolu')|length }}
+                                    </h4>
+                                    <p class="mb-0 small text-muted">Signalements résolus</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3 h-100">
+                                    <i class="fas fa-comments fa-2x text-info mb-2"></i>
+                                    <h4 class="text-info">{{ user.commentaires|length }}</h4>
+                                    <p class="mb-0 small text-muted">Commentaires postés</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3 h-100">
+                                    <i class="fas fa-calendar fa-2x text-warning mb-2"></i>
+                                    {% set joursDepuisInscription = ((date().timestamp - user.dateInscription.timestamp) / 86400)|round %}
+                                    <h4 class="text-warning">{{ joursDepuisInscription }}</h4>
+                                    <p class="mb-0 small text-muted">Jours depuis l'inscription</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informations supplémentaires -->
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <div class="border rounded p-3 text-center">
+                                    <h6 class="text-muted">Statut du compte</h6>
+                                    {% if user.estValide %}
+                                        <span class="badge bg-success fs-6">
+                                        <i class="fas fa-check-circle me-1"></i> Compte validé
+                                    </span>
+                                    {% else %}
+                                        <span class="badge bg-warning fs-6">
+                                        <i class="fas fa-clock me-1"></i> En attente de validation
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-3 text-center">
+                                    <h6 class="text-muted">Membre depuis</h6>
+                                    <strong class="text-primary">{{ user.dateInscription|date('d F Y') }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions rapides -->
+                <div class="card shadow-sm mt-4">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bolt me-2"></i>
+                            Actions rapides
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-2">
+                                <a href="{{ path('app_signalement_nouveau') }}" class="btn btn-success w-100">
+                                    <i class="fas fa-plus-circle me-1"></i> Nouveau signalement
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <a href="{{ path('app_carte') }}" class="btn btn-info w-100">
+                                    <i class="fas fa-map me-1"></i> Explorer la carte
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <a href="{{ path('app_messages_inbox') }}" class="btn btn-primary w-100">
+                                    <i class="fas fa-envelope me-1"></i> Mes messages
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <a href="{{ path('app_signalements') }}" class="btn btn-outline-secondary w-100">
+                                    <i class="fas fa-list me-1"></i> Tous les signalements
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

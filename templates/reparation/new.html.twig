@@ -1,0 +1,215 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvelle réparation - CityFlow{% endblock %}
+
+{% block body %}
+    <div class="container my-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="mb-4">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="{{ path('app_home') }}" class="text-decoration-none">
+                                <i class="fas fa-home"></i> Accueil
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="text-decoration-none">
+                                Signalement #{{ signalement.id }}
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">Nouvelle réparation</li>
+                    </ol>
+                </nav>
+
+                <div class="card shadow">
+                    <div class="card-header bg-light border-bottom">
+                        <h4 class="mb-0 text-dark">
+                            <i class="fas fa-tools me-2"></i>
+                            Planifier une réparation
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Informations du signalements -->
+                        <div class="alert alert-light border mb-4">
+                            <h6 class="alert-heading mb-2">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Signalement concerné
+                            </h6>
+                            <div class="d-flex flex-wrap align-items-center gap-3">
+                                <div>
+                                    <strong>{{ signalement.titre }}</strong>
+                                </div>
+                                <div>
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-map-marker-alt me-1"></i>
+                                        {{ signalement.ville.nom }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-tag me-1"></i>
+                                        {{ signalement.categorie.nom ?? 'Non catégorisé' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+                        
+                        <!-- Description -->
+                        <div class="mb-4">
+                            <h6 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-clipboard-list me-2"></i>
+                                Description des travaux
+                            </h6>
+                            {{ form_row(form.description, {
+                                'attr': {
+                                    'class': 'form-control',
+                                    'rows': 4
+                                }
+                            }) }}
+                        </div>
+
+                        <!-- Dates -->
+                        <div class="mb-4">
+                            <h6 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                Planification
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form_row(form.dateDebut, {
+                                        'attr': {
+                                            'class': 'form-control date-debut'
+                                        }
+                                    }) }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form_row(form.dateFin, {
+                                        'attr': {
+                                            'class': 'form-control date-fin'
+                                        }
+                                    }) }}
+                                    <div class="form-text">
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Optionnel
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Statut et Assignment -->
+                        <div class="mb-4">
+                            <h6 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-cogs me-2"></i>
+                                Gestion
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form_row(form.statut, {
+                                        'attr': {
+                                            'class': 'form-select'
+                                        }
+                                    }) }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form_row(form.utilisateur, {
+                                        'attr': {
+                                            'class': 'form-select'
+                                        }
+                                    }) }}
+                                    <div class="form-text">
+                                        <small class="text-muted">
+                                            <i class="fas fa-user-cog me-1"></i>
+                                            Technicien responsable
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Commentaires -->
+                        <div class="mb-4">
+                            <h6 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-comment me-2"></i>
+                                Commentaires
+                            </h6>
+                            {{ form_row(form.commentaire, {
+                                'attr': {
+                                    'class': 'form-control',
+                                    'rows': 3,
+                                    'placeholder': 'Informations supplémentaires (optionnel)...'
+                                }
+                            }) }}
+                        </div>
+
+                        <!-- Actions -->
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" 
+                               class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Retour au signalement
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i>
+                                Planifier la réparation
+                            </button>
+                        </div>
+
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Validation côté client pour les dates
+        function updateDateFinMin() {
+            const dateDebut = document.querySelector('.date-debut');
+            const dateFin = document.querySelector('.date-fin');
+            
+            if (dateDebut && dateFin && dateDebut.value) {
+                // Ajouter 1 heure minimum à la date de début
+                const debut = new Date(dateDebut.value);
+                debut.setHours(debut.getHours() + 1);
+                dateFin.min = debut.toISOString().slice(0, 16);
+                
+                // Si la date de fin est antérieure, la réinitialiser
+                if (dateFin.value && new Date(dateFin.value) <= new Date(dateDebut.value)) {
+                    dateFin.value = '';
+                    alert('La date de fin a été réinitialisée car elle était antérieure à la date de début.');
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialiser la validation des dates
+            updateDateFinMin();
+            
+            // Ajouter la validation en temps réel
+            const dateDebut = document.querySelector('.date-debut');
+            const dateFin = document.querySelector('.date-fin');
+            
+            if (dateDebut) {
+                dateDebut.addEventListener('change', updateDateFinMin);
+            }
+            
+            // Validation avant soumission
+            document.querySelector('form').addEventListener('submit', function(e) {
+                if (dateDebut && dateFin && dateDebut.value && dateFin.value) {
+                    if (new Date(dateDebut.value) >= new Date(dateFin.value)) {
+                        e.preventDefault();
+                        alert('La date de début doit être antérieure à la date de fin.');
+                        return false;
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}

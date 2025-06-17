@@ -1,0 +1,144 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon profil - CityFlow{% endblock %}
+
+{% block body %}
+    <div class="container my-4">
+        <div class="row">
+            <div class="col-md-4">
+                <!-- Carte profil -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white text-center">
+                        <i class="fas fa-user-circle fa-3x mb-2"></i>
+                        <h4 class="mb-0">{{ user.prenom }} {{ user.nom }}</h4>
+                        {% if is_granted('ROLE_ADMIN') %}
+                            <span class="badge bg-danger">Administrateur</span>
+                        {% elseif is_granted('ROLE_SUPERVISOR') %}
+                            <span class="badge bg-warning">Superviseur</span>
+                        {% elseif is_granted('ROLE_AGENT') %}
+                            <span class="badge bg-info">Agent municipal</span>
+                        {% else %}
+                            <span class="badge bg-light text-dark">Utilisateur</span>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <small class="text-muted d-block">Email</small>
+                            <strong>{{ user.email }}</strong>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted d-block">Ville de résidence</small>
+                            <strong>{{ user.villeResidence.nom }}</strong>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted d-block">Membre depuis</small>
+                            <strong>{{ user.dateInscription|date('d/m/Y') }}</strong>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <a href="{{ path('app_profil_edit') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-edit me-1"></i> Modifier mon profil
+                            </a>
+                            <a href="{{ path('app_messages_inbox') }}" class="btn btn-outline-info">
+                                <i class="fas fa-envelope me-1"></i> Mes messages
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistiques -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Mes statistiques</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-12 mb-3">
+                                <div class="p-3 bg-primary text-white rounded">
+                                    <h3 class="mb-0">{{ stats.signalements_total }}</h3>
+                                    <small>Signalements créés</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-success text-white rounded">
+                                    <h4 class="mb-0">{{ stats.signalements_resolus }}</h4>
+                                    <small>Résolus</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-info text-white rounded">
+                                    <h4 class="mb-0">{{ stats.commentaires_total }}</h4>
+                                    <small>Commentaires</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <!-- Derniers signalements -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Mes derniers signalements</h5>
+                        <a href="{{ path('app_mes_signalements') }}" class="btn btn-sm btn-outline-primary">Voir tout</a>
+                    </div>
+                    <div class="card-body">
+                        {% if user.signalements|length > 0 %}
+                            {% for signalement in user.signalements|slice(0, 5) %}
+                                <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                                    <div>
+                                        <h6 class="mb-0">{{ signalement.titre|u.truncate(40, '...') }}</h6>
+                                        <small class="text-muted">{{ signalement.dateSignalement|date('d/m/Y') }}</small>
+                                    </div>
+                                    <div>
+                                    <span class="badge bg-{% if signalement.statut.value == 'resolu' %}success{% elseif signalement.statut.value == 'en_cours' %}warning{% else %}secondary{% endif %}">
+                                        {{ signalement.statut.value|replace({'_': ' '})|title }}
+                                    </span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted text-center mb-0">Aucun signalement pour le moment.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Actions rapides -->
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Actions rapides</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <a href="{{ path('app_signalement_nouveau') }}" class="btn btn-success w-100">
+                                    <i class="fas fa-plus-circle me-2"></i>
+                                    Nouveau signalement
+                                </a>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <a href="{{ path('app_carte') }}" class="btn btn-info w-100">
+                                    <i class="fas fa-map me-2"></i>
+                                    Explorer la carte
+                                </a>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <a href="{{ path('app_message_new') }}" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-envelope me-2"></i>
+                                    Envoyer un message
+                                </a>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <a href="{{ path('app_profil_activites') }}" class="btn btn-outline-secondary w-100">
+                                    <i class="fas fa-history me-2"></i>
+                                    Mes activités
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

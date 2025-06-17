@@ -1,0 +1,858 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Gestion des rôles - Administration{% endblock %}
+
+{% block admin_breadcrumb %}
+    <li class="breadcrumb-item">
+        <a href="{{ path('app_admin_utilisateurs') }}">Utilisateurs</a>
+    </li>
+    <li class="breadcrumb-item active">Gestion des rôles</li>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .role-management-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent-color);
+        }
+
+        .stats-card.total::before { background: linear-gradient(45deg, #4f46e5, #7c3aed); }
+        .stats-card.admin::before { background: linear-gradient(45deg, #dc2626, #b91c1c); }
+        .stats-card.moderator::before { background: linear-gradient(45deg, #f59e0b, #d97706); }
+        .stats-card.citizen::before { background: linear-gradient(45deg, #059669, #047857); }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .icon-total { background: linear-gradient(45deg, #4f46e5, #7c3aed); }
+        .icon-admin { background: linear-gradient(45deg, #dc2626, #b91c1c); }
+        .icon-moderator { background: linear-gradient(45deg, #f59e0b, #d97706); }
+        .icon-citizen { background: linear-gradient(45deg, #059669, #047857); }
+
+        .filter-card, .bulk-actions-card, .users-table-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            border: none;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: linear-gradient(45deg, #f8fafc, #f1f5f9);
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .card-header h5, .card-header h6 {
+            margin: 0;
+            color: #334155;
+            font-weight: 600;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .btn {
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-outline-secondary {
+            border: 2px solid #e2e8f0;
+            color: #64748b;
+        }
+
+        .btn-outline-secondary:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .table {
+            margin: 0;
+        }
+
+        .table thead th {
+            background: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+            color: #334155;
+            font-weight: 600;
+            padding: 1rem;
+        }
+
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .avatar-container {
+            position: relative;
+        }
+
+        .avatar-circle {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            color: white;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .user-info h6 {
+            margin: 0;
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        .user-info small {
+            color: #64748b;
+        }
+
+        .badge {
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        .badge.bg-danger {
+            background: linear-gradient(45deg, #dc2626, #b91c1c) !important;
+        }
+
+        .badge.bg-warning {
+            background: linear-gradient(45deg, #f59e0b, #d97706) !important;
+        }
+
+        .badge.bg-info {
+            background: linear-gradient(45deg, #0ea5e9, #0284c7) !important;
+        }
+
+        .badge.bg-success {
+            background: linear-gradient(45deg, #059669, #047857) !important;
+        }
+
+        .badge.bg-secondary {
+            background: linear-gradient(45deg, #64748b, #475569) !important;
+        }
+
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border-radius: 10px;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1.25rem;
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background: #f8fafc;
+            color: #4f46e5;
+        }
+
+        .empty-state {
+            padding: 4rem 2rem;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .empty-state i {
+            color: #cbd5e1;
+            margin-bottom: 1rem;
+        }
+
+        .modal-content {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: linear-gradient(45deg, #f8fafc, #f1f5f9);
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .selection-counter {
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: none;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+        }
+
+        .form-floating label {
+            color: #64748b;
+        }
+
+        .alert {
+            border: none;
+            border-radius: 10px;
+            border-left: 4px solid;
+        }
+
+        .alert-info {
+            border-left-color: #0ea5e9;
+            background: linear-gradient(45deg, #f0f9ff, #e0f2fe);
+        }
+    </style>
+{% endblock %}
+
+{% block admin_content %}
+    <!-- En-tête avec design moderne -->
+    <div class="role-management-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h2 mb-2">
+                    <i class="fas fa-user-shield me-3"></i>
+                    Gestion des rôles utilisateurs
+                </h1>
+                <p class="mb-0 opacity-90">
+                    Attribution et modification des rôles d'accès pour {{ stats.total }} utilisateurs
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{{ path('app_admin_utilisateurs') }}" class="btn btn-light btn-lg">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Retour aux utilisateurs
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques avec design cards modernes -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stats-card total">
+                <div class="d-flex align-items-center">
+                    <div class="stats-icon icon-total text-white me-3">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-1 fw-bold text-primary">{{ stats.total }}</h3>
+                        <small class="text-muted fw-medium">Total utilisateurs</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stats-card admin">
+                <div class="d-flex align-items-center">
+                    <div class="stats-icon icon-admin text-white me-3">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-1 fw-bold text-danger">{{ stats.admins }}</h3>
+                        <small class="text-muted fw-medium">Administrateurs</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stats-card moderator">
+                <div class="d-flex align-items-center">
+                    <div class="stats-icon icon-moderator text-white me-3">
+                        <i class="fas fa-gavel"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-1 fw-bold text-warning">{{ stats.moderateurs }}</h3>
+                        <small class="text-muted fw-medium">Modérateurs</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stats-card citizen">
+                <div class="d-flex align-items-center">
+                    <div class="stats-icon icon-citizen text-white me-3">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-1 fw-bold text-success">{{ stats.citoyens }}</h3>
+                        <small class="text-muted fw-medium">Citoyens</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres avec design amélioré -->
+    <div class="filter-card mb-4">
+        <div class="card-header">
+            <h5>
+                <i class="fas fa-filter me-2 text-primary"></i>
+                Filtres et recherche avancée
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="search" name="search"
+                               value="{{ current_filters.search }}"
+                               placeholder="Rechercher...">
+                        <label for="search">
+                            <i class="fas fa-search me-2"></i>Rechercher par nom, prénom ou email
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <select class="form-select" id="role_filter" name="role_filter">
+                            <option value="">Tous les rôles</option>
+                            {% for role_value, role_label in roles_disponibles %}
+                                <option value="{{ role_value }}"
+                                        {{ current_filters.role_filter == role_value ? 'selected' : '' }}>
+                                    {{ role_label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <label for="role_filter">Filtrer par rôle</label>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <select class="form-select" id="status_filter" name="status_filter">
+                            <option value="">Tous les statuts</option>
+                            <option value="active" {{ current_filters.status_filter == 'active' ? 'selected' : '' }}>
+                                Actifs
+                            </option>
+                            <option value="inactive" {{ current_filters.status_filter == 'inactive' ? 'selected' : '' }}>
+                                En attente
+                            </option>
+                        </select>
+                        <label for="status_filter">Filtrer par statut</label>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="form-floating">
+                        <select class="form-select" id="sort" name="sort">
+                            <option value="date_desc" {{ current_filters.sort == 'date_desc' ? 'selected' : '' }}>
+                                Date (récent)
+                            </option>
+                            <option value="date_asc" {{ current_filters.sort == 'date_asc' ? 'selected' : '' }}>
+                                Date (ancien)
+                            </option>
+                            <option value="name_asc" {{ current_filters.sort == 'name_asc' ? 'selected' : '' }}>
+                                Nom (A-Z)
+                            </option>
+                            <option value="name_desc" {{ current_filters.sort == 'name_desc' ? 'selected' : '' }}>
+                                Nom (Z-A)
+                            </option>
+                            <option value="email_asc" {{ current_filters.sort == 'email_asc' ? 'selected' : '' }}>
+                                Email
+                            </option>
+                        </select>
+                        <label for="sort">Trier par</label>
+                    </div>
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="fas fa-search me-2"></i>
+                        Filtrer
+                    </button>
+                    <a href="{{ path('app_admin_users_roles') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-refresh"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Actions en lot avec design amélioré -->
+    <div class="bulk-actions-card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h6>
+                <i class="fas fa-tasks me-2 text-primary"></i>
+                Actions en lot
+            </h6>
+            <span class="selection-counter" id="selectionCounter">
+                <i class="fas fa-check-circle me-1"></i>
+                <span id="selectedCount">0</span> sélectionné(s)
+            </span>
+        </div>
+        <div class="card-body">
+            <form method="POST" id="bulkActionForm">
+                <input type="hidden" name="action" value="bulk_role_change">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <select class="form-select" name="bulk_role" required id="bulkRoleSelect">
+                                <option value="">Sélectionner un nouveau rôle</option>
+                                {% for role_value, role_label in roles_disponibles %}
+                                    <option value="{{ role_value }}">
+                                        <i class="fas fa-arrow-right me-2"></i>{{ role_label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <label for="bulkRoleSelect">Nouveau rôle à appliquer</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-warning btn-lg pulse-animation"
+                                onclick="return confirmBulkAction()" id="bulkActionBtn" disabled>
+                            <i class="fas fa-users-cog me-2"></i>
+                            Appliquer aux sélectionnés
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Sélectionnez des utilisateurs dans le tableau pour activer cette fonctionnalité
+                        </small>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tableau des utilisateurs avec design moderne -->
+    <div class="users-table-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5>
+                <i class="fas fa-list me-2 text-primary"></i>
+                Liste des utilisateurs
+                <span class="badge bg-primary ms-2">{{ utilisateurs|length }}</span>
+            </h5>
+            <div class="table-actions">
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll()">
+                    <i class="fas fa-check-square me-1"></i>
+                    Tout sélectionner
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectNone()">
+                    <i class="fas fa-square me-1"></i>
+                    Tout désélectionner
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            {% if utilisateurs|length > 0 %}
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th width="60">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="selectAllCheckbox"
+                                       onchange="toggleSelectAll()">
+                            </div>
+                        </th>
+                        <th>Utilisateur</th>
+                        <th>Contact</th>
+                        <th>Rôle actuel</th>
+                        <th>Statut</th>
+                        <th>Inscription</th>
+                        <th width="180">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for utilisateur in utilisateurs %}
+                        <tr>
+                            <td>
+                                {% if utilisateur != app.user %}
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input user-checkbox"
+                                               name="user_ids[]" value="{{ utilisateur.id }}"
+                                               form="bulkActionForm" onchange="updateSelectionCounter()">
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-container me-3">
+                                        <div class="avatar-circle">
+                                            {{ utilisateur.prenom|first|upper }}{{ utilisateur.nom|first|upper }}
+                                        </div>
+                                    </div>
+                                    <div class="user-info">
+                                        <h6 class="mb-1">
+                                            {{ utilisateur.prenom }} {{ utilisateur.nom }}
+                                            {% if utilisateur == app.user %}
+                                                <span class="badge bg-info ms-2">
+                                                        <i class="fas fa-user me-1"></i>Vous
+                                                    </span>
+                                            {% endif %}
+                                        </h6>
+                                        <small class="text-muted">ID: #{{ utilisateur.id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <i class="fas fa-envelope text-muted me-2"></i>
+                                    {{ utilisateur.email }}
+                                </div>
+                            </td>
+                            <td>
+                                {% set mainRole = utilisateur.roles|first|default('ROLE_USER') %}
+                                {% if mainRole == 'ROLE_ADMIN' %}
+                                    <span class="badge bg-danger">
+                                            <i class="fas fa-crown me-1"></i>Administrateur
+                                        </span>
+                                {% elseif mainRole == 'ROLE_MODERATOR' %}
+                                    <span class="badge bg-warning">
+                                            <i class="fas fa-gavel me-1"></i>Modérateur
+                                        </span>
+                                {% else %}
+                                    <span class="badge bg-info">
+                                            <i class="fas fa-user me-1"></i>Citoyen
+                                        </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if utilisateur.estValide %}
+                                    <span class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i>Actif
+                                        </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                            <i class="fas fa-clock me-1"></i>En attente
+                                        </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar text-muted me-1"></i>
+                                    {{ utilisateur.dateInscription|date('d/m/Y') }}
+                                </small>
+                            </td>
+                            <td>
+                                {% if utilisateur != app.user %}
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-primary dropdown-toggle"
+                                                type="button" data-bs-toggle="dropdown">
+                                            <i class="fas fa-user-cog me-1"></i>
+                                            Modifier
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            {% for role_value, role_label in roles_disponibles %}
+                                                {% if role_value != (utilisateur.roles|first|default('ROLE_USER')) %}
+                                                    <li>
+                                                        <a class="dropdown-item" href="#"
+                                                           onclick="changeUserRole({{ utilisateur.id }}, '{{ role_value }}', '{{ utilisateur.prenom }} {{ utilisateur.nom }}', '{{ role_label }}')">
+                                                            <i class="fas fa-arrow-right me-2 text-primary"></i>
+                                                            {{ role_label }}
+                                                        </a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% else %}
+                                    <small class="text-muted">
+                                        <i class="fas fa-lock me-1"></i>
+                                        Non modifiable
+                                    </small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-users fa-4x"></i>
+                    <h4 class="mt-3">Aucun utilisateur trouvé</h4>
+                    <p class="text-muted">Modifiez vos critères de recherche ou vérifiez les filtres appliqués.</p>
+                    <a href="{{ path('app_admin_users_roles') }}" class="btn btn-primary">
+                        <i class="fas fa-refresh me-2"></i>
+                        Réinitialiser les filtres
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Modal moderne pour confirmation -->
+    <div class="modal fade" id="roleChangeModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-cog me-2 text-primary"></i>
+                        Confirmation de changement de rôle
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <div class="avatar-circle mx-auto mb-3" style="width: 80px; height: 80px; font-size: 1.5rem;">
+                            <i class="fas fa-user-cog"></i>
+                        </div>
+                        <h6>Modification du rôle utilisateur</h6>
+                    </div>
+
+                    <p class="text-center">
+                        Êtes-vous sûr de vouloir changer le rôle de <strong id="userName"></strong> ?
+                    </p>
+
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Nouveau rôle : <strong id="newRoleLabel"></strong>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <small>Cette action modifiera immédiatement les permissions de l'utilisateur.</small>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>
+                        Annuler
+                    </button>
+                    <form method="POST" style="display: inline;">
+                        <input type="hidden" name="action" value="change_role">
+                        <input type="hidden" name="user_id" id="modalUserId">
+                        <input type="hidden" name="role" id="modalRole">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check me-2"></i>
+                            Confirmer le changement
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        // Gestion de la sélection multiple avec animations
+        function updateSelectionCounter() {
+            const checkboxes = document.querySelectorAll('.user-checkbox:checked');
+            const counter = document.getElementById('selectionCounter');
+            const countSpan = document.getElementById('selectedCount');
+            const bulkBtn = document.getElementById('bulkActionBtn');
+
+            countSpan.textContent = checkboxes.length;
+
+            if (checkboxes.length > 0) {
+                counter.style.display = 'inline-block';
+                bulkBtn.disabled = false;
+                bulkBtn.classList.add('pulse-animation');
+            } else {
+                counter.style.display = 'none';
+                bulkBtn.disabled = true;
+                bulkBtn.classList.remove('pulse-animation');
+            }
+        }
+
+        function toggleSelectAll() {
+            const checkboxes = document.querySelectorAll('.user-checkbox');
+            const selectAll = document.getElementById('selectAllCheckbox');
+
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+            });
+            updateSelectionCounter();
+        }
+
+        function selectAll() {
+            const checkboxes = document.querySelectorAll('.user-checkbox');
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+
+            checkboxes.forEach(checkbox => checkbox.checked = true);
+            selectAllCheckbox.checked = true;
+            updateSelectionCounter();
+        }
+
+        function selectNone() {
+            const checkboxes = document.querySelectorAll('.user-checkbox');
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+
+            checkboxes.forEach(checkbox => checkbox.checked = false);
+            selectAllCheckbox.checked = false;
+            updateSelectionCounter();
+        }
+
+        // Changement de rôle individuel avec animation
+        function changeUserRole(userId, newRole, userName, roleLabel) {
+            document.getElementById('modalUserId').value = userId;
+            document.getElementById('modalRole').value = newRole;
+            document.getElementById('userName').textContent = userName;
+            document.getElementById('newRoleLabel').textContent = roleLabel;
+
+            const modal = new bootstrap.Modal(document.getElementById('roleChangeModal'));
+            modal.show();
+        }
+
+        // Confirmation améliorée des actions en lot
+        function confirmBulkAction() {
+            const selectedUsers = document.querySelectorAll('.user-checkbox:checked');
+            const newRole = document.querySelector('select[name="bulk_role"]').value;
+
+            if (selectedUsers.length === 0) {
+                // Toast notification instead of alert
+                showToast('warning', 'Veuillez sélectionner au moins un utilisateur.');
+                return false;
+            }
+
+            if (!newRole) {
+                showToast('warning', 'Veuillez sélectionner un rôle.');
+                return false;
+            }
+
+            const roleLabels = {
+                'ROLE_USER': 'Citoyen',
+                'ROLE_MODERATOR': 'Modérateur',
+                'ROLE_ADMIN': 'Administrateur'
+            };
+
+            return confirm(
+                `🔄 Changement de rôle en lot\n\n` +
+                `Utilisateurs sélectionnés: ${selectedUsers.length}\n` +
+                `Nouveau rôle: ${roleLabels[newRole]}\n\n` +
+                `Confirmez-vous cette action ?`
+            );
+        }
+
+        // Toast notifications
+        function showToast(type, message) {
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
+            toast.style.zIndex = '9999';
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                ${message}
+            `;
+
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Animation de survol pour les cartes stats
+        document.addEventListener('DOMContentLoaded', function() {
+            const statsCards = document.querySelectorAll('.stats-card');
+
+            statsCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-8px) scale(1.02)';
+                });
+
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+
+            // Initialiser le compteur de sélection
+            updateSelectionCounter();
+        });
+
+        // Effet de recherche en temps réel (optionnel)
+        const searchInput = document.getElementById('search');
+        if (searchInput) {
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    // Ici vous pourriez ajouter une recherche AJAX en temps réel
+                }, 500);
+            });
+        }
+    </script>
+{% endblock %}
